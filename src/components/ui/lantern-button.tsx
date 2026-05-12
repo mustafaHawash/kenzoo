@@ -1,42 +1,27 @@
-import { ButtonHTMLAttributes } from "react";
+import * as React from "react";
+
+import { Button, type ButtonProps } from "@/components/ui/button";
+
 import { cn } from "@/lib/utils";
 
-type LanternButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
-
-export function LanternButton({
-    className,
-    children,
-    ...props
-}: LanternButtonProps) {
+export function LanternButton({ className, children, ...props }: ButtonProps) {
     return (
-        <button
+        <Button
+            variant='primary'
+            size='lg'
             className={cn(
-                "inline-flex items-center justify-center",
+                "hover:-translate-y-0.5",
 
-                "h-12 px-6",
+                "hover:shadow-(--shadow-glow)",
 
-                "rounded-full",
-
-                "bg-primary text-primary-foreground",
-
-                "shadow-(--shadow-ambient)",
-
-                "transition-all duration-300",
-
-                "hover:brightness-105",
-
+                "active:translate-y-0",
                 "active:scale-[0.98]",
-
-                "disabled:pointer-events-none",
-                "disabled:opacity-50",
-
-                "text-label-md",
 
                 className,
             )}
             {...props}
         >
             {children}
-        </button>
+        </Button>
     );
 }

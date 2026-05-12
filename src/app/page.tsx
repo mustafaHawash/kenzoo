@@ -1,7 +1,13 @@
 import { AmbientBackground } from "@/components/atmosphere/ambient-background";
-import { CozyCard } from "@/components/ui/cozy-card";
+import {
+    CozyCard,
+    CozyCardContent,
+    CozyCardFooter,
+    CozyCardHeader,
+} from "@/components/ui/cozy-card";
 import { LanternButton } from "@/components/ui/lantern-button";
 import { ScreenContainer } from "@/components/ui/layout/screen-container";
+import { Headline, Muted } from "@/components/ui/typography";
 
 export default function HomePage() {
     return (
@@ -9,12 +15,17 @@ export default function HomePage() {
             <AmbientBackground />
             <ScreenContainer>
                 <CozyCard>
-                    <h1 className='text-headline-md'>يا ألف أهلا وسهلاً</h1>
+                    <CozyCardHeader>
+                        <Headline>أهلا بك في كنزو</Headline>
 
-                    <p className='mt-2 text-body-md text-muted-foreground'>
-                        جاهز تتبسط!
-                    </p>
-                    <LanternButton>ابدأ</LanternButton>
+                        <Muted>رحلة ممتعة ومثمرة</Muted>
+                    </CozyCardHeader>
+
+                    <CozyCardContent>جااااهز ؟!!</CozyCardContent>
+
+                    <CozyCardFooter>
+                        <LanternButton>يلا بينا</LanternButton>
+                    </CozyCardFooter>
                 </CozyCard>
             </ScreenContainer>
         </main>
