@@ -1,3 +1,4 @@
+//app/play/page.tsx
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
@@ -59,8 +60,8 @@ const ALL_STATIONS: Station[] = [...eidQuizStations, ...eidRiddleStations];
 /* ─── Animation ─── */
 const floatBob = {
     animate: {
-        y: [0, -4, 0],
-        transition: { duration: 2.5, repeat: Infinity, ease: "easeInOut" as const },
+        y: [0, -3, 0],
+        transition: { duration: 3, repeat: Infinity, ease: "easeInOut" as const },
     },
 };
 
@@ -117,9 +118,9 @@ export default function PlayPage() {
                     🎯 PLAYER TURN INDICATOR
                     ═══════════════════════════════════════════ */}
                 <motion.div
-                    initial={{ opacity: 0, y: -12 }}
+                    initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    transition={{ duration: 0.35, ease: "easeOut" }}
                     className="flex justify-center"
                 >
                     <div

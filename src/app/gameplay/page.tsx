@@ -10,22 +10,12 @@ import { Headline, Body, Label, Muted } from "@/components/ui/typography";
 import { eidQuizStations } from "@/content/themes/eid-el-adha/quiz";
 import { eidRiddleStations } from "@/content/themes/eid-el-adha/riddles";
 import type { Station, StationType } from "@/types/station";
+import { stationTypeMeta } from "@/components/game/active-station-surface/station-type-meta";
 
 const STATIONS: Station[] = [...eidQuizStations, ...eidRiddleStations];
 
 /* ─── Station type grouping config ─── */
 const typeOrder: StationType[] = ["quiz", "riddle", "guess", "memory", "puzzle", "treasure", "mystery", "story"];
-
-const typeSectionMeta: Record<StationType, { emoji: string; title: string }> = {
-    quiz: { emoji: "🤔", title: "سيــن وجيــم" },
-    riddle: { emoji: "🗝️", title: "فـزورة .. حــزورة" },
-    guess: { emoji: "💭", title: "يا ترى هتفتكر؟" },
-    memory: { emoji: "📖", title: "ذكـرى حلـوة" },
-    puzzle: { emoji: "🧩", title: "لغـز خفيـف" },
-    treasure: { emoji: "🎁", title: "كنز غامض" },
-    mystery: { emoji: "🔮", title: "اكتشف الغامض" },
-    story: { emoji: "🕯️", title: "حكاية وروايـة" },
-};
 
 /* ─── Animation variants ─── */
 const containerVariants: Variants = {
@@ -37,18 +27,18 @@ const containerVariants: Variants = {
 };
 
 const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 16 },
+    hidden: { opacity: 0, y: 10 },
     visible: {
         opacity: 1,
         y: 0,
-        transition: { type: "spring" as const, stiffness: 300, damping: 24 },
+        transition: { duration: 0.35, ease: "easeOut" as const },
     },
 };
 
 const floatVariants: Variants = {
     animate: {
-        y: [0, -6, 0],
-        transition: { duration: 3, repeat: Infinity, ease: "easeInOut" as const },
+        y: [0, -3, 0],
+        transition: { duration: 3.5, repeat: Infinity, ease: "easeInOut" as const },
     },
 };
 
@@ -183,7 +173,7 @@ export default function GameplayScreen() {
                     ═══════════════════════════════════════════ */}
                 <div className="flex flex-col gap-8">
                     {[...groupedStations.entries()].map(([type, stations], groupIdx) => {
-                        const sectionMeta = typeSectionMeta[type];
+                        const sectionMeta = stationTypeMeta[type];
 
                         return (
                             <motion.div
@@ -195,7 +185,7 @@ export default function GameplayScreen() {
                                 <div className="flex items-center gap-3">
                                     <span className="text-lg">{sectionMeta.emoji}</span>
                                     <Headline className="text-foreground text-base font-semibold">
-                                        {sectionMeta.title}
+                                        {sectionMeta.label}
                                     </Headline>
                                     <div className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-transparent" />
                                     <Muted className="text-xs tabular-nums">

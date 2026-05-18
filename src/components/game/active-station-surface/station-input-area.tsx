@@ -1,0 +1,97 @@
+
+"use client";
+
+import { motion } from "framer-motion";
+
+import { LanternButton } from "@/components/ui/lantern-button";
+import { Label, Muted } from "@/components/ui/typography";
+
+import type { Station } from "@/types/station";
+
+import { fadeIn } from "./motion";
+import { stationRenderers } from "../station-renderers";
+
+interface StationInputAreaProps {
+    station: Station;
+    selectedChoice: string | null;
+    onChoiceSelect: (choice: string) => void;
+    riddleInput: string;
+    onRiddleInput: (value: string) => void;
+    canSubmit: boolean;
+    onSubmit: () => void;
+}
+
+/**
+ * StationInputArea — renderer selector + shared chrome.
+ *
+ * This component is now a thin orchestrator:
+ *   1. Selects the correct renderer from the registry based on station.type
+ *   2. Wraps it in shared UI (reward hint bar + submit button)
+ *   3. Passes props through to the renderer
+ *
+ * No gameplay type branching lives here anymore.
+ * Each station type has its own isolated renderer file.
+ *
+ * To add a new gameplay type:
+ *   - Create a new renderer in station-renderers/
+ *   - Add it to the registry in station-renderers/index.ts
+ *   - This component automatically picks it up
+ */
+export function StationInputArea({
+    station,
+    selectedChoice,
+    onChoiceSelect,
+    riddleInput,
+    onRiddleInput,
+    canSubmit,
+    onSubmit,
+}: StationInputAreaProps) {
+    const Renderer = stationRenderers[station.type];
+
+    return (
+        <motion.div
+            {...fadeIn}
+            className="flex flex-col gap-5"
+        >
+            {/* ── Type-specific gameplay renderer ── */}
+            <Renderer
+                station={station}
+                selectedChoice={selectedChoice}
+                onSelect={onChoiceSelect}
+                textInput={riddleInput}
+                onTextInput={onRiddleInput}
+                canSubmit={canSubmit}
+                onSubmit={onSubmit}
+            />
+
+            {/* ── Reward hint bar (shared across all types) ── */}
+            <div
+                className="
+                    flex items-center justify-between
+                    rounded-2xl
+                    border border-secondary/10
+                    bg-secondary/5
+                    px-4 py-3
+                "
+            >
+                <Muted className="text-xs">
+                    {station.reward.canUnlockTreasure
+                        ? "🗝️ جهز نجومك للكنز"
+                        : "✨ نجوم حلوة"}
+                </Muted>
+                <Label className="text-secondary text-xs">
+                    +{station.reward.stars} ⭐
+                </Label>
+            </div>
+
+            {/* ── Confirm CTA (shared across all types) ── */}
+            <LanternButton
+                disabled={!canSubmit}
+                onClick={onSubmit}
+                className="w-full"
+            >
+                تأكيد الاختيار ✨
+            </LanternButton>
+        </motion.div>
+    );
+}

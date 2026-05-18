@@ -23,7 +23,7 @@ export type StationCategory =
 
 export type StationDifficulty = 1 | 2 | 3 | 4;
 
-export type TargetAgeGroup = "kid" | "teen" | "adult";
+export type TargetAgeGroup = "kid"  | "adult";
 
 export type TinyMissionType =
     | "islamic"
