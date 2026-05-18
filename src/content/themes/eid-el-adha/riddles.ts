@@ -50,9 +50,9 @@ export const eidRiddleStations: Station[] = [
 
         difficulty: 1,
 
-        targetAgeGroup: "teen",
+        targetAgeGroup: "kid",
 
-        question: "كلما زاد عدد الناس حوله أصبح أجمل، ما هو؟",
+        question: "كلما زاد عدد الناس حوله أصبح أجمل، ما هو？",
 
         answer: "العيد",
 
