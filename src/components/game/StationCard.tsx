@@ -22,14 +22,11 @@ interface StationCardProps {
  * Visual styling based on gameplay state.
  */
 const statusStyles = {
-    locked:
-        "pointer-events-none opacity-50 grayscale-[0.35] saturate-[0.6]",
+    locked: "pointer-events-none opacity-50 grayscale-[0.35] saturate-[0.6]",
 
-    active:
-        "ring-1 ring-secondary/30 shadow-glow",
+    active: "ring-1 ring-secondary/30 shadow-glow",
 
-    completed:
-        "opacity-90 saturate-[1.1] ring-1 ring-secondary/15",
+    completed: "opacity-90 saturate-[1.1] ring-1 ring-secondary/15",
 };
 
 /**
@@ -92,14 +89,14 @@ const difficultyLabels: Record<StationDifficulty, string> = {
     1: "🌿 سهل",
     2: "🔥 مش سهل",
     3: "🧠 مش سهل خالص",
-    4: "👑 مش سهل  خالصخالص",
+    4: "👑 مش سهل  خالص خالص",
 };
 
 /**
  * Soft emotional mood labels.
  */
 const moodLabels: Record<SessionMood, string> = {
-    cozy: "🌙 رايقة",
+    cozy: "🌙 خفيفة",
 
     playful: "🎉 مرحة",
 
@@ -107,7 +104,7 @@ const moodLabels: Record<SessionMood, string> = {
 
     social: "❤️ اجتماعية",
 
-    reflective: "✨ تأملية",
+    reflective: "✨ مُثمرة",
 };
 
 export function StationCard({ station, onClick, className }: StationCardProps) {
@@ -188,7 +185,7 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                     h-14 w-14
                     rounded-2xl
                     border border-secondary/20
-                    bg-gradient-to-br from-secondary/15 to-accent/10
+                    bg-linear-to-br from-secondary/15 to-accent/10
                     text-2xl
                     shadow-[0_6px_24px_rgba(216,179,106,0.15)]
                   '
@@ -203,7 +200,7 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                                 className='
                 rounded-full
                 border border-primary/15
-                    bg-primary/[0.06]
+                    bg-primary/6
                 text-primary
                     inline-flex items-center
                     self-start
@@ -245,7 +242,7 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                         <div
                             className='
                   h-px flex-1
-                  bg-gradient-to-l
+                  bg-linear-to-l
                   from-transparent
                   via-secondary/25
                   to-transparent
@@ -255,7 +252,7 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                         <div
                             className='
                   h-px flex-1
-                  bg-gradient-to-r
+                  bg-linear-to-r
                   from-transparent
                   via-secondary/25
                   to-transparent
@@ -275,10 +272,9 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                             className='
                 rounded-full
                 border border-secondary/10
-                bg-secondary/[0.06]
+                bg-secondary/6
                 px-3.5 py-1.5
-                text-xs
-              '
+                text-xs'
                         >
                             {moodLabels[station.mood]}
                         </Muted>
@@ -288,7 +284,7 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                             className='
                 rounded-full
                 border border-primary/10
-                bg-primary/[0.06]
+                bg-primary/6
                 px-3.5 py-1.5
                 text-xs
               '
