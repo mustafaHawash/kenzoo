@@ -1,4 +1,6 @@
+"use client";
 import { AmbientBackground } from "@/components/atmosphere/ambient-background";
+import { StationCard } from "@/components/game/StationCard";
 import {
     CozyCard,
     CozyCardContent,
@@ -12,20 +14,14 @@ import { Headline, Muted } from "@/components/ui/typography";
 export default function HomePage() {
     return (
         <main className='relative min-h-dvh overflow-hidden bg-background'>
-            <AmbientBackground />
             <ScreenContainer>
                 <CozyCard>
                     <CozyCardHeader>
                         <Headline>أهلا بك في كنزو</Headline>
-
                         <Muted>رحلة ممتعة ومثمرة</Muted>
                     </CozyCardHeader>
-
-                    <CozyCardContent>جااااهز ؟!!</CozyCardContent>
-
-                    <CozyCardFooter>
-                        <LanternButton>يلا بينا</LanternButton>
-                    </CozyCardFooter>
+                    <CozyCardContent>
+                    </CozyCardContent>
                 </CozyCard>
             </ScreenContainer>
         </main>
