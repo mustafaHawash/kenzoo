@@ -16,13 +16,15 @@ import { pickRandomTitle } from "@/content/themes/eid-el-adha/titles";
 import {
     pickTreasureByRarity,
     toHiddenTreasureReveal,
-    HIDDEN_POINTS_BY_RARITY,
-    STARS_REQUIRED_BY_RARITY,
-    TREASURE_APPEARANCE_MIN_STARS,
-    HIDDEN_TREASURE_WIN_THRESHOLD,
     type Treasure,
-    type OpenedTreasureRecord,
 } from "@/types/treasure";
+
+import {
+    resolveTurn,
+    resolveTreasureOpen,
+    resolveTurnEnd,
+    type TurnOutcome,
+} from "@/lib/session-runtime/turn-engine";
 
 import type { Station } from "@/types/station";
 import type { Player } from "@/types/player";
@@ -106,52 +108,35 @@ function useGameSession(initialPlayers: Player[], stations: Station[]) {
         setPlayers((prev) => prev.map((p, i) => i === currentPlayerIndex ? updater(p) : p));
     }, [currentPlayerIndex]);
 
-    /* ─── Round complete handler ─── */
-    const handleRoundComplete = useCallback(
-        (result: RoundResult) => {
-            if (result.starsEarned > 0 && !result.treasureUnlocked) {
-                updateCurrentPlayer((p) => ({ ...p, stars: p.stars + result.starsEarned }));
-            }
+    /* ─── Handle player answer (pure resolution) ─── */
+    const handleResolveAnswer = useCallback((answer: string) => {
+        return resolveTurn(
+            currentPlayer,
+            station,
+            answer,
+            eidTreasures,
+            claimedLegendaryIds
+        );
+    }, [currentPlayer, station, claimedLegendaryIds]);
 
-            setLastRoundResult(result);
+    /* ─── Round complete handler (state application) ─── */
+    const handleRoundComplete = useCallback((outcome: TurnOutcome) => {
+        updateCurrentPlayer(() => outcome.updatedPlayer);
+        setLastRoundResult(outcome.roundResult);
 
-            // Treasure appears only if player has >= 7 stars (max hidden cost)
-            if (result.isCorrect && result.treasureUnlocked && currentPlayer.stars >= TREASURE_APPEARANCE_MIN_STARS) {
-                const treasure = pickTreasureByRarity(
-                    eidTreasures,
-                    claimedLegendaryIds,
-                    currentPlayer.difficulty,
-                );
-                setActiveTreasure(treasure);
-                setShowTreasureOpportunity(true);
-            }
-        },
-        [currentPlayer.stars, currentPlayer.difficulty, claimedLegendaryIds, updateCurrentPlayer]
-    );
+        if (outcome.treasureOpportunity) {
+            setActiveTreasure(outcome.treasureOpportunity);
+            setShowTreasureOpportunity(true);
+        }
+    }, [updateCurrentPlayer]);
 
     /* ─── Open treasure: spend stars, record opened treasure, check win ─── */
     const handleOpenTreasure = useCallback(() => {
         if (!activeTreasure) return;
 
-        const cost = STARS_REQUIRED_BY_RARITY[activeTreasure.rarity];
-        const hiddenPoints = HIDDEN_POINTS_BY_RARITY[activeTreasure.rarity];
-
-        const record: OpenedTreasureRecord = {
-            treasureId: activeTreasure.id,
-            rarity: activeTreasure.rarity,
-            hiddenPoints,
-            starsConsumed: cost,
-        };
-
-        const currentHiddenPoints = currentPlayer.openedTreasures.reduce((sum, t) => sum + t.hiddenPoints, 0);
-        const newTotalHidden = currentHiddenPoints + hiddenPoints;
-
-        updateCurrentPlayer((p) => ({
-            ...p,
-            stars: Math.max(0, p.stars - cost),
-            treasures: p.treasures + 1,
-            openedTreasures: [...p.openedTreasures, record],
-        }));
+        const outcome = resolveTreasureOpen(currentPlayer, activeTreasure);
+        
+        updateCurrentPlayer(() => outcome.updatedPlayer);
 
         if (activeTreasure.rarity === "legendary") {
             setClaimedLegendaryIds((prev) => [...prev, activeTreasure.id]);
@@ -163,7 +148,7 @@ function useGameSession(initialPlayers: Player[], stations: Station[]) {
             // TODO: persist title to player when session state is centralized
         }
 
-        if (newTotalHidden >= HIDDEN_TREASURE_WIN_THRESHOLD) {
+        if (outcome.isWinner) {
             setWinnerId(currentPlayer.id);
         }
     }, [activeTreasure, currentPlayer, updateCurrentPlayer]);
@@ -178,9 +163,7 @@ function useGameSession(initialPlayers: Player[], stations: Station[]) {
     /* ─── Next station handler ─── */
     const handleNextStation = useCallback(() => {
         // Track tiny mission completion for social continuity
-        if (lastRoundResult && !lastRoundResult.isCorrect && lastRoundResult.tinyMission) {
-            updateCurrentPlayer((p) => ({ ...p, completedMissions: p.completedMissions + 1 }));
-        }
+        updateCurrentPlayer((p) => resolveTurnEnd(p, lastRoundResult));
 
         setStationIndex((prev) => prev + 1);
         setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
@@ -200,6 +183,7 @@ function useGameSession(initialPlayers: Player[], stations: Station[]) {
         showTreasureOpportunity,
         activeTreasure,
         awardedTitle,
+        handleResolveAnswer,
         handleRoundComplete,
         handleOpenTreasure,
         handleDismissTreasure,
@@ -219,6 +203,7 @@ export default function PlayPage() {
         showTreasureOpportunity,
         activeTreasure,
         awardedTitle,
+        handleResolveAnswer,
         handleRoundComplete,
         handleOpenTreasure,
         handleDismissTreasure,
@@ -312,6 +297,7 @@ export default function PlayPage() {
                     <ActiveStationSurface
                         station={station}
                         playerName={currentPlayer.name}
+                        onResolveAnswer={handleResolveAnswer}
                         onRoundComplete={handleRoundComplete}
                         onNextStation={handleNextStation}
                     />

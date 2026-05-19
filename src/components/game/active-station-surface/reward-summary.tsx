@@ -3,7 +3,7 @@
 
 import { motion } from "framer-motion";
 
-import { Label, Muted } from "@/components/ui/typography";
+import { Label } from "@/components/ui/typography";
 
 import type { RoundResult } from "@/types/session";
 

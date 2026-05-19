@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { CozyCard } from "@/components/ui/cozy-card";
 import { LanternButton } from "@/components/ui/lantern-button";
-import { Headline, Label, Muted, Body } from "@/components/ui/typography";
+import { Headline, Muted, Body } from "@/components/ui/typography";
 
 import type { HiddenTreasureReveal } from "@/types/treasure";
 
@@ -203,7 +203,7 @@ export function TreasureOpportunityCard({
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="h-2.5 w-44 rounded-full bg-linear-to-l from-secondary/10 via-secondary/25 to-secondary/10 bg-[length:200%_100%]"
+                                    className="h-2.5 w-44 rounded-full bg-linear-to-l from-secondary/10 via-secondary/25 to-secondary/10 bg-size-[200%_100%]"
                                     style={{ animation: "shimmer 1.6s linear infinite" }}
                                 />
                                 <Muted className="text-sm animate-pulse">
@@ -244,8 +244,8 @@ export function TreasureOpportunityCard({
 
                                 <Headline className={
                                     treasure.cinematic.emojiSizeClass === "text-6xl" ? "text-secondary text-2xl text-center"
-                                  : treasure.cinematic.emojiSizeClass === "text-[52px]" ? "text-secondary text-[22px] text-center"
-                                  : "text-secondary text-xl text-center"
+                                        : treasure.cinematic.emojiSizeClass === "text-[52px]" ? "text-secondary text-[22px] text-center"
+                                            : "text-secondary text-xl text-center"
                                 }>
                                     {treasure.title}
                                 </Headline>

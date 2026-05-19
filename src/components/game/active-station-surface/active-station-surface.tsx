@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CozyCard } from "@/components/ui/cozy-card";
 
 import type { Station } from "@/types/station";
-import type { RoundResult } from "@/types/session";
+import type { TurnOutcome } from "@/lib/session-runtime/turn-engine";
 
 import { phaseTransition } from "./motion";
 import { StationHeader } from "./station-header";
@@ -15,11 +15,11 @@ import { StationInputArea } from "./station-input-area";
 import { RevealPhase } from "./reveal-phase";
 import { ResultPhase } from "./result-phase";
 
-/* ─── Props ─── */
 interface ActiveStationSurfaceProps {
     station: Station;
     playerName: string;
-    onRoundComplete: (result: RoundResult) => void;
+    onResolveAnswer: (answer: string) => TurnOutcome;
+    onRoundComplete: (outcome: TurnOutcome) => void;
     onNextStation: () => void;
 }
 
@@ -53,13 +53,14 @@ const REVEAL_DELAY_MS = 800;
 export function ActiveStationSurface({
     station,
     playerName,
+    onResolveAnswer,
     onRoundComplete,
     onNextStation,
 }: ActiveStationSurfaceProps) {
     const [phase, setPhase] = useState<GamePhase>("playing");
     const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
     const [textInput, setTextInput] = useState("");
-    const [roundResult, setRoundResult] = useState<RoundResult | null>(null);
+    const [turnOutcome, setTurnOutcome] = useState<TurnOutcome | null>(null);
 
     /* ─── Derive current answer from interaction state ─── */
     const currentAnswer = selectedChoice ?? textInput.trim();
@@ -71,32 +72,24 @@ export function ActiveStationSurface({
 
         setPhase("revealing");
 
-        const isCorrect = currentAnswer === station.answer;
-        const result: RoundResult = {
-            isCorrect,
-            starsEarned: isCorrect ? station.reward.stars : 0,
-            treasureUnlocked: isCorrect && station.reward.canUnlockTreasure,
-            tinyMission: !isCorrect
-                ? station.tinyMissionPool[
-                      Math.floor(Math.random() * station.tinyMissionPool.length)
-                ]
-                : undefined,
-        };
+        // The engine acts purely on the answer, returning a structured decision.
+        const outcome = onResolveAnswer(currentAnswer);
 
-        // Cinematic reveal pause
+        // We hold the result in memory until the cinematic UI pause completes.
         setTimeout(() => {
-            setRoundResult(result);
+            setTurnOutcome(outcome);
             setPhase("result");
-            onRoundComplete(result);
+            // Only update global session state AFTER the cinematic reveal is done.
+            onRoundComplete(outcome);
         }, REVEAL_DELAY_MS);
-    }, [currentAnswer, station, onRoundComplete]);
+    }, [currentAnswer, onResolveAnswer, onRoundComplete]);
 
     /* ─── Next station ─── */
     const handleNext = useCallback(() => {
         setPhase("playing");
         setSelectedChoice(null);
         setTextInput("");
-        setRoundResult(null);
+        setTurnOutcome(null);
         onNextStation();
     }, [onNextStation]);
 
@@ -162,10 +155,10 @@ export function ActiveStationSurface({
                             <RevealPhase />
                         )}
 
-                        {phase === "result" && roundResult && (
+                        {phase === "result" && turnOutcome && (
                             <ResultPhase
                                 station={station}
-                                result={roundResult}
+                                result={turnOutcome.roundResult}
                                 onNext={handleNext}
                             />
                         )}
