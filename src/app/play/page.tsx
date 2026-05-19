@@ -7,13 +7,22 @@ import { motion } from "framer-motion";
 import { ScreenContainer } from "@/components/ui/layout/screen-container";
 import { ActiveStationSurface } from "@/components/game/active-station-surface";
 import { TreasureOpportunityCard } from "@/components/game/treasure-opportunity";
-import { Label, Muted } from "@/components/ui/typography";
+import { Label, Muted, Headline } from "@/components/ui/typography";
 
 import { eidQuizStations } from "@/content/themes/eid-el-adha/quiz";
 import { eidRiddleStations } from "@/content/themes/eid-el-adha/riddles";
 import { eidTreasures } from "@/content/themes/eid-el-adha/treasures";
 import { pickRandomTitle } from "@/content/themes/eid-el-adha/titles";
-import { pickTreasureByRarity, type Treasure } from "@/types/treasure";
+import {
+    pickTreasureByRarity,
+    toHiddenTreasureReveal,
+    HIDDEN_POINTS_BY_RARITY,
+    STARS_REQUIRED_BY_RARITY,
+    TREASURE_APPEARANCE_MIN_STARS,
+    HIDDEN_TREASURE_WIN_THRESHOLD,
+    type Treasure,
+    type OpenedTreasureRecord,
+} from "@/types/treasure";
 
 import type { Station } from "@/types/station";
 import type { Player } from "@/types/player";
@@ -28,10 +37,11 @@ const MOCK_PLAYERS: Player[] = [
         age: 25,
         ageGroup: "adult",
         difficulty: "normal",
-        stars: 3,
-        treasures: 0,
+        stars: 27,
+        treasures: 2,
         completedMissions: 2,
         titles: [],
+        openedTreasures: [],
     },
     {
         id: "player-2",
@@ -44,6 +54,7 @@ const MOCK_PLAYERS: Player[] = [
         treasures: 0,
         completedMissions: 1,
         titles: [],
+        openedTreasures: [],
     },
     {
         id: "player-3",
@@ -56,12 +67,11 @@ const MOCK_PLAYERS: Player[] = [
         treasures: 1,
         completedMissions: 3,
         titles: ["🌟 نجم العيد"],
+        openedTreasures: [],
     },
 ];
 
 const ALL_STATIONS: Station[] = [...eidQuizStations, ...eidRiddleStations];
-
-/* ─── Treasure economy (MVP) ─── */
 
 /* ─── Animation ─── */
 const floatBob = {
@@ -72,87 +82,93 @@ const floatBob = {
 };
 
 /* ═══════════════════════════════════════════════════════════
-   PLAY PAGE
+   SESSION ORCHESTRATOR HOOK
    ═══════════════════════════════════════════════════════════ */
-export default function PlayPage() {
-    /* ─── Session state (TODO: move to Zustand/session engine) ─── */
+function useGameSession(initialPlayers: Player[], stations: Station[]) {
+    const [players, setPlayers] = useState<Player[]>(initialPlayers);
     const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
     const [stationIndex, setStationIndex] = useState(0);
-    const [playerStars, setPlayerStars] = useState<Record<string, number>>(
-        () => Object.fromEntries(MOCK_PLAYERS.map((p) => [p.id, p.stars]))
-    );
+
+    const [claimedLegendaryIds, setClaimedLegendaryIds] = useState<string[]>([]);
+    const [winnerId, setWinnerId] = useState<string | null>(null);
 
     /* ─── Treasure opportunity state ─── */
     const [showTreasureOpportunity, setShowTreasureOpportunity] = useState(false);
     const [activeTreasure, setActiveTreasure] = useState<Treasure | null>(null);
     const [awardedTitle, setAwardedTitle] = useState<string | null>(null);
     const [lastRoundResult, setLastRoundResult] = useState<RoundResult | null>(null);
-    const [claimedLegendaryIds, setClaimedLegendaryIds] = useState<string[]>([]);
 
-    const currentPlayer = MOCK_PLAYERS[currentPlayerIndex];
-    const station = ALL_STATIONS[stationIndex % ALL_STATIONS.length];
+    const currentPlayer = players[currentPlayerIndex];
+    const station = stations[stationIndex % stations.length];
 
-    /* ─── Derived ─── */
-    const currentStars = playerStars[currentPlayer.id] ?? currentPlayer.stars;
+    /* ─── Helper to update the current player safely ─── */
+    const updateCurrentPlayer = useCallback((updater: (p: Player) => Player) => {
+        setPlayers((prev) => prev.map((p, i) => i === currentPlayerIndex ? updater(p) : p));
+    }, [currentPlayerIndex]);
 
     /* ─── Round complete handler ─── */
     const handleRoundComplete = useCallback(
         (result: RoundResult) => {
-            // Stations with treasure opportunity give 0 stars
-            // Treasures consume stars — rewards are emotional and magical
             if (result.starsEarned > 0 && !result.treasureUnlocked) {
-                setPlayerStars((prev) => ({
-                    ...prev,
-                    [currentPlayer.id]: (prev[currentPlayer.id] ?? 0) + result.starsEarned,
-                }));
+                updateCurrentPlayer((p) => ({ ...p, stars: p.stars + result.starsEarned }));
             }
 
             setLastRoundResult(result);
 
-            // Check if treasure opportunity should appear
-            if (result.isCorrect && result.treasureUnlocked) {
-                const treasure = pickTreasureByRarity(eidTreasures, claimedLegendaryIds);
-                if (currentStars >= treasure.starsRequired) {
-                    setActiveTreasure(treasure);
-                    setShowTreasureOpportunity(true);
-                }
+            // Treasure appears only if player has >= 7 stars (max hidden cost)
+            if (result.isCorrect && result.treasureUnlocked && currentPlayer.stars >= TREASURE_APPEARANCE_MIN_STARS) {
+                const treasure = pickTreasureByRarity(
+                    eidTreasures,
+                    claimedLegendaryIds,
+                    currentPlayer.difficulty,
+                );
+                setActiveTreasure(treasure);
+                setShowTreasureOpportunity(true);
             }
-
-            console.log("Round complete:", {
-                player: currentPlayer.name,
-                stationId: station.id,
-                isCorrect: result.isCorrect,
-                starsEarned: result.starsEarned,
-                treasureUnlocked: result.treasureUnlocked,
-            });
         },
-        [currentPlayer, station, currentStars, claimedLegendaryIds]
+        [currentPlayer.stars, currentPlayer.difficulty, claimedLegendaryIds, updateCurrentPlayer]
     );
 
-    /* ─── Open treasure: spend stars, apply reward ─── */
+    /* ─── Open treasure: spend stars, record opened treasure, check win ─── */
     const handleOpenTreasure = useCallback(() => {
         if (!activeTreasure) return;
 
-        // Spend stars to open the treasure
-        setPlayerStars((prev) => ({
-            ...prev,
-            [currentPlayer.id]: Math.max(0, (prev[currentPlayer.id] ?? 0) - activeTreasure.starsRequired),
+        const cost = STARS_REQUIRED_BY_RARITY[activeTreasure.rarity];
+        const hiddenPoints = HIDDEN_POINTS_BY_RARITY[activeTreasure.rarity];
+
+        const record: OpenedTreasureRecord = {
+            treasureId: activeTreasure.id,
+            rarity: activeTreasure.rarity,
+            hiddenPoints,
+            starsConsumed: cost,
+        };
+
+        const currentHiddenPoints = currentPlayer.openedTreasures.reduce((sum, t) => sum + t.hiddenPoints, 0);
+        const newTotalHidden = currentHiddenPoints + hiddenPoints;
+
+        updateCurrentPlayer((p) => ({
+            ...p,
+            stars: Math.max(0, p.stars - cost),
+            treasures: p.treasures + 1,
+            openedTreasures: [...p.openedTreasures, record],
         }));
 
-        // Mark legendary as claimed (unique — never appears again)
         if (activeTreasure.rarity === "legendary") {
             setClaimedLegendaryIds((prev) => [...prev, activeTreasure.id]);
         }
 
-        // Pick a random title if the treasure rewards a title
         if (activeTreasure.reward.type === "title") {
             const title = pickRandomTitle(currentPlayer.titles);
             setAwardedTitle(title);
             // TODO: persist title to player when session state is centralized
         }
-    }, [currentPlayer, activeTreasure]);
 
-    /* ─── Dismiss treasure (keep stars or continue after reveal) ─── */
+        if (newTotalHidden >= HIDDEN_TREASURE_WIN_THRESHOLD) {
+            setWinnerId(currentPlayer.id);
+        }
+    }, [activeTreasure, currentPlayer, updateCurrentPlayer]);
+
+    /* ─── Dismiss treasure ─── */
     const handleDismissTreasure = useCallback(() => {
         setShowTreasureOpportunity(false);
         setActiveTreasure(null);
@@ -161,18 +177,73 @@ export default function PlayPage() {
 
     /* ─── Next station handler ─── */
     const handleNextStation = useCallback(() => {
-        // Advance to next station
+        // Track tiny mission completion for social continuity
+        if (lastRoundResult && !lastRoundResult.isCorrect && lastRoundResult.tinyMission) {
+            updateCurrentPlayer((p) => ({ ...p, completedMissions: p.completedMissions + 1 }));
+        }
+
         setStationIndex((prev) => prev + 1);
-        // Rotate to next player
-        setCurrentPlayerIndex((prev) => (prev + 1) % MOCK_PLAYERS.length);
-        // Clear treasure state
+        setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
+
         setShowTreasureOpportunity(false);
         setActiveTreasure(null);
         setAwardedTitle(null);
         setLastRoundResult(null);
-    }, []);
+    }, [lastRoundResult, players.length, updateCurrentPlayer]);
 
+    return {
+        players,
+        currentPlayer,
+        station,
+        stationIndex,
+        winnerId,
+        showTreasureOpportunity,
+        activeTreasure,
+        awardedTitle,
+        handleRoundComplete,
+        handleOpenTreasure,
+        handleDismissTreasure,
+        handleNextStation,
+    };
+}
 
+/* ═══════════════════════════════════════════════════════════
+   PLAY PAGE
+   ═══════════════════════════════════════════════════════════ */
+export default function PlayPage() {
+    const {
+        currentPlayer,
+        station,
+        stationIndex,
+        winnerId,
+        showTreasureOpportunity,
+        activeTreasure,
+        awardedTitle,
+        handleRoundComplete,
+        handleOpenTreasure,
+        handleDismissTreasure,
+        handleNextStation,
+    } = useGameSession(MOCK_PLAYERS, ALL_STATIONS);
+
+    /* ─── Session Ending Placeholder ─── */
+    if (winnerId) {
+        return (
+            <ScreenContainer className="justify-center items-center">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center gap-6 text-center max-w-sm"
+                >
+                    <div className="text-6xl">🎉</div>
+                    <Headline className="text-secondary text-3xl">الجلسة خلصت!</Headline>
+                    <Muted className="text-sm leading-relaxed">
+                        هنا هيتعمل الـ Session Ending Cinematic Reveal.
+                        (النقاط المخفية والكنوز هتتعرض واحد واحد).
+                    </Muted>
+                </motion.div>
+            </ScreenContainer>
+        );
+    }
 
     return (
         <ScreenContainer className="justify-center gap-0">
@@ -207,20 +278,23 @@ export default function PlayPage() {
                         <Label className="text-primary text-sm">
                             دور {currentPlayer.name}
                         </Label>
-                        <div
-                            className="
-                                flex items-center gap-1.5
-                                rounded-full
-                                border border-secondary/10
-                                bg-secondary/8
-                                px-2.5 py-0.5
-                            "
-                        >
-                            <span className="text-[10px]">⭐</span>
-                            <Label className="text-secondary text-[11px] tabular-nums">
-                                {currentStars}
-                            </Label>
-                        </div>
+                        {/* Visible treasure count only — no points or rarity */}
+                        {currentPlayer.treasures > 0 && (
+                            <div
+                                className="
+                                    flex items-center gap-1
+                                    rounded-full
+                                    border border-primary/10
+                                    bg-primary/8
+                                    px-2.5 py-0.5
+                                "
+                            >
+                                <span className="text-[10px]">🗝️</span>
+                                <Label className="text-primary text-[11px] tabular-nums">
+                                    {currentPlayer.treasures}
+                                </Label>
+                            </div>
+                        )}
                     </div>
                 </motion.div>
 
@@ -229,8 +303,7 @@ export default function PlayPage() {
                     ═══════════════════════════════════════════ */}
                 {showTreasureOpportunity ? (
                     <TreasureOpportunityCard
-                        playerStars={currentStars}
-                        treasure={activeTreasure}
+                        treasure={activeTreasure ? toHiddenTreasureReveal(activeTreasure) : null}
                         awardedTitle={awardedTitle}
                         onOpenTreasure={handleOpenTreasure}
                         onDismiss={handleDismissTreasure}
@@ -239,7 +312,6 @@ export default function PlayPage() {
                     <ActiveStationSurface
                         station={station}
                         playerName={currentPlayer.name}
-                        playerStars={currentStars}
                         onRoundComplete={handleRoundComplete}
                         onNextStation={handleNextStation}
                     />

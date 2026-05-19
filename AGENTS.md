@@ -321,12 +321,15 @@ Treasures are:
 - rare magical moments
 - meta progression rewards
 - emotional discoveries
+- mystery capsules of wonder
 
 Treasures are NOT:
 
 - normal stations
 - score generators
 - extra question cards
+- visible loot systems
+- spreadsheet optimization targets
 
 Gameplay economy philosophy:
 
@@ -338,9 +341,16 @@ Normal Stations:
 
 Treasure Stations / Treasure Events:
 
-- consume stars
-- provide magical rewards
-- create emotional moments
+- appear ONLY when player has >= 7 stars (the maximum possible hidden cost)
+- look completely identical before opening — ALL rarities feel equally mysterious
+- consume hidden stars upon opening (cost is unknown until revealed)
+- provide magical rewards and emotional moments
+- remain paced and special — avoid treasure spam or constant interruptions
+
+Treasure reward balance:
+
+- ~70% emotional / atmospheric rewards (wisdom, secret, atmosphere, message)
+- ~30% gameplay modifiers (bonus stars, double-stars, bonus turn, title)
 
 Treasure rewards MAY include:
 
@@ -356,6 +366,7 @@ Treasure rewards MAY include:
 
 However:
 treasure rewards should NEVER create infinite progression inflation.
+Even common treasures should feel emotionally rewarding and magical.
 
 Treasure rewards should feel:
 
@@ -364,12 +375,20 @@ Treasure rewards should feel:
 - atmospheric
 - memorable
 - magical
+- surprising
 
 NOT:
 
+- predictable loot
 - loot grinding
 - farming systems
 - casino-like rewards
+- snowball economy
+
+Treasure pacing philosophy:
+Treasures should remain special, uncommon moments.
+Treasure appearance may scale with session progression, station difficulty, and hidden balancing.
+Avoid repetitive treasure interruptions that make them feel routine.
 
 ---
 
@@ -383,13 +402,39 @@ Treasure rarities:
 - rare
 - legendary
 
-Star cost by rarity:
+**HIDDEN RARITY RULE:**
+Rarity is COMPLETELY HIDDEN before opening.
+Before opening, ALL treasure opportunities look and feel identical.
+DO NOT show: rarity labels, rarity colors, different aura styles, different wording, or any visual hint of rarity before opening.
+Rarity is revealed ONLY after the player opens the treasure — as a cinematic discovery moment.
 
-- common: 3 stars
-- rare: 5 stars
-- legendary: 7 stars
+**HIDDEN STAR COSTS (consumed upon opening):**
 
-Higher rarity costs more stars but delivers more powerful and memorable rewards.
+- common: costs 3 stars (hidden until reveal)
+- rare: costs 5 stars (hidden until reveal)
+- legendary: costs 7 stars (hidden until reveal)
+
+The player never knows the cost before opening.
+Opening a treasure feels like an act of curiosity and trust.
+
+**HIDDEN TREASURE POINT VALUES (never shown during gameplay):**
+
+- common = 3 hidden points
+- rare = 5 hidden points
+- legendary = 7 hidden points
+
+Hidden points are accumulated silently.
+They are ONLY revealed at the session-end ceremony.
+
+**WIN CONDITION:**
+The session ends when a player reaches **21 hidden treasure points**.
+Players should NOT know their current point total or how close they are to winning.
+
+**HIDDEN WEIGHTED GENERATION:**
+Treasure rarity is determined by hidden weighted rolls.
+Default weights: common ~60%, rare ~28%, legendary ~12%.
+Difficulty bias shifts weights toward higher rarity — harder stations increase rare/legendary potential.
+7 stars does NOT guarantee legendary — it guarantees the player can afford any treasure they encounter.
 
 Legendary treasures are unique:
 
@@ -397,25 +442,18 @@ Legendary treasures are unique:
 - this makes every legendary discovery feel special and irreplaceable
 - the pickTreasureByRarity function accepts claimedLegendaryIds to exclude them
 
-Winning conditions:
-
-- 7 common treasures
-  OR
-- 5 rare treasures
-  OR
-- 3 legendary treasures
-
 Treasure rarity should feel:
 
-- magical
-- mysterious
-- emotionally exciting
+- mysterious before opening
+- emotionally exciting after revealing
+- cinematic and magical
 
 NOT:
 
+- visible rarity grinding
 - RPG farming
-- aggressive rarity systems
-- hyper-competitive loot systems
+- aggressive loot systems
+- hyper-competitive score tracking
 
 ---
 
@@ -430,23 +468,43 @@ Normal stations reward:
 Difficulty affects:
 
 - stars rewarded
-- treasure rarity potential
+- treasure rarity potential (via difficultyBias in pickTreasureByRarity)
 - treasure quality
 - gameplay complexity
 
-Rarity affects star cost:
+Hidden star costs by rarity (consumed on opening, unknown to player beforehand):
 
 - common treasures cost 3 stars
 - rare treasures cost 5 stars
 - legendary treasures cost 7 stars
 
+Hidden point values (accumulated silently, revealed at session end):
+
+- common = 3 points
+- rare = 5 points
+- legendary = 7 points
+
+Win threshold: 21 hidden treasure points.
+
+Visible player information during session:
+
+- star count (shown)
+- opened treasure count (shown as "🗝️ الكنوز المكتشفة: N")
+- current player turn (shown)
+
+Hidden from player during session:
+
+- rarity of opened treasures
+- hidden point total
+- proximity to win
+- star cost of upcoming treasure
+
 Example balancing philosophy:
 
-Easy:
+Normal:
 
-- safer
 - more common rewards
-- lower treasure rarity potential
+- lower legendary potential
 
 Medium:
 
@@ -455,58 +513,80 @@ Medium:
 
 Hard:
 
-- higher risk
+- higher legendary potential
 - stronger rewards
-- better legendary potential
+
+Legend:
+
+- significantly elevated rare/legendary chance
+- most emotionally intense treasure moments
 
 The system should encourage:
 
+- emotional curiosity
 - playful risk taking
-- curiosity
 - social interaction
+- mystery-first thinking
 
 NOT:
 
 - optimization grinding
-- hardcore min-maxing
+- spreadsheet min-maxing
+- anti-fun numeric obsession
 
 ---
 
 # Session Ending Philosophy
 
 The session ends when:
-a player satisfies one of the treasure rarity victory conditions.
+a player reaches **21 hidden treasure points**.
 
-Victory Conditions:
+Players do NOT know their exact hidden point total during the session.
+The win condition is a surprise — discovered via the session-end ceremony.
 
-- 3 legendary treasures
-  OR
-- 5 rare treasures
-  OR
-- 7 common treasures
+Session-End Treasure Reveal Ceremony:
+
+The ending should include a cinematic reveal sequence:
+
+1. Each player's opened treasures are revealed one by one
+2. Rarity of each treasure is disclosed for the first time
+3. Hidden point value of each treasure is shown
+4. Running total builds toward the winning player
+5. Winner is revealed with maximum emotional impact
+
+Example reveal lines:
+
+- "✨ مصطفى فتح كنز أسطوري... +7 نقاط كنوز"
+- "🗝️ الكنوز الكاملة: مصطفى = 21 نقطة"
+- "👑 مصطفى هو الفايز!"
 
 The ending should feel:
 
+- cinematic
 - warm
 - magical
 - celebratory
-- memorable
+- emotionally satisfying
+- socially memorable
 
 NOT:
 
 - hyper competitive
 - esports-like
-- leaderboard focused
+- scoreboard-heavy
+- number-obsessed
 
 The ending reveal may include:
 
+- treasure rarity reveals (first time player sees rarities)
+- hidden point accumulation reveal
+- winner announcement
 - player titles
-- magical memories
-- discovered treasures
-- special moments
+- magical session memories
 - emotional highlights
+- special moments
 
-Examples:
+Title examples:
 
 - "روح الجلسة"
 - "حارس الأسرار"
@@ -530,6 +610,17 @@ NOT:
 - crowded dashboards
 - aggressive mobile game UI
 
+**TREASURE UI RULES:**
+Before opening a treasure, the UI must be completely neutral and mysterious.
+DO NOT show: rarity labels, star costs, point values, different chest icons per rarity, different colors per rarity, or any visual leak of rarity.
+ALL treasure opportunities must look and feel identical before opening.
+The discovery moment is AFTER opening — preserve that magic.
+
+During gameplay, only show:
+- star count
+- opened treasure count ("🗝️ N") — count only, never points or rarity
+- player name and turn indicator
+
 Prioritize:
 
 - breathing room
@@ -538,6 +629,7 @@ Prioritize:
 - atmosphere
 - tactile interaction
 - emotional pacing
+- mystery preservation
 
 ---
 
@@ -573,6 +665,14 @@ Motion should support:
 - anticipation
 - warmth
 - reveal pacing
+- treasure suspense (neutral shimmer and dots during the revealing phase)
+- session-end ceremony (cinematic rarity reveal sequence)
+
+**TREASURE MOTION RULES:**
+Phase 1 (opportunity): uniform, calm float — no rarity-specific motion.
+Phase 2 (revealing): neutral shimmer and pulse dots — same for all rarities.
+Phase 3 (revealed): rarity-aware motion — common: gentle, rare: stronger, legendary: dramatic pulse and scale.
+The emotional intensity escalates only AFTER rarity is disclosed.
 
 ---
 

@@ -16,7 +16,6 @@ import { TinyMissionCard } from "./tiny-mission-card";
 interface ResultPhaseProps {
     station: Station;
     result: RoundResult;
-    playerStars: number;
     onNext: () => void;
 }
 
@@ -34,10 +33,8 @@ interface ResultPhaseProps {
 export function ResultPhase({
     station,
     result,
-    playerStars,
     onNext,
 }: ResultPhaseProps) {
-    const totalStars = playerStars + result.starsEarned;
 
     return (
         <motion.div
@@ -108,7 +105,7 @@ export function ResultPhase({
             )}
 
             {/* ── Reward summary ── */}
-            <RewardSummary result={result} totalStars={totalStars} />
+            <RewardSummary result={result} />
 
             {/* ── Tiny mission (wrong answers) ── */}
             {!result.isCorrect && result.tinyMission && (
@@ -122,7 +119,9 @@ export function ResultPhase({
             >
                 {result.isCorrect
                     ? "يلا المحطة الجاية 🚀"
-                    : "جرب تاني 💪"}
+                    : result.tinyMission
+                        ? "عملت المهمة! يلا نكمل 🚀"
+                        : "جرب تاني 💪"}
             </LanternButton>
         </motion.div>
     );

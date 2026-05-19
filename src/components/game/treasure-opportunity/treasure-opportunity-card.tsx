@@ -1,97 +1,39 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { CozyCard } from "@/components/ui/cozy-card";
 import { LanternButton } from "@/components/ui/lantern-button";
 import { Headline, Label, Muted, Body } from "@/components/ui/typography";
 
-import type { Treasure, TreasureRarity } from "@/types/treasure";
+import type { HiddenTreasureReveal } from "@/types/treasure";
 
 import {
     treasureCardEntrance,
     chestFloat,
     sparkle,
     rewardReveal,
-    starCountPulse,
     glowRing,
-    rareGlowRing,
-    legendaryGlowRing,
-    rareChestFloat,
-    legendaryChestFloat,
-    rareRewardReveal,
-    legendaryRewardReveal,
     legendaryEmojiPulse,
 } from "./motion";
 
-/* ─── Rarity config ─── */
-const RARITY_CONFIG: Record<TreasureRarity, {
-    chestIcon: string;
-    headline: string;
-    subtitle: string;
-    openLabel: string;
-    glowVariant: typeof glowRing;
-    floatVariant: typeof chestFloat;
-    revealVariant: typeof rewardReveal;
-    revealDuration: number;
-    glowColor: string;
-    glowSize: string;
-    borderAccent: string;
-    shimmerWidth: string;
-    sparkleCount: number;
-}> = {
-    common: {
-        chestIcon: "🎁",
-        headline: "فرصة كنز!",
-        subtitle: "عندك كنز ممكن تفتحه! هل تنفق نجومك عشان تكتشف اللي جوا؟",
-        openLabel: "افتح الكنز 🗝️",
-        glowVariant: glowRing,
-        floatVariant: chestFloat,
-        revealVariant: rewardReveal,
-        revealDuration: 900,
-        glowColor: "rgba(246,208,140,0.20)",
-        glowSize: "h-20 w-20",
-        borderAccent: "border-secondary/12",
-        shimmerWidth: "w-44",
-        sparkleCount: 3,
-    },
-    rare: {
-        chestIcon: "✨",
-        headline: "كنز نادر!",
-        subtitle: "كنز نادر ظهر! محتاج نجوم أكتر بس المكافأة تستاهل...",
-        openLabel: "افتح الكنز النادر 🗝️",
-        glowVariant: rareGlowRing,
-        floatVariant: rareChestFloat,
-        revealVariant: rareRewardReveal,
-        revealDuration: 1100,
-        glowColor: "rgba(168,130,255,0.22)",
-        glowSize: "h-24 w-24",
-        borderAccent: "border-primary/15",
-        shimmerWidth: "w-52",
-        sparkleCount: 4,
-    },
-    legendary: {
-        chestIcon: "👑",
-        headline: "كنز أسطوري!",
-        subtitle: "كنز أسطوري نادر بيظهر مرة واحدة! هل هتخاطر بكل نجومك؟",
-        openLabel: "افتح الكنز الأسطوري 👑",
-        glowVariant: legendaryGlowRing,
-        floatVariant: legendaryChestFloat,
-        revealVariant: legendaryRewardReveal,
-        revealDuration: 1400,
-        glowColor: "rgba(246,180,80,0.30)",
-        glowSize: "h-28 w-28",
-        borderAccent: "border-secondary/25",
-        shimmerWidth: "w-60",
-        sparkleCount: 5,
-    },
-};
+/* ─── Mystery messages shown BEFORE opening (all rarities identical) ─── */
+const MYSTERY_MESSAGES = [
+    "✨ فيه كنز غريب ظهر...",
+    "🗝️ حاسس إن فيه سر مستخبي...",
+    "🌙 واضح إن الليلة لسه مخبية حاجات...",
+    "✨ في الهوا حاجة غريبة...",
+    "🗝️ كنز ظهر فجأة...",
+];
+
+function pickMysteryMessage(): string {
+    return MYSTERY_MESSAGES[Math.floor(Math.random() * MYSTERY_MESSAGES.length)];
+}
 
 /* ─── Props ─── */
 interface TreasureOpportunityCardProps {
-    playerStars: number;
-    treasure: Treasure | null;
+    treasure: HiddenTreasureReveal | null;
     /** The randomly picked title for "title" reward type (set when treasure is opened) */
     awardedTitle?: string | null;
     onOpenTreasure: () => void;
@@ -102,45 +44,69 @@ interface TreasureOpportunityCardProps {
 type TreasurePhase = "opportunity" | "revealing" | "revealed";
 
 /**
- * TreasureOpportunityCard — the first treasure meta progression layer.
+ * TreasureOpportunityCard — hidden mystery treasure UX.
  *
- * Flow:
- *   1. Opportunity: magical chest presentation, star cost, two CTAs
- *   2. Revealing: brief cinematic pause (shimmer + floating sparkles)
- *   3. Revealed: the reward content with its emotional message
+ * MYSTERY RULES:
+ *   - Phase 1 (opportunity): ALL treasures look identical.
+ *     No rarity hints. No star cost. No color differences.
+ *     Only a mysterious atmospheric message and a single CTA.
+ *   - Phase 2 (revealing): neutral shimmer and suspense dots.
+ *     No rarity-specific wording or colors.
+ *   - Phase 3 (revealed): rarity is now revealed with full cinematic emotion.
+ *     The player experiences the discovery moment here.
  *
- * Parent orchestrator owns: star spending, reward selection, show/hide logic.
+ * Parent orchestrator owns: star spending, reward selection, show/hide.
  * This component owns: the three-phase visual flow, local animation state.
  *
  * Motion: calm, magical, cinematic. No aggressive popups. No flash.
  */
 export function TreasureOpportunityCard({
-    playerStars,
     treasure,
     awardedTitle,
     onOpenTreasure,
     onDismiss,
 }: TreasureOpportunityCardProps) {
-        const [phase, setPhase] = useState<TreasurePhase>("opportunity");
+    const [phase, setPhase] = useState<TreasurePhase>("opportunity");
+    const [mysteryMessage, setMysteryMessage] = useState<string>(() => pickMysteryMessage());
 
-    // Reset phase during rendering when treasure.id changes
-    const prevTreasureIdRef = useRef(treasure?.id);
-    if (prevTreasureIdRef.current !== treasure?.id) {
-        prevTreasureIdRef.current = treasure?.id;
-        setPhase("opportunity");
-    }
+    // Track the previous treasure id to detect a new treasure instance
+    const prevTreasureIdRef = useRef<string | undefined>(treasure?.id);
+    // Keep a ref to the reveal timeout so we can cancel it if needed
+    const revealTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    // When the treasure prop changes to a new instance, reset phase and pick a new message
+    useEffect(() => {
+        if (prevTreasureIdRef.current !== treasure?.id) {
+            prevTreasureIdRef.current = treasure?.id;
+            setPhase("opportunity");
+            setMysteryMessage(pickMysteryMessage());
+        }
+    }, [treasure?.id]);
 
-    const rarity = treasure?.rarity ?? "common";
-    const config = RARITY_CONFIG[rarity];
-    const starCost = treasure?.starsRequired ?? 3;
-    const canAfford = playerStars >= starCost;
+    // Clear any pending reveal timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (revealTimeoutRef.current !== null) {
+                clearTimeout(revealTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const handleOpen = () => {
-        if (!canAfford) return;
+        if (!treasure) return; // guard: should never be null when visible, but be safe
+
+        // Clear any pre-existing timeout before starting a new one
+        if (revealTimeoutRef.current !== null) {
+            clearTimeout(revealTimeoutRef.current);
+        }
+
         setPhase("revealing");
         onOpenTreasure();
-        setTimeout(() => setPhase("revealed"), config.revealDuration);
+
+        revealTimeoutRef.current = setTimeout(() => {
+            revealTimeoutRef.current = null;
+            setPhase("revealed");
+        }, treasure.cinematic.revealDuration);
     };
 
     return (
@@ -153,31 +119,40 @@ export function TreasureOpportunityCard({
                 exit="exit"
             >
                 <CozyCard className="relative overflow-hidden rounded-[32px] p-7 sm:p-8">
-                    {/* ═══ Ambient atmosphere (rarity-aware) ═══ */}
+                    {/* ═══ Ambient atmosphere ═══
+                        Phase 1 & 2: neutral warm glow — no rarity hints
+                        Phase 3: rarity-specific glow revealed after opening */}
                     <div
                         className="pointer-events-none absolute inset-0"
                         style={{
-                            background: rarity === "legendary"
-                                ? "radial-gradient(circle at center, rgba(246,180,80,0.22), transparent 60%)"
-                                : rarity === "rare"
-                                    ? "radial-gradient(circle at center, rgba(168,130,255,0.14), transparent 60%)"
-                                    : "radial-gradient(circle at center, rgba(246,208,140,0.15), transparent 60%)",
+                            background: phase === "revealed" && treasure
+                                ? `radial-gradient(circle at center, rgba(246,208,140,${treasure.cinematic.glowOpacity}), transparent 60%)`
+                                : "radial-gradient(circle at center, rgba(246,208,140,0.13), transparent 60%)",
                         }}
                     />
 
                     <div className="relative z-10 flex flex-col items-center gap-6">
-                        {/* ═══ Phase 1: OPPORTUNITY ═══ */}
+
+                        {/* ═══ Phase 1: OPPORTUNITY ═══
+                            All treasures look completely identical here.
+                            No rarity indicators. No cost. Pure mystery. */}
                         {phase === "opportunity" && (
                             <div className="flex flex-col items-center gap-5 w-full">
+                                {/* Uniform soft glow — same for all rarities */}
                                 <motion.div
-                                    variants={config.glowVariant}
+                                    variants={glowRing}
                                     animate="animate"
-                                    className={`pointer-events-none absolute top-6 left-1/2 -translate-x-1/2 ${config.glowSize} rounded-full bg-[radial-gradient(circle,${config.glowColor},transparent_70%)]`}
+                                    className="pointer-events-none absolute top-6 left-1/2 -translate-x-1/2 h-20 w-20 rounded-full bg-[radial-gradient(circle,rgba(246,208,140,0.18),transparent_70%)]"
                                 />
 
-                                <motion.div variants={config.floatVariant} animate="animate" className="text-5xl relative">
-                                    {config.chestIcon}
-                                    {Array.from({ length: config.sparkleCount }).map((_, i) => (
+                                {/* Uniform mystery chest — same for all rarities */}
+                                <motion.div
+                                    variants={chestFloat}
+                                    animate="animate"
+                                    className="text-5xl relative"
+                                >
+                                    🎁
+                                    {Array.from({ length: 3 }).map((_, i) => (
                                         <motion.span
                                             key={i}
                                             variants={sparkle(i)}
@@ -190,30 +165,19 @@ export function TreasureOpportunityCard({
                                     ))}
                                 </motion.div>
 
-                                <Headline className="text-secondary text-xl text-center">{config.headline}</Headline>
+                                {/* Mystery headline — same wording for ALL rarities */}
+                                <Headline className="text-secondary text-xl text-center">
+                                    كنز مجهول...
+                                </Headline>
 
+                                {/* Randomly chosen mystery message — stable per treasure instance */}
                                 <Muted className="text-sm text-center max-w-[280px]">
-                                    {config.subtitle}
+                                    {mysteryMessage}
                                 </Muted>
 
-                                <motion.div
-                                    variants={starCountPulse}
-                                    animate="animate"
-                                    className="flex items-center gap-2 rounded-full border border-secondary/15 bg-secondary/8 px-4 py-2"
-                                >
-                                    <span className="text-sm">⭐</span>
-                                    <Label className="text-secondary text-sm tabular-nums">{starCost} نجوم</Label>
-                                </motion.div>
-
-                                {playerStars < starCost && (
-                                    <Muted className="text-xs text-center text-muted-foreground/60">
-                                        محتاج {starCost - playerStars} نجوم كمان
-                                    </Muted>
-                                )}
-
-                                <div className="flex flex-col gap-3 w-full mt-1">
-                                    <LanternButton disabled={!canAfford} onClick={handleOpen} className="w-full">
-                                        {config.openLabel}
+                                <div className="flex flex-col gap-3 w-full mt-2">
+                                    <LanternButton onClick={handleOpen} className="w-full">
+                                        افتح الكنز 🗝️
                                     </LanternButton>
                                     <button
                                         onClick={onDismiss}
@@ -226,75 +190,71 @@ export function TreasureOpportunityCard({
                                             focus-visible:ring-2 focus-visible:ring-secondary/30
                                         "
                                     >
-                                        احتفظ بنجومي ✨
+                                        مش دلوقتي ✨
                                     </button>
                                 </div>
                             </div>
                         )}
 
-                        {/* ═══ Phase 2: REVEALING ═══ */}
+                        {/* ═══ Phase 2: REVEALING ═══
+                            Neutral suspense — no rarity wording or colors yet */}
                         {phase === "revealing" && (
                             <div className="flex flex-col items-center gap-5 py-4">
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className={`h-2.5 ${config.shimmerWidth} rounded-full bg-gradient-to-l from-secondary/10 via-secondary/25 to-secondary/10 bg-[length:200%_100%]`}
+                                    className="h-2.5 w-44 rounded-full bg-linear-to-l from-secondary/10 via-secondary/25 to-secondary/10 bg-[length:200%_100%]"
                                     style={{ animation: "shimmer 1.6s linear infinite" }}
                                 />
                                 <Muted className="text-sm animate-pulse">
-                                    {rarity === "legendary" ? "👑 الكنز الأسطوري بيتفتح..." : rarity === "rare" ? "✨ الكنز النادر بيتفتح..." : "🗝️ بيتفتح..."}
+                                    🗝️ الكنز بيتفتح...
                                 </Muted>
                                 <div className="flex gap-2">
-                                    {Array.from({ length: config.sparkleCount }).map((_, i) => (
+                                    {Array.from({ length: 3 }).map((_, i) => (
                                         <motion.div
                                             key={i}
                                             animate={{ y: [0, -5, 0], opacity: [0.4, 0.9, 0.4] }}
                                             transition={{ duration: 1, repeat: Infinity, delay: i * 0.2, ease: "easeInOut" as const }}
-                                            className={`h-1.5 w-1.5 rounded-full ${rarity === "legendary" ? "bg-secondary/60" : rarity === "rare" ? "bg-primary/50" : "bg-secondary/40"}`}
+                                            className="h-1.5 w-1.5 rounded-full bg-secondary/40"
                                         />
                                     ))}
                                 </div>
                             </div>
                         )}
 
-                        {/* ═══ Phase 3: REVEALED ═══ */}
+                        {/* ═══ Phase 3: REVEALED ═══
+                            Discovery moment. Full cinematic emotion. */}
                         {phase === "revealed" && treasure && (
                             <motion.div
-                                variants={config.revealVariant}
+                                variants={rewardReveal}
                                 initial="initial"
                                 animate="animate"
                                 className="flex flex-col items-center gap-5 w-full"
                             >
-                                {/* Emoji with legendary pulse */}
+                                {/* Emoji — subtle motion and size variance based on cinematic props */}
                                 <motion.span
-                                    variants={rarity === "legendary" ? legendaryEmojiPulse : undefined}
-                                    animate={rarity === "legendary" ? "animate" : undefined}
-                                    className={rarity === "legendary" ? "text-6xl" : rarity === "rare" ? "text-5xl" : "text-5xl"}
+                                    variants={treasure.cinematic.hasPulse ? legendaryEmojiPulse : undefined}
+                                    animate={treasure.cinematic.hasPulse ? "animate" : undefined}
+                                    className={treasure.cinematic.emojiSizeClass}
                                 >
                                     {treasure.emoji}
                                 </motion.span>
 
-                                {/* Rarity badge */}
-                                {treasure.rarity === "legendary" && (
-                                    <div className="flex items-center gap-1.5 rounded-full border border-secondary/25 bg-secondary/15 px-3.5 py-1">
-                                        <Label className="text-secondary text-xs font-medium">👑 أسطوري — بيظهر مرة واحدة!</Label>
-                                    </div>
-                                )}
-                                {treasure.rarity === "rare" && (
-                                    <div className="flex items-center gap-1.5 rounded-full border border-primary/18 bg-primary/10 px-3 py-1">
-                                        <Label className="text-primary text-xs">✨ نادر!</Label>
-                                    </div>
-                                )}
+                                {/* No explicit rarity badges. Rarity is felt, not read. */}
 
-                                <Headline className={rarity === "legendary" ? "text-secondary text-2xl text-center" : "text-secondary text-xl text-center"}>
+                                <Headline className={
+                                    treasure.cinematic.emojiSizeClass === "text-6xl" ? "text-secondary text-2xl text-center"
+                                  : treasure.cinematic.emojiSizeClass === "text-[52px]" ? "text-secondary text-[22px] text-center"
+                                  : "text-secondary text-xl text-center"
+                                }>
                                     {treasure.title}
                                 </Headline>
                                 <Muted className="text-xs text-center italic text-muted-foreground/60">{treasure.flavor}</Muted>
-                                <div className={`rounded-2xl border ${config.borderAccent} bg-secondary/6 px-5 py-4 text-center w-full`}>
+                                <div className="rounded-2xl border border-secondary/12 bg-secondary/6 px-5 py-4 text-center w-full">
                                     <Body className="text-foreground text-sm leading-relaxed">{treasure.description}</Body>
                                 </div>
 
-                                {/* Reward type indicator */}
+                                {/* Reward type indicators */}
                                 {treasure.reward.type === "double-stars" && (
                                     <Muted className="text-xs text-center">⭐⭐ النجوم مضاعفة!</Muted>
                                 )}
@@ -304,17 +264,17 @@ export function TreasureOpportunityCard({
                                 {treasure.reward.type === "title" && awardedTitle && (
                                     <Muted className="text-xs text-center">👑 لقب جديد: {awardedTitle}</Muted>
                                 )}
-                                {treasure.reward.type === "wisdom" && (
-                                    <Muted className="text-xs text-center">💡 حكمة</Muted>
+                                {treasure.reward.type === "wisdom" && treasure.reward.message && (
+                                    <Muted className="text-xs text-center italic">💡 {treasure.reward.message}</Muted>
                                 )}
-                                {treasure.reward.type === "secret" && (
-                                    <Muted className="text-xs text-center">🔮 سر مخفي</Muted>
+                                {treasure.reward.type === "secret" && treasure.reward.message && (
+                                    <Muted className="text-xs text-center">🔮 {treasure.reward.message}</Muted>
                                 )}
-                                {treasure.reward.type === "atmosphere" && (
-                                    <Muted className="text-xs text-center">✨ أجواء</Muted>
+                                {treasure.reward.type === "atmosphere" && treasure.reward.message && (
+                                    <Muted className="text-xs text-center">✨ {treasure.reward.message}</Muted>
                                 )}
 
-                                <LanternButton onClick={onDismiss} className="w-full">يلا كمل 🚀</LanternButton>
+                                <LanternButton onClick={onDismiss} className="w-full">يلا نكمل 🚀</LanternButton>
                             </motion.div>
                         )}
                     </div>

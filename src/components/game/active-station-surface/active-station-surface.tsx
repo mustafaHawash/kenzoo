@@ -19,7 +19,6 @@ import { ResultPhase } from "./result-phase";
 interface ActiveStationSurfaceProps {
     station: Station;
     playerName: string;
-    playerStars: number;
     onRoundComplete: (result: RoundResult) => void;
     onNextStation: () => void;
 }
@@ -54,7 +53,6 @@ const REVEAL_DELAY_MS = 800;
 export function ActiveStationSurface({
     station,
     playerName,
-    playerStars,
     onRoundComplete,
     onNextStation,
 }: ActiveStationSurfaceProps) {
@@ -168,7 +166,6 @@ export function ActiveStationSurface({
                             <ResultPhase
                                 station={station}
                                 result={roundResult}
-                                playerStars={playerStars}
                                 onNext={handleNext}
                             />
                         )}

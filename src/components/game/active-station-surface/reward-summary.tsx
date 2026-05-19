@@ -11,7 +11,6 @@ import { slideUp } from "./motion";
 
 interface RewardSummaryProps {
     result: RoundResult;
-    totalStars: number;
 }
 
 /**
@@ -20,7 +19,7 @@ interface RewardSummaryProps {
  * Shown inside ResultPhase when the answer is correct.
  * Pure visual component.
  */
-export function RewardSummary({ result, totalStars }: RewardSummaryProps) {
+export function RewardSummary({ result }: RewardSummaryProps) {
     return (
         <motion.div
             {...slideUp(0.15)}
@@ -44,9 +43,6 @@ export function RewardSummary({ result, totalStars }: RewardSummaryProps) {
                                 ? `+${result.starsEarned} نجوم`
                                 : "محاولة قريبة"}
                     </Label>
-                    <Muted className="text-[11px]">
-                        المجموع: {totalStars} ⭐
-                    </Muted>
                 </div>
             </div>
 
