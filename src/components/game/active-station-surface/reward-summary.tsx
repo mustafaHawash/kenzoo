@@ -34,13 +34,15 @@ export function RewardSummary({ result, totalStars }: RewardSummaryProps) {
         >
             <div className="flex items-center gap-3">
                 <span className="text-lg">
-                    {result.isCorrect ? "⭐" : "🌙"}
+                    {result.treasureUnlocked ? "🗝️" : result.isCorrect ? "⭐" : "🌙"}
                 </span>
                 <div className="flex flex-col">
                     <Label className="text-foreground text-sm">
-                        {result.isCorrect
-                            ? `+${result.starsEarned} نجوم`
-                            : "محاولة قريبة"}
+                        {result.treasureUnlocked
+                            ? "فرصة كنز!"
+                            : result.isCorrect
+                                ? `+${result.starsEarned} نجوم`
+                                : "محاولة قريبة"}
                     </Label>
                     <Muted className="text-[11px]">
                         المجموع: {totalStars} ⭐

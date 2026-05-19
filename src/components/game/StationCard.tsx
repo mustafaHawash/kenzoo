@@ -177,7 +177,7 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                                 duration: 3,
                                 repeat: Infinity,
                                 repeatDelay: 4,
-                                ease: "easeInOut",
+                                ease: "easeInOut" as const,
                             }}
                             className='
                     flex shrink-0

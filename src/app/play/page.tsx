@@ -1,15 +1,19 @@
 //app/play/page.tsx
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 
 import { ScreenContainer } from "@/components/ui/layout/screen-container";
 import { ActiveStationSurface } from "@/components/game/active-station-surface";
+import { TreasureOpportunityCard } from "@/components/game/treasure-opportunity";
 import { Label, Muted } from "@/components/ui/typography";
 
 import { eidQuizStations } from "@/content/themes/eid-el-adha/quiz";
 import { eidRiddleStations } from "@/content/themes/eid-el-adha/riddles";
+import { eidTreasures } from "@/content/themes/eid-el-adha/treasures";
+import { pickRandomTitle } from "@/content/themes/eid-el-adha/titles";
+import { pickTreasureByRarity, type Treasure } from "@/types/treasure";
 
 import type { Station } from "@/types/station";
 import type { Player } from "@/types/player";
@@ -57,6 +61,8 @@ const MOCK_PLAYERS: Player[] = [
 
 const ALL_STATIONS: Station[] = [...eidQuizStations, ...eidRiddleStations];
 
+/* ─── Treasure economy (MVP) ─── */
+
 /* ─── Animation ─── */
 const floatBob = {
     animate: {
@@ -76,17 +82,40 @@ export default function PlayPage() {
         () => Object.fromEntries(MOCK_PLAYERS.map((p) => [p.id, p.stars]))
     );
 
+    /* ─── Treasure opportunity state ─── */
+    const [showTreasureOpportunity, setShowTreasureOpportunity] = useState(false);
+    const [activeTreasure, setActiveTreasure] = useState<Treasure | null>(null);
+    const [awardedTitle, setAwardedTitle] = useState<string | null>(null);
+    const [lastRoundResult, setLastRoundResult] = useState<RoundResult | null>(null);
+    const [claimedLegendaryIds, setClaimedLegendaryIds] = useState<string[]>([]);
+
     const currentPlayer = MOCK_PLAYERS[currentPlayerIndex];
     const station = ALL_STATIONS[stationIndex % ALL_STATIONS.length];
+
+    /* ─── Derived ─── */
+    const currentStars = playerStars[currentPlayer.id] ?? currentPlayer.stars;
 
     /* ─── Round complete handler ─── */
     const handleRoundComplete = useCallback(
         (result: RoundResult) => {
-            if (result.starsEarned > 0) {
+            // Stations with treasure opportunity give 0 stars
+            // Treasures consume stars — rewards are emotional and magical
+            if (result.starsEarned > 0 && !result.treasureUnlocked) {
                 setPlayerStars((prev) => ({
                     ...prev,
                     [currentPlayer.id]: (prev[currentPlayer.id] ?? 0) + result.starsEarned,
                 }));
+            }
+
+            setLastRoundResult(result);
+
+            // Check if treasure opportunity should appear
+            if (result.isCorrect && result.treasureUnlocked) {
+                const treasure = pickTreasureByRarity(eidTreasures, claimedLegendaryIds);
+                if (currentStars >= treasure.starsRequired) {
+                    setActiveTreasure(treasure);
+                    setShowTreasureOpportunity(true);
+                }
             }
 
             console.log("Round complete:", {
@@ -97,8 +126,38 @@ export default function PlayPage() {
                 treasureUnlocked: result.treasureUnlocked,
             });
         },
-        [currentPlayer, station]
+        [currentPlayer, station, currentStars, claimedLegendaryIds]
     );
+
+    /* ─── Open treasure: spend stars, apply reward ─── */
+    const handleOpenTreasure = useCallback(() => {
+        if (!activeTreasure) return;
+
+        // Spend stars to open the treasure
+        setPlayerStars((prev) => ({
+            ...prev,
+            [currentPlayer.id]: Math.max(0, (prev[currentPlayer.id] ?? 0) - activeTreasure.starsRequired),
+        }));
+
+        // Mark legendary as claimed (unique — never appears again)
+        if (activeTreasure.rarity === "legendary") {
+            setClaimedLegendaryIds((prev) => [...prev, activeTreasure.id]);
+        }
+
+        // Pick a random title if the treasure rewards a title
+        if (activeTreasure.reward.type === "title") {
+            const title = pickRandomTitle(currentPlayer.titles);
+            setAwardedTitle(title);
+            // TODO: persist title to player when session state is centralized
+        }
+    }, [currentPlayer, activeTreasure]);
+
+    /* ─── Dismiss treasure (keep stars or continue after reveal) ─── */
+    const handleDismissTreasure = useCallback(() => {
+        setShowTreasureOpportunity(false);
+        setActiveTreasure(null);
+        setAwardedTitle(null);
+    }, []);
 
     /* ─── Next station handler ─── */
     const handleNextStation = useCallback(() => {
@@ -106,10 +165,14 @@ export default function PlayPage() {
         setStationIndex((prev) => prev + 1);
         // Rotate to next player
         setCurrentPlayerIndex((prev) => (prev + 1) % MOCK_PLAYERS.length);
+        // Clear treasure state
+        setShowTreasureOpportunity(false);
+        setActiveTreasure(null);
+        setAwardedTitle(null);
+        setLastRoundResult(null);
     }, []);
 
-    /* ─── Derived ─── */
-    const currentStars = playerStars[currentPlayer.id] ?? currentPlayer.stars;
+
 
     return (
         <ScreenContainer className="justify-center gap-0">
@@ -120,7 +183,7 @@ export default function PlayPage() {
                 <motion.div
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, ease: "easeOut" }}
+                    transition={{ duration: 0.35, ease: "easeOut" as const }}
                     className="flex justify-center"
                 >
                     <div
@@ -162,15 +225,25 @@ export default function PlayPage() {
                 </motion.div>
 
                 {/* ═══════════════════════════════════════════
-                    🃏 ACTIVE GAMEPLAY SURFACE
+                    🃏 ACTIVE GAMEPLAY SURFACE / TREASURE OPPORTUNITY
                     ═══════════════════════════════════════════ */}
-                <ActiveStationSurface
-                    station={station}
-                    playerName={currentPlayer.name}
-                    playerStars={currentStars}
-                    onRoundComplete={handleRoundComplete}
-                    onNextStation={handleNextStation}
-                />
+                {showTreasureOpportunity ? (
+                    <TreasureOpportunityCard
+                        playerStars={currentStars}
+                        treasure={activeTreasure}
+                        awardedTitle={awardedTitle}
+                        onOpenTreasure={handleOpenTreasure}
+                        onDismiss={handleDismissTreasure}
+                    />
+                ) : (
+                    <ActiveStationSurface
+                        station={station}
+                        playerName={currentPlayer.name}
+                        playerStars={currentStars}
+                        onRoundComplete={handleRoundComplete}
+                        onNextStation={handleNextStation}
+                    />
+                )}
 
                 {/* ═══════════════════════════════════════════
                     📊 STATION PROGRESS

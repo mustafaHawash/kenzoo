@@ -1,41 +1,301 @@
 import { Treasure } from "@/types/treasure";
 
+/**
+ * Eid Al-Adha treasure pool — Egyptian common life flavor.
+ *
+ * Every treasure feels unique, fun, and worth the wait.
+ * Stations with treasure opportunity give 0 stars.
+ * Treasures consume stars — rewards are emotional and magical.
+ *
+ * Star cost by rarity:
+ *   - Common: 3 stars
+ *   - Rare: 5 stars
+ *   - Legendary: 7 stars
+ *
+ * Legendary treasures are unique — once claimed, they never appear again.
+ *
+ * Rarity distribution:
+ *   - Common (60%): small rewards, warm feelings
+ *   - Rare (28%): meaningful rewards, memorable moments
+ *   - Legendary (12%): extraordinary, once-in-a-session moments
+ */
 export const eidTreasures: Treasure[] = [
+    /* ═══ COMMON (3 stars) — warm feelings, small discoveries ═══ */
+
     {
-        id: "treasure-001",
-
-        title: "📦 صندوق المفاجأة",
-
-        description: "وجدت صندوقًا صغيرًا مليئًا بالمفاجآت ✨",
-
+        id: "eid-common-001",
+        emoji: "📦",
+        title: "طرد البوسطة",
+        flavor: "بوسطة وصلت والطرد لماع... إيه جوا؟",
+        description: "لقيت رسالة حلوة جوا الطرد! الحظ حلو النهاردة ✨",
         starsRequired: 3,
-
-        reward: "stars",
+        rarity: "common",
+        reward: { type: "wisdom", message: "الحياة حلوة لما تتعلم تقدر كل لحظة" },
+    },
+    {
+        id: "eid-common-002",
+        emoji: "🫖",
+        title: "كوباية شاي",
+        flavor: "كوباية شاي بتربّع على الترابيزة...",
+        description: "شاي كشك بيقولك: اللي بيزرع خير بيحصد حب 🫖",
+        starsRequired: 3,
+        rarity: "common",
+        reward: { type: "wisdom", message: "اللي بيزرع خير بيحصد حب" },
+    },
+    {
+        id: "eid-common-003",
+        emoji: "🥜",
+        title: "فول مدمس",
+        flavor: "طبق فول طالع من حتة ماتتتوقعهاش...",
+        description: "الفول بيقوّي — وبيديك طاقة تكمل! 🥜",
+        starsRequired: 3,
+        rarity: "common",
+        reward: { type: "atmosphere", message: "ريحة الفول بتعبي المكان بدفء" },
+    },
+    {
+        id: "eid-common-004",
+        emoji: "🕊️",
+        title: "حمامة السلام",
+        flavor: "حمامة طارت وحطت على كتفك...",
+        description: "السلام الحقيقي بييجي من جواك — استنى الحلو 🕊️",
+        starsRequired: 3,
+        rarity: "common",
+        reward: { type: "wisdom", message: "السلام الحقيقي بييجي من جواك" },
+    },
+    {
+        id: "eid-common-005",
+        emoji: "🌸",
+        title: "عبير البيت",
+        flavor: "ريحة حلو طلعت من البيت...",
+        description: "البيت بيتك والحلو فيه — ريحة البيت بتريّح 🌸",
+        starsRequired: 3,
+        rarity: "common",
+        reward: { type: "atmosphere", message: "عبير البيت بيغمر المكان بالحنان" },
+    },
+    {
+        id: "eid-common-006",
+        emoji: "📚",
+        title: "كتاب الحكمة",
+        flavor: "كتاب قديم تحت المخدة...",
+        description: "العلم نور — والنور بيديك طاقة 📚",
+        starsRequired: 3,
+        rarity: "common",
+        reward: { type: "wisdom", message: "العلم نور — والنور بيديك طاقة" },
+    },
+    {
+        id: "eid-common-007",
+        emoji: "☕",
+        title: "فنجان قهوة",
+        flavor: "فنجان قهوة على المانة...",
+        description: "القهوة بتصحّى — وبتديك طاقة تكمل! ☕",
+        starsRequired: 3,
+        rarity: "common",
+        reward: { type: "wisdom", message: "كل فنجان قهوة بيبدا حكاية جديدة" },
+    },
+    {
+        id: "eid-common-008",
+        emoji: "🧆",
+        title: "طبق كشري",
+        flavor: "طبق كشري طالع من حتة ماتتتوقعهاش...",
+        description: "الكشري بيقوّي القلب — والقلب القوي بيكمل! 🧆",
+        starsRequired: 3,
+        rarity: "common",
+        reward: { type: "atmosphere", message: "نكهة الكشري بتملا المكان بحب" },
+    },
+    {
+        id: "eid-common-009",
+        emoji: "🌙",
+        title: "همسة هلال",
+        flavor: "الهلال همسلك حاجة في السكوت...",
+        description: "كل بداية حلوة بتنور من جواك 🌙",
+        starsRequired: 3,
+        rarity: "common",
+        reward: { type: "wisdom", message: "كل بداية حلوة بتنور من جواك" },
     },
 
+    /* ═══ RARE (5 stars) — noticeable excitement ═══ */
+
     {
-        id: "treasure-002",
-
-        title: "🗝️ مفتاح الكنز",
-
-        description: "وجدت مفتاحًا ذهبيًا غامضًا",
-
+        id: "eid-rare-001",
+        emoji: "🗝️",
+        title: "مفتاح دهبي",
+        flavor: "مفتاح دهبي لمع في إيدك...",
+        description: "المفتاح فتح باب سر — فيه حاجة حلوة مستنياك! 🗝️",
         starsRequired: 5,
-
-        reward: "double-stars",
+        rarity: "rare",
+        reward: { type: "secret", message: "الباب السري بيفتح للي بيستنى الحلو" },
     },
+    {
+        id: "eid-rare-002",
+        emoji: "📜",
+        title: "ورقة الحكمة",
+        flavor: "ورقة قديمة طايرة في الهوا... مكتوب عليها إيه؟",
+        description: "الصبر مفتاح الفرج — والفرج قريب 📜",
+        starsRequired: 5,
+        rarity: "rare",
+        reward: { type: "wisdom", message: "الصبر مفتاح الفرج — والفرج قريب" },
+    },
+    {
+        id: "eid-rare-003",
+        emoji: "⭐",
+        title: "نجمة مضاعفة",
+        flavor: "نجمة طلعت من السما ونزلت عليك...",
+        description: "الإجابة الصح الجاية هتديك نجوم مضاعفة! ⭐⭐",
+        starsRequired: 5,
+        rarity: "rare",
+        reward: { type: "double-stars" },
+    },
+    {
+        id: "eid-rare-004",
+        emoji: "🎯",
+        title: "دورة إضافية",
+        flavor: "حسيت إنك مش عايز تقف...",
+        description: "عندك دور كمان! العب مرة تانية على حسابنا 🎯",
+        starsRequired: 5,
+        rarity: "rare",
+        reward: { type: "bonus-turn" },
+    },
+    {
+        id: "eid-rare-005",
+        emoji: "🫕",
+        title: "حلويات العيد",
+        flavor: "طبق حلويات ظهر فجأة... كنافة وبسبوسة!",
+        description: "كل يوم فرصة جديدة تبدأ فيه من تاني — زي أول لقمة حلو 🫕",
+        starsRequired: 5,
+        rarity: "rare",
+        reward: { type: "wisdom", message: "كل يوم فرصة جديدة تبدأ فيه من تاني" },
+    },
+    {
+        id: "eid-rare-006",
+        emoji: "🌙",
+        title: "هلال الحظ",
+        flavor: "هلال العيد لمع في السما وقالك حاجة...",
+        description: "الهلال بيبشّر بالحلو — استنى الفرحة! 🌙",
+        starsRequired: 5,
+        rarity: "rare",
+        reward: { type: "atmosphere", message: "نور الهلال بيضوي المكان بأمل" },
+    },
+    {
+        id: "eid-rare-007",
+        emoji: "🐑",
+        title: "كبش البركة",
+        flavor: "كبش العيد ظهر فجأة وقالك حاجة...",
+        description: "البركة في الصبر — والصبر بيجيب فرج 🐑",
+        starsRequired: 5,
+        rarity: "rare",
+        reward: { type: "wisdom", message: "البركة في الصبر — والصبر بيجيب فرج" },
+    },
+    {
+        id: "eid-rare-008",
+        emoji: "🏠",
+        title: "مفتاح البيت",
+        flavor: "مفتاح دهبي للبيت الكبير...",
+        description: "البيت مفتوح — ادخل واقعد معانا! 🏠",
+        starsRequired: 5,
+        rarity: "rare",
+        reward: { type: "wisdom", message: "البيت اللي فيه حب مابيقفلش بابه" },
+    },
+
+    /* ═══ LEGENDARY (7 stars) — unforgettable, unique moments ═══ */
 
     {
-        id: "treasure-003",
-
-        title: "🌙 كنز العيد",
-
-        description: "كنز خاص بأجواء عيد الأضحى",
-
+        id: "eid-legendary-001",
+        emoji: "🏆",
+        title: "كنز العيد",
+        flavor: "الأرض اهتزت... وكنز العيد ظهر!",
+        description: "كنز العيد مبيظهرش كتير — أنت نورت المكان! 🏆",
         starsRequired: 7,
-
-        reward: "real-gift",
+        rarity: "legendary",
+        reward: { type: "secret", message: "كنز العيد الحقيقي هو الناس اللي حواليك" },
     },
-
-    
+    {
+        id: "eid-legendary-002",
+        emoji: "👑",
+        title: "تاج العيد",
+        flavor: "تاج دهبي نزل من السما...",
+        description: "حصلت على لقب جديد 👑 — أنت أسطورة!",
+        starsRequired: 7,
+        rarity: "legendary",
+        reward: { type: "title" },
+    },
+    {
+        id: "eid-legendary-003",
+        emoji: "🔮",
+        title: "كرة السر",
+        flavor: "كرة بلورية لمعت في الضلمة...",
+        description: "في سر مخفي في الليلة دي — العب كمان وهتكتشفه 🔮",
+        starsRequired: 7,
+        rarity: "legendary",
+        reward: { type: "secret", message: "في سر مخفي في الليلة دي — العب كمان وهتكتشفه" },
+    },
+    {
+        id: "eid-legendary-004",
+        emoji: "💎",
+        title: "لؤلؤة النيل",
+        flavor: "لؤلؤة نادرة طلعت من قاع النيل...",
+        description: "حصلت على لقب جديد 💎 — أنت كنز حقيقي!",
+        starsRequired: 7,
+        rarity: "legendary",
+        reward: { type: "title" },
+    },
+    {
+        id: "eid-legendary-005",
+        emoji: "🕌",
+        title: "أذان الفجر",
+        flavor: "صوت الأذان رنّ في السكوت...",
+        description: "حصلت على لقب جديد 🕌 — صوتك نور!",
+        starsRequired: 7,
+        rarity: "legendary",
+        reward: { type: "title" },
+    },
+    {
+        id: "eid-legendary-006",
+        emoji: "🫖",
+        title: "إبريق الشاي الذهبي",
+        flavor: "إبريق شاي دهبي ظهر من حتة ماتتتوقعهاش...",
+        description: "حصلت على لقب جديد 🫖 — أنت سلطان المضافة!",
+        starsRequired: 7,
+        rarity: "legendary",
+        reward: { type: "title" },
+    },
+    {
+        id: "eid-legendary-007",
+        emoji: "🎓",
+        title: "شهادة الحكمة",
+        flavor: "شهادة قديمة مكتوب عليها اسمك...",
+        description: "حصلت على لقب جديد 🎓 — عقلك كنز!",
+        starsRequired: 7,
+        rarity: "legendary",
+        reward: { type: "title" },
+    },
+    {
+        id: "eid-legendary-008",
+        emoji: "🤲",
+        title: "دعوة أمي",
+        flavor: "حسيت بدفء دعوة أمي...",
+        description: "حصلت على لقب جديد 🤲 — أغلى كنز في الدنيا!",
+        starsRequired: 7,
+        rarity: "legendary",
+        reward: { type: "title" },
+    },
+    {
+        id: "eid-legendary-009",
+        emoji: "🎊",
+        title: "فرحة العيد",
+        flavor: "فرحة كبيرة غمرت المكان كله...",
+        description: "فرحة العيد غمرت المكان! 🎊 — العيد سعيد!",
+        starsRequired: 7,
+        rarity: "legendary",
+        reward: { type: "atmosphere", message: "فرحة العيد بتنور كل مكان بتعديه" },
+    },
+    {
+        id: "eid-legendary-010",
+        emoji: "🏠",
+        title: "عمدة الحارة",
+        flavor: "كل الناس في الحارة بيقولك: أنت العمدة!",
+        description: "حصلت على لقب جديد 🏠 — أنت زعيم!",
+        starsRequired: 7,
+        rarity: "legendary",
+        reward: { type: "title" },
+    },
 ];

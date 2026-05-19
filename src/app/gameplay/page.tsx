@@ -113,12 +113,12 @@ export default function GameplayScreen() {
                     {/* Player greeting */}
                     <Headline className="text-foreground text-2xl font-bold leading-tight">
                         دورك يا{" "}
-                        <span className="bg-gradient-to-l from-amber-500 via-secondary to-amber-600 bg-clip-text text-transparent">
+                        <span className="bg-linear-to-l from-amber-500 via-secondary to-amber-600 bg-clip-text text-transparent">
                             {"اسم اللاعب"}
                         </span>
                     </Headline>
 
-                    <Body className="text-muted-foreground text-sm leading-relaxed max-w-[280px]">
+                    <Body className="text-muted-foreground text-sm leading-relaxed max-w-70">
                         اختار المحطة اللي تعجبك واكتشف الكنز 🗝️
                     </Body>
                 </motion.header>
@@ -153,17 +153,17 @@ export default function GameplayScreen() {
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${progressPercent}%` }}
-                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
-                            className="absolute inset-y-0 right-0 rounded-full bg-gradient-to-l from-secondary via-amber-400 to-secondary/80"
+                            transition={{ duration: 0.8, ease: "easeOut" as const, delay: 0.5 }}
+                            className="absolute inset-y-0 right-0 rounded-full bg-linear-to-l from-secondary via-amber-400 to-secondary/80"
                         />
                         {/* Shimmer effect */}
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${progressPercent}%` }}
-                            transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
+                            transition={{ duration: 0.8, ease: "easeOut" as const, delay: 0.5 }}
                             className="absolute inset-y-0 right-0 overflow-hidden rounded-full"
                         >
-                            <div className="absolute inset-0 bg-gradient-to-l from-transparent via-white/20 to-transparent animate-pulse" />
+                            <div className="absolute inset-0 bg-linear-to-l from-transparent via-white/20 to-transparent animate-pulse" />
                         </motion.div>
                     </div>
                 </motion.div>
@@ -187,7 +187,7 @@ export default function GameplayScreen() {
                                     <Headline className="text-foreground text-base font-semibold">
                                         {sectionMeta.label}
                                     </Headline>
-                                    <div className="h-px flex-1 bg-gradient-to-l from-transparent via-border to-transparent" />
+                                    <div className="h-px flex-1 bg-linear-to-l from-transparent via-border to-transparent" />
                                     <Muted className="text-xs tabular-nums">
                                         {stations.length}
                                     </Muted>
@@ -222,9 +222,9 @@ export default function GameplayScreen() {
                 >
                     {/* Decorative divider */}
                     <div className="flex items-center gap-3 w-full">
-                        <div className="h-px flex-1 bg-gradient-to-l from-transparent via-secondary/20 to-transparent" />
+                        <div className="h-px flex-1 bg-linear-to-l from-transparent via-secondary/20 to-transparent" />
                         <span className="text-secondary/30 text-xs">✦</span>
-                        <div className="h-px flex-1 bg-gradient-to-r from-transparent via-secondary/20 to-transparent" />
+                        <div className="h-px flex-1 bg-linear-to-r from-transparent via-secondary/20 to-transparent" />
                     </div>
 
                     <Muted className="text-xs text-center leading-relaxed">

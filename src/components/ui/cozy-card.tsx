@@ -29,7 +29,7 @@ function CozyCard({
                 "after:inset-px",
                 "after:rounded-[30px]",
                 "after:border",
-                "after:border-white/[0.08]",
+                "after:border-white/8",
                 "after:pointer-events-none",
                 "after:content-['']",
 
