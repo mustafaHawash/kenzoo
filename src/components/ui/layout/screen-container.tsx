@@ -12,7 +12,7 @@ type ScreenContainerProps = PropsWithChildren<{
 export function ScreenContainer({ children, className }: ScreenContainerProps) {
     return (
         // Relative container to hold the absolute background
-        <div className="relative min-h-dvh w-full overflow-hidden bg-[var(--bg)]">
+        <div className="relative min-h-dvh w-full overflow-hidden bg-(--bg)">
             
             {/* Background Layer: Sits behind everything */}
             <AmbientBackground />

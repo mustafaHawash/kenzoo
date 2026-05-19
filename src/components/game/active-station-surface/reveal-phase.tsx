@@ -28,9 +28,9 @@ export function RevealPhase() {
                 animate="animate"
                 className="
                     h-2.5 w-44 rounded-full
-                    bg-gradient-to-l
+                    bg-linear-to-l
                     from-secondary/10 via-secondary/25 to-secondary/10
-                    bg-[length:200%_100%]
+                    bg-size-[200%_100%]
                 "
             />
 

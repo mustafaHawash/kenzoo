@@ -171,7 +171,7 @@ export function TreasureOpportunityCard({
                                 </Headline>
 
                                 {/* Randomly chosen mystery message — stable per treasure instance */}
-                                <Muted className="text-sm text-center max-w-[280px]">
+                                <Muted className="text-sm text-center max-w-70">
                                     {mysteryMessage}
                                 </Muted>
 
