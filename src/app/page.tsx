@@ -6,7 +6,7 @@ import { motion, type Variants } from "framer-motion";
 import { OpeningSceneAtmosphere } from "@/components/atmosphere/opening-scene-atmosphere";
 import { OpeningLanternMark } from "@/components/branding/opening-lantern-mark";
 import { LanternButton } from "@/components/ui/lantern-button";
-import { Body, Display, Muted } from "@/components/ui/typography";
+import { Body, Muted } from "@/components/ui/typography";
 
 const sceneVariants: Variants = {
     hidden: { opacity: 0 },
