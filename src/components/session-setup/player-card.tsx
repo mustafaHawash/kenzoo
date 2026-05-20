@@ -82,7 +82,6 @@ export function PlayerCard({
                         value={player.name}
                         onChange={(event) => onUpdate({ ...player, name: event.target.value })}
                         placeholder="الاسم"
-                        autoFocus
                         className={cn(
                             "h-9 flex-1 rounded-xl border bg-background/30 px-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/50",
                             validationError

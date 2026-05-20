@@ -95,9 +95,9 @@ export function PlayersStep({ setup, onSetupChange }: StepComponentProps) {
 
     /* ─── Players list with internal scrolling ─── */
     return (
-        <div className="flex flex-col gap-2.5">
-            {/* Scrollable player cards area */}
-            <div className="flex flex-col gap-2">
+        <div className="flex min-h-0 flex-1 flex-col gap-2">
+            {/* Scrollable player cards — contained region */}
+            <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain scrollbar-none">
                 {players.map((player, index) => (
                     <PlayerCard
                         key={player.id}
@@ -121,21 +121,23 @@ export function PlayersStep({ setup, onSetupChange }: StepComponentProps) {
                 ))}
             </div>
 
-            {/* Add player / capacity indicator */}
-            {!isAtMax ? (
-                <Button
-                    type="button"
-                    variant="ghost"
-                    className="h-11 border border-dashed border-secondary/22 bg-surface-elevated/18 text-sm text-muted-foreground hover:bg-secondary/8 hover:text-foreground"
-                    onClick={addPlayer}
-                >
-                    + ضيف حد للّيلة
-                </Button>
-            ) : (
-                <p className="py-1 text-center text-xs text-muted-foreground/50">
-                    اللمة كاملة — {SESSION_LIMITS.maxPlayers} لاعبين 🌙
-                </p>
-            )}
+            {/* Add player / capacity indicator — always visible */}
+            <div className="shrink-0">
+                {!isAtMax ? (
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        className="h-11 border border-dashed border-secondary/22 bg-surface-elevated/18 text-sm text-muted-foreground hover:bg-secondary/8 hover:text-foreground"
+                        onClick={addPlayer}
+                    >
+                        + ضيف حد للّيلة
+                    </Button>
+                ) : (
+                    <p className="py-1 text-center text-xs text-muted-foreground/50">
+                        اللمة كاملة — {SESSION_LIMITS.maxPlayers} لاعبين 🌙
+                    </p>
+                )}
+            </div>
         </div>
     );
 }
