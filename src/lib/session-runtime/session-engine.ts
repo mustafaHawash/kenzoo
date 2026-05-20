@@ -76,6 +76,12 @@ export type SessionState = {
      */
     isComplete: boolean;
 
+    /** 
+     * The pending treasure opportunity for the current player, if any.
+     * Strict isolation: the UI NEVER holds this in its own state.
+     */
+    activeTreasure: Treasure | null;
+
     /** Legendary treasure IDs already claimed this session — excluded from future rolls. */
     claimedLegendaryIds: string[];
 };
@@ -162,6 +168,7 @@ export function createSessionState(
         sessionLength,
         globalTurnIndex: 0,
         isComplete: false,
+        activeTreasure: null,
         claimedLegendaryIds: [],
     };
 }
@@ -213,10 +220,33 @@ export function advanceTurn(
         currentRound: nextRound,
         globalTurnIndex: state.globalTurnIndex + 1,
         isComplete,
+        activeTreasure: null,
     };
 }
 
-/* ─── Player Update ──────────────────────────────────────── */
+/* ─── Player & Turn Update ───────────────────────────────── */
+
+/**
+ * Applies the outcome of a player's turn to the session state.
+ * Captures the updated player and any resulting treasure opportunity.
+ *
+ * This strict boundary ensures the UI NEVER holds the raw Treasure
+ * in its own state variables.
+ */
+export function applyTurnOutcome(
+    state: SessionState,
+    outcome: import("./turn-engine").TurnOutcome,
+): SessionState {
+    const updatedPlayers = state.players.map((p, i) =>
+        i === state.currentPlayerIndex ? outcome.updatedPlayer : p,
+    );
+
+    return {
+        ...state,
+        players: updatedPlayers,
+        activeTreasure: outcome.treasureOpportunity,
+    };
+}
 
 /**
  * Applies an immutable player update to session state.
@@ -242,6 +272,9 @@ export function applyPlayerUpdate(
 /**
  * Applies a treasure opening to session state.
  *
+ * Consumes the internally tracked state.activeTreasure. The UI does not pass
+ * the treasure payload.
+ *
  * Deducts hidden star cost, records the opened treasure (for ceremony reveal),
  * and tracks legendary claims to exclude from future rolls.
  *
@@ -253,9 +286,11 @@ export function applyPlayerUpdate(
  */
 export function applyTreasureOpen(
     state: SessionState,
-    playerIndex: number,
-    treasure: Treasure,
 ): SessionState {
+    const treasure = state.activeTreasure;
+    if (!treasure) return state;
+
+    const playerIndex = state.currentPlayerIndex;
     const player = state.players[playerIndex];
     const { updatedPlayer } = resolveTreasureOpen(player, treasure);
 
@@ -272,6 +307,7 @@ export function applyTreasureOpen(
         ...state,
         players: updatedPlayers,
         claimedLegendaryIds,
+        activeTreasure: null, // Clear after opening
     };
 }
 

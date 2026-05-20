@@ -118,19 +118,19 @@ Theme Selection
 ↓
 Session Generation
 ↓
-Current Player Chooses Station
+Current Player Chooses a Mysterious Path
 ↓
-Active Station Gameplay
+Current Station in Path Opens
 ↓
-Reveal
+Gameplay Interaction Begins
 ↓
-Reward OR Tiny Mission
+Correct Answer: Advance in Path / Wrong Answer: Station Disappears & Turn Ends
 ↓
-Treasure Opportunity
+Possible Treasure Opportunity
 ↓
-Next Player
+Next Player Turn
 ↓
-Return To Station Selection
+Return to Player Journey Board
 ↓
 Loop for Fixed Rounds (default: 4 rounds per player)
 ↓
@@ -230,76 +230,106 @@ Replace numeric round selection with these named lengths.
 
 ---
 
-# Stations Philosophy
+# Player Journey Board Philosophy
 
-Stations are:
+The Player Journey Board is:
 
-- discoverable gameplay nodes
-- interaction opportunities
-- emotionally flavored moments
+- the magical session hub
+- the current player interaction board
+- the social gameplay surface
 
-Stations are NOT:
+It is NOT:
 
-- fixed linear steps
-- plain question cards
+- a station list
+- a dashboard
+- a progression spreadsheet
 
-A station may contain:
+During a player's turn, the gameplay flow is:
 
-- quiz interactions
-- riddles
-- story moments
-- memory interactions
-- mystery gameplay
-- tiny social challenges
-- treasure opportunities
-
-Players actively choose stations during the session.
-
-The station board should eventually feel:
-
-- magical
-- mysterious
-- atmospheric
-- partially discoverable
-
-NOT:
-
-- a plain list UI
-- a dashboard grid
+1. Player chooses ANY mysterious path
+2. Current station in that path opens
+3. Gameplay interaction begins
+4. Outcome:
+   - Correct answer: advance to next station in same path
+   - Wrong answer: current station disappears/skips, turn immediately ends
+5. Possible treasure opportunity
+6. Next player turn
+7. Return to Player Journey Board
 
 ---
 
-# Station Availability Philosophy
+# Path Philosophy
 
-Stations are dynamically available during sessions.
+Paths are:
+mysterious emotional journeys.
 
-Players do NOT necessarily see all stations at once.
+Paths are NOT:
+explicit difficulty tiers.
 
-Station availability may depend on:
+DO NOT create:
 
-- current player
-- age group
-- difficulty
-- progression
-- treasures
-- session state
-- theme
+- Easy
+- Medium
+- Hard
+- Expert
 
-The station board should eventually feel:
+Instead, paths should feel atmospheric and magical.
+Examples:
 
-- exploratory
-- magical
-- partially mysterious
-- progressively discoverable
+- 🌙 حكايات القمر
+- 🔮 الغرفة المقفولة
+- 🕯️ أسرار الليلة
+- 👁️ باب المجهول
+
+Internally, paths may contain:
+
+- hidden difficulty curves
+- hidden treasure potential
+- different emotional pacing
+
+BUT players NEVER see:
+
+- percentages
+- rarity rates
+- difficulty labels
+- optimization information
+
+---
+
+# Path Structure
+
+Each player receives:
+4 mysterious paths.
+
+Each path contains:
+number of stations equal to session length.
+
+Example:
+5-round session → each path contains 5 sequential stations.
+
+Stations inside a path remain sequential.
+Players may choose ANY path every turn.
+Players are NOT locked into one path.
+
+---
+
+# Gameplay Board Responsibilities
+
+The Player Journey Board (gameplay/page.tsx) should eventually support:
+
+- current player spotlight
+- path selection
+- subtle progression visualization
+- atmosphere continuity
+- session pacing
+- social anticipation
 
 Avoid:
 
-- static question lists
-- fully predictable station boards
-- exposing all gameplay content immediately
-
-Stations should feel like:
-discoverable interaction opportunities.
+- spreadsheet UI
+- visible economy systems
+- visible optimization systems
+- cluttered information density
 
 ---
 
@@ -376,7 +406,7 @@ NOT:
 
 Treasure pacing philosophy:
 Treasures should remain special, uncommon moments.
-Treasure appearance may scale with session progression, station difficulty, and hidden balancing.
+Treasure appearance may scale with session progression, hidden path difficulty, and hidden balancing.
 Avoid repetitive treasure interruptions that make them feel routine.
 
 ---
@@ -642,7 +672,7 @@ Phase order:
    Each player gets a cinematic spotlight moment.
    Revealed:
    - discovered treasures
-   - treasure rarities (FIRST TIME player sees them)
+   - treasure rarities (FIRST TIME player sees thier true rarity)
    - hidden points per treasure
    - titles earned
    - memorable highlights

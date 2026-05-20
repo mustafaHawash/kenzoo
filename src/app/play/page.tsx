@@ -23,7 +23,7 @@ import {
 import {
     createSessionState,
     advanceTurn,
-    applyPlayerUpdate,
+    applyTurnOutcome,
     applyTreasureOpen,
     createEndingCeremonyState,
     advanceCeremonyPhase,
@@ -118,7 +118,6 @@ function useGameSession(initialPlayers: Player[], stations: Station[]) {
 
     /* ─── Active treasure UI state ─── */
     const [showTreasureOpportunity, setShowTreasureOpportunity] = useState(false);
-    const [rawActiveTreasure, setRawActiveTreasure] = useState<Treasure | null>(null);
     const [awardedTitle, setAwardedTitle] = useState<string | null>(null);
     const [lastRoundResult, setLastRoundResult] = useState<RoundResult | null>(null);
 
@@ -126,7 +125,9 @@ function useGameSession(initialPlayers: Player[], stations: Station[]) {
     const station = stations[stationIndex % stations.length];
     
     // Exposed to UI: strictly isolated from hidden values
-    const activeTreasure = rawActiveTreasure ? toHiddenTreasureReveal(rawActiveTreasure) : null;
+    const activeTreasure = sessionState.activeTreasure 
+        ? toHiddenTreasureReveal(sessionState.activeTreasure) 
+        : null;
 
     /* ─── Resolve answer: pure resolution, no state side effects ─── */
     const handleResolveAnswer = useCallback(
@@ -142,20 +143,13 @@ function useGameSession(initialPlayers: Player[], stations: Station[]) {
         [currentPlayer, station, sessionState.claimedLegendaryIds],
     );
 
-    /* ─── Round complete: apply player update, show treasure if available ─── */
+    /* ─── Round complete: apply turn outcome, show treasure if available ─── */
     const handleRoundComplete = useCallback(
         (outcome: TurnOutcome) => {
-            setSessionState((prev) =>
-                applyPlayerUpdate(
-                    prev,
-                    prev.currentPlayerIndex,
-                    () => outcome.updatedPlayer,
-                ),
-            );
+            setSessionState((prev) => applyTurnOutcome(prev, outcome));
             setLastRoundResult(outcome.roundResult);
 
             if (outcome.treasureOpportunity) {
-                setRawActiveTreasure(outcome.treasureOpportunity);
                 setShowTreasureOpportunity(true);
             }
         },
@@ -164,23 +158,21 @@ function useGameSession(initialPlayers: Player[], stations: Station[]) {
 
     /* ─── Open treasure: delegate economy to session-engine, no instant win check ─── */
     const handleOpenTreasure = useCallback(() => {
-        if (!rawActiveTreasure) return;
+        const rawTreasure = sessionState.activeTreasure;
+        if (!rawTreasure) return;
 
-        setSessionState((prev) =>
-            applyTreasureOpen(prev, prev.currentPlayerIndex, rawActiveTreasure),
-        );
+        setSessionState((prev) => applyTreasureOpen(prev));
 
-        if (rawActiveTreasure.reward.type === "title") {
+        if (rawTreasure.reward.type === "title") {
             const title = pickRandomTitle(currentPlayer.titles);
             setAwardedTitle(title);
             // TODO: persist title to player record when session state is centralized
         }
-    }, [rawActiveTreasure, currentPlayer.titles]);
+    }, [sessionState.activeTreasure, currentPlayer.titles]);
 
     /* ─── Dismiss treasure ─── */
     const handleDismissTreasure = useCallback(() => {
         setShowTreasureOpportunity(false);
-        setRawActiveTreasure(null);
         setAwardedTitle(null);
     }, []);
 
@@ -197,7 +189,6 @@ function useGameSession(initialPlayers: Player[], stations: Station[]) {
 
         setStationIndex((prev) => prev + 1);
         setShowTreasureOpportunity(false);
-        setRawActiveTreasure(null);
         setAwardedTitle(null);
         setLastRoundResult(null);
     }, [lastRoundResult, sessionState]);
