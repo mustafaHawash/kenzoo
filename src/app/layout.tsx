@@ -35,6 +35,7 @@ export default function RootLayout({
         <html
             lang='ar'
             dir='rtl'
+            suppressHydrationWarning
             className={cn(
                 "h-full",
                 "antialiased",

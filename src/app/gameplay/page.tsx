@@ -3,6 +3,7 @@
 
 import { useMemo } from "react";
 import { motion, type Variants } from "framer-motion";
+import Image from "next/image";
 
 import { ScreenContainer } from "@/components/ui/layout/screen-container";
 import { StationCard } from "@/components/game/StationCard";
@@ -101,13 +102,19 @@ export default function GameplayScreen() {
                         </motion.span>
                     </div>
 
-                    {/* Crescent icon */}
+                    {/* Brand Logo */}
                     <motion.div
                         variants={floatVariants}
                         animate="animate"
-                        className="text-4xl select-none"
+                        className="relative h-24 w-24 select-none sm:h-28 sm:w-28"
                     >
-                        🌙
+                        <Image
+                            src="/Logo-PNG.webp"
+                            alt="Kenzoo Logo"
+                            fill
+                            priority
+                            className="object-contain drop-shadow-[0_6px_20px_rgba(216,179,106,0.25)]"
+                        />
                     </motion.div>
 
                     {/* Player greeting */}

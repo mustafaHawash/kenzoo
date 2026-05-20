@@ -3,6 +3,7 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 
 import { ScreenContainer } from "@/components/ui/layout/screen-container";
 import { ActiveStationSurface } from "@/components/game/active-station-surface";
@@ -264,15 +265,32 @@ function EndingCeremonyView({
                 transition={{ duration: 0.5, ease: "easeOut" }}
                 className="flex flex-col items-center gap-8 text-center max-w-sm px-6"
             >
-                {/* Phase emoji */}
-                <motion.div
-                    initial={{ scale: 0.85, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
-                    className="text-5xl"
-                >
-                    {CEREMONY_EMOJI[ceremony.phase]}
-                </motion.div>
+                {/* Phase emoji or Brand Logo */}
+                {ceremony.phase === "intro" || ceremony.phase === "closing" ? (
+                    <motion.div
+                        initial={{ scale: 0.85, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
+                        className="relative h-20 w-20 select-none"
+                    >
+                        <Image
+                            src="/Logo-PNG.webp"
+                            alt="Kenzoo Logo"
+                            fill
+                            priority
+                            className="object-contain drop-shadow-[0_4px_15px_rgba(216,179,106,0.2)]"
+                        />
+                    </motion.div>
+                ) : (
+                    <motion.div
+                        initial={{ scale: 0.85, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
+                        className="text-5xl"
+                    >
+                        {CEREMONY_EMOJI[ceremony.phase]}
+                    </motion.div>
+                )}
 
                 {/* Phase heading */}
                 <Headline className="text-secondary text-2xl">
@@ -408,13 +426,18 @@ export default function PlayPage() {
                             shadow-soft
                         "
                     >
-                        <motion.span
+                        <motion.div
                             variants={floatBob}
                             animate="animate"
-                            className="text-sm"
+                            className="relative h-5 w-5 select-none"
                         >
-                            ✨
-                        </motion.span>
+                            <Image
+                                src="/Logo-PNG.webp"
+                                alt="Kenzoo"
+                                fill
+                                className="object-contain"
+                            />
+                        </motion.div>
                         <Label className="text-primary text-sm">
                             دور {currentPlayer.name}
                         </Label>
