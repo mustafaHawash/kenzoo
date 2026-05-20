@@ -48,9 +48,12 @@ export const HIDDEN_POINTS_BY_RARITY: Record<TreasureRarity, number> = {
 
 
 /**
- * The hidden point threshold to win a session.
- * Players do NOT see this number during gameplay.
- * It is only revealed during the session-end ceremony.
+ * @deprecated
+ * The session NO LONGER ends when a player reaches this threshold.
+ * Sessions run for a fixed number of rounds (default: 4).
+ * The winner is the player with the most hidden points after all rounds complete.
+ *
+ * Preserved for reference only — do NOT use as an instant victory trigger.
  */
 export const HIDDEN_TREASURE_WIN_THRESHOLD = 21;
 
@@ -174,34 +177,25 @@ export function toHiddenTreasureReveal(treasure: Treasure): HiddenTreasureReveal
  * Pick a random treasure from a pool using hidden weighted generation.
  *
  * Default weights: Common 60%, Rare 28%, Legendary 12%
- * Difficulty bias shifts weights toward higher rarity.
+ * The game internally controls these weights for pacing (difficulty is an invisible system).
  *
  * Legendary treasures are unique — once claimed, they never appear again.
  * Pass claimedLegendaryIds to exclude them from the pool.
  *
  * IMPORTANT: 7 stars does NOT guarantee a legendary treasure.
- * Harder stations increase rare/legendary potential via difficultyBias.
  */
 export function pickTreasureByRarity(
     pool: Treasure[],
     claimedLegendaryIds: string[] = [],
-    difficultyBias: "normal" | "medium" | "hard" | "legend" = "normal",
 ): Treasure {
     // Exclude claimed legendary treasures
     const available = pool.filter(
         (t) => !(t.rarity === "legendary" && claimedLegendaryIds.includes(t.id)),
     );
 
-    // Weighted rarity thresholds — shifted by difficulty
-    // harder difficulty = higher chance of rare/legendary
-    const weights: Record<"normal" | "medium" | "hard" | "legend", { legendary: number; rare: number }> = {
-        normal: { legendary: 0.12, rare: 0.40 },
-        medium: { legendary: 0.18, rare: 0.52 },
-        hard: { legendary: 0.26, rare: 0.62 },
-        legend: { legendary: 0.35, rare: 0.72 },
-    };
-
-    const { legendary: legendaryThreshold, rare: rareThreshold } = weights[difficultyBias];
+    // Standard internal pacing weights (invisible to players)
+    const legendaryThreshold = 0.12;
+    const rareThreshold = 0.40;
     const roll = Math.random();
     let targetRarity: TreasureRarity;
 

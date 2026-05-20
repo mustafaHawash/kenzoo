@@ -1,6 +1,5 @@
 import type { OpenedTreasureRecord } from "./treasure";
 
-export type PlayerDifficulty = "normal" | "medium" | "hard" | "legend";
 
 export type PlayerAgeGroup = "kid" | "teen" | "adult";
 
@@ -16,8 +15,6 @@ export type Player = {
     age: number;
 
     ageGroup: PlayerAgeGroup;
-
-    difficulty: PlayerDifficulty;
 
     stars: number;
 

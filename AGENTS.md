@@ -132,7 +132,9 @@ Next Player
 ↓
 Return To Station Selection
 ↓
-Loop Until A Player Wins
+Loop for Fixed Rounds (default: 4 rounds per player)
+↓
+Loop Until All Rounds Complete
 ↓
 Session Ending
 ↓
@@ -192,52 +194,39 @@ friends sharing the same magical night together.
 
 ---
 
-# Difficulty Philosophy
+# New Gameplay Philosophy
 
-Difficulty is:
+Players choose ONLY:
 
-- flexible
-- player-driven
-- gameplay-affecting
+- name
+- avatar/icon
+- adult or child
+- session length
 
-Players may choose:
+The GAME internally controls:
 
-- one difficulty
-  OR
-- multiple difficulties together
+- hidden station difficulty
+- hidden treasure probability
+- hidden reward balancing
+- pacing
 
-Examples:
+Difficulty becomes:
+an invisible gameplay pacing system.
 
-- 🌿 عادي
-- 🔥 أصعب شوية
-- 🧠 صعب جدًا
-- 👑 ده انت جامد بقى
+NOT:
+a visible optimization system.
 
-Players may combine difficulties:
+---
 
-- normal + medium
-- medium + hard
+# Session Length Philosophy
 
-Difficulty should affect:
+Session length options:
 
-- station complexity
-- stars rewarded
-- treasure quality
-- treasure rarity potential
-- mystery depth
+- قصيرة 🌙 = 3 rounds
+- ليلة عادية ✨ = 4 rounds
+- سهرة طويلة 🔥 = 5 rounds
 
-Difficulty should NOT:
-
-- make the game frustrating
-- create unfair punishment
-- feel like ranked competitive gameplay
-
-The experience must remain:
-
-- cozy
-- social
-- magical
-- emotionally safe
+Replace numeric round selection with these named lengths.
 
 ---
 
@@ -403,10 +392,13 @@ Treasure rarities:
 - legendary
 
 **HIDDEN RARITY RULE:**
-Rarity is COMPLETELY HIDDEN before opening.
-Before opening, ALL treasure opportunities look and feel identical.
-DO NOT show: rarity labels, rarity colors, different aura styles, different wording, or any visual hint of rarity before opening.
-Rarity is revealed ONLY after the player opens the treasure — as a cinematic discovery moment.
+Rarity is COMPLETELY HIDDEN during gameplay.
+Treasure rewards/effects are revealed immediately upon opening, BUT:
+- rarity
+- hidden points
+- hidden scoring value
+remain hidden until the Final Ending Ceremony.
+DO NOT show: rarity labels, rarity colors, different aura styles, different wording, or any visual hint of rarity during the session.
 
 **HIDDEN STAR COSTS (consumed upon opening):**
 
@@ -426,14 +418,18 @@ Opening a treasure feels like an act of curiosity and trust.
 Hidden points are accumulated silently.
 They are ONLY revealed at the session-end ceremony.
 
-**WIN CONDITION:**
-The session ends when a player reaches **21 hidden treasure points**.
-Players should NOT know their current point total or how close they are to winning.
+**HIDDEN SCORING (SESSION-END REVEAL ONLY):**
+Hidden treasure points are final scoring weights — NOT instant victory triggers.
+The session runs for a fixed number of rounds (default: 4).
+All players complete all rounds. The session NEVER ends early.
+Hidden point totals are revealed ONLY during the ending ceremony.
+The player with the most hidden points at session end wins.
+Players do NOT know their point total or ranking during gameplay.
 
 **HIDDEN WEIGHTED GENERATION:**
 Treasure rarity is determined by hidden weighted rolls.
 Default weights: common ~60%, rare ~28%, legendary ~12%.
-Difficulty bias shifts weights toward higher rarity — harder stations increase rare/legendary potential.
+The game internally controls these weights for pacing (difficulty is an invisible system).
 7 stars does NOT guarantee legendary — it guarantees the player can afford any treasure they encounter.
 
 Legendary treasures are unique:
@@ -465,10 +461,10 @@ Normal stations reward:
 - treasure opportunities
 - emotional reveals
 
-Difficulty affects:
+Internal pacing affects:
 
 - stars rewarded
-- treasure rarity potential (via difficultyBias in pickTreasureByRarity)
+- treasure rarity potential
 - treasure quality
 - gameplay complexity
 
@@ -484,18 +480,24 @@ Hidden point values (accumulated silently, revealed at session end):
 - rare = 5 points
 - legendary = 7 points
 
-Win threshold: 21 hidden treasure points.
+Hidden points are final scoring weights.
+Revealed ONLY at the session-end ceremony.
+The player with the most hidden points after all rounds wins.
 
 Visible player information during session:
 
-- star count (shown)
-- opened treasure count (shown as "🗝️ الكنوز المكتشفة: N")
+- opened treasure count (shown as "🗝️ N")
 - current player turn (shown)
+- temporary cinematic reward feedback (e.g. "✨ +2 نجوم" which fades quickly)
+
+Players should NOT see persistent stars HUD.
+Hidden star totals remain internal to runtime systems.
 
 Hidden from player during session:
 
 - rarity of opened treasures
 - hidden point total
+- persistent star count
 - proximity to win
 - star cost of upcoming treasure
 
@@ -538,29 +540,34 @@ NOT:
 
 # Session Ending Philosophy
 
-The session ends when:
-a player reaches **21 hidden treasure points**.
+Sessions are fixed-length.
 
-Players do NOT know their exact hidden point total during the session.
-The win condition is a surprise — discovered via the session-end ceremony.
+The session ALWAYS completes all rounds.
 
-Session-End Treasure Reveal Ceremony:
+Default session structure:
 
-The ending should include a cinematic reveal sequence:
+- 4 rounds
+- each player plays once per round
 
-1. Each player's opened treasures are revealed one by one
-2. Rarity of each treasure is disclosed for the first time
-3. Hidden point value of each treasure is shown
-4. Running total builds toward the winning player
-5. Winner is revealed with maximum emotional impact
+Example:
+3 players × 4 rounds = 12 total turns
 
-Example reveal lines:
+The session does NOT end early.
+There is NO instant victory trigger during gameplay.
 
-- "✨ مصطفى فتح كنز أسطوري... +7 نقاط كنوز"
-- "🗝️ الكنوز الكاملة: مصطفى = 21 نقطة"
-- "👑 مصطفى هو الفايز!"
+Hidden treasure points are:
+FINAL SCORING WEIGHTS — not instant victory triggers.
 
-The ending should feel:
+The winner is revealed ONLY after all rounds complete,
+via the cinematic ending ceremony.
+
+Players should NEVER know during gameplay:
+
+- their exact hidden treasure points
+- their ranking
+- how close they are to winning
+
+The ending ceremony should feel:
 
 - cinematic
 - warm
@@ -576,22 +583,97 @@ NOT:
 - scoreboard-heavy
 - number-obsessed
 
-The ending reveal may include:
+---
 
-- treasure rarity reveals (first time player sees rarities)
-- hidden point accumulation reveal
-- winner announcement
-- player titles
-- magical session memories
-- emotional highlights
-- special moments
+# Fixed-Length Session Structure
 
-Title examples:
+Sessions run for a fixed number of rounds.
 
-- "روح الجلسة"
-- "حارس الأسرار"
-- "سيد الألغاز"
-- "حكّاء الليلة"
+Default:
+
+- 4 rounds total
+- each player plays once per round
+
+Total turns = number of players × total rounds
+
+Example:
+3 players × 4 rounds = 12 total turns
+
+Turn advancement:
+
+- after each turn, the next player plays (round-robin)
+- after all players play once, the round increments
+- after all rounds complete, the session ends
+
+The session is ALWAYS completed in full.
+No early termination. No instant win triggers.
+
+Session completion is tracked by:
+
+- currentRound
+- totalRounds
+- currentPlayerIndex
+- players.length
+
+This is orchestrated by:
+`session-engine.ts` → `advanceTurn()`
+
+---
+
+# Ending Ceremony Architecture
+
+The ending is a phase-driven orchestration system.
+
+Phase order:
+
+1. **intro**
+   "الليلة قربت تخلص..."
+
+2. **session-summary**
+   Total treasures discovered.
+   Rarity distribution revealed.
+   Example: "اكتشفتم 12 كنز — 2 أسطوري، 3 نادر، 7 عادي"
+
+3. **titles-reveal**
+   Earned titles revealed one by one.
+   Examples: حارس الأسرار، روح الجلسة، مكتشف الكنوز
+
+4. **player-reveals**
+   Each player gets a cinematic spotlight moment.
+   Revealed:
+   - discovered treasures
+   - treasure rarities (FIRST TIME player sees them)
+   - hidden points per treasure
+   - titles earned
+   - memorable highlights
+
+5. **ranking-reveal**
+   Rankings revealed progressively.
+   Last place revealed first.
+   Winner revealed last.
+
+6. **winner-reveal**
+   Final cinematic winner reveal.
+   Maximum emotional impact.
+
+7. **closing**
+   Optional emotional session memory or highlight.
+
+Implementation:
+
+Ending ceremony state is managed by:
+`EndingCeremonyState` in `session-engine.ts`
+
+Phase advancement via:
+`advanceCeremonyPhase()`
+
+Final scores computed by:
+`computeFinalScores()` — called ONLY when `session.isComplete === true`
+
+IMPORTANT:
+Do NOT build the final polished UI yet.
+Architecture is established.
+Rendering evolves incrementally.
 
 ---
 
@@ -617,7 +699,7 @@ ALL treasure opportunities must look and feel identical before opening.
 The discovery moment is AFTER opening — preserve that magic.
 
 During gameplay, only show:
-- star count
+- temporary cinematic reward feedback (e.g. "✨ +2 نجوم")
 - opened treasure count ("🗝️ N") — count only, never points or rarity
 - player name and turn indicator
 

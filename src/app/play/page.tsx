@@ -1,4 +1,4 @@
-//app/play/page.tsx
+// app/play/page.tsx
 "use client";
 
 import { useState, useCallback } from "react";
@@ -13,24 +13,30 @@ import { eidQuizStations } from "@/content/themes/eid-el-adha/quiz";
 import { eidRiddleStations } from "@/content/themes/eid-el-adha/riddles";
 import { eidTreasures } from "@/content/themes/eid-el-adha/treasures";
 import { pickRandomTitle } from "@/content/themes/eid-el-adha/titles";
-import {
-    pickTreasureByRarity,
-    toHiddenTreasureReveal,
-    type Treasure,
-} from "@/types/treasure";
+import { toHiddenTreasureReveal, type Treasure } from "@/types/treasure";
 
 import {
     resolveTurn,
-    resolveTreasureOpen,
-    resolveTurnEnd,
     type TurnOutcome,
 } from "@/lib/session-runtime/turn-engine";
+
+import {
+    createSessionState,
+    advanceTurn,
+    applyPlayerUpdate,
+    applyTreasureOpen,
+    createEndingCeremonyState,
+    advanceCeremonyPhase,
+    getSessionProgressLabel,
+    type SessionState,
+    type EndingCeremonyState,
+} from "@/lib/session-runtime/session-engine";
 
 import type { Station } from "@/types/station";
 import type { Player } from "@/types/player";
 import type { RoundResult } from "@/types/session";
 
-/* ─── Mock data (replace with real session context) ─── */
+/* ─── Mock data (replace with real session context) ──────── */
 const MOCK_PLAYERS: Player[] = [
     {
         id: "player-1",
@@ -38,7 +44,6 @@ const MOCK_PLAYERS: Player[] = [
         gender: "male",
         age: 25,
         ageGroup: "adult",
-        difficulty: "normal",
         stars: 27,
         treasures: 2,
         completedMissions: 2,
@@ -51,7 +56,6 @@ const MOCK_PLAYERS: Player[] = [
         gender: "male",
         age: 22,
         ageGroup: "adult",
-        difficulty: "normal",
         stars: 1,
         treasures: 0,
         completedMissions: 1,
@@ -64,7 +68,6 @@ const MOCK_PLAYERS: Player[] = [
         gender: "female",
         age: 20,
         ageGroup: "teen",
-        difficulty: "normal",
         stars: 5,
         treasures: 1,
         completedMissions: 3,
@@ -85,101 +88,131 @@ const floatBob = {
 
 /* ═══════════════════════════════════════════════════════════
    SESSION ORCHESTRATOR HOOK
+   
+   Backed by session-engine.ts pure functions.
+   The hook owns React state; the engine owns all logic.
+   
+   Responsibilities kept here (presentation layer):
+     - useState wiring
+     - UI-level ephemeral state (active treasure, awarded title)
+     - Coordinating engine outputs with UI transitions
+   
+   Responsibilities delegated to session-engine:
+     - Round / turn progression
+     - Player index advancement
+     - Treasure economy (star deduction, record tracking)
+     - Session completion detection
+     - Ending ceremony creation and phase advancement
    ═══════════════════════════════════════════════════════════ */
 function useGameSession(initialPlayers: Player[], stations: Station[]) {
-    const [players, setPlayers] = useState<Player[]>(initialPlayers);
-    const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
+    /* ─── Core session engine state ─── */
+    const [sessionState, setSessionState] = useState<SessionState>(
+        () => createSessionState(initialPlayers),
+    );
+
+    /* ─── Ending ceremony (null during active gameplay) ─── */
+    const [ceremony, setCeremony] = useState<EndingCeremonyState | null>(null);
+
+    /* ─── Station index (UI concern — advances independently of turns) ─── */
     const [stationIndex, setStationIndex] = useState(0);
 
-    const [claimedLegendaryIds, setClaimedLegendaryIds] = useState<string[]>([]);
-    const [winnerId, setWinnerId] = useState<string | null>(null);
-
-    /* ─── Treasure opportunity state ─── */
+    /* ─── Active treasure UI state ─── */
     const [showTreasureOpportunity, setShowTreasureOpportunity] = useState(false);
-    const [activeTreasure, setActiveTreasure] = useState<Treasure | null>(null);
+    const [rawActiveTreasure, setRawActiveTreasure] = useState<Treasure | null>(null);
     const [awardedTitle, setAwardedTitle] = useState<string | null>(null);
     const [lastRoundResult, setLastRoundResult] = useState<RoundResult | null>(null);
 
-    const currentPlayer = players[currentPlayerIndex];
+    const currentPlayer = sessionState.players[sessionState.currentPlayerIndex];
     const station = stations[stationIndex % stations.length];
+    
+    // Exposed to UI: strictly isolated from hidden values
+    const activeTreasure = rawActiveTreasure ? toHiddenTreasureReveal(rawActiveTreasure) : null;
 
-    /* ─── Helper to update the current player safely ─── */
-    const updateCurrentPlayer = useCallback((updater: (p: Player) => Player) => {
-        setPlayers((prev) => prev.map((p, i) => i === currentPlayerIndex ? updater(p) : p));
-    }, [currentPlayerIndex]);
+    /* ─── Resolve answer: pure resolution, no state side effects ─── */
+    const handleResolveAnswer = useCallback(
+        (answer: string): TurnOutcome => {
+            return resolveTurn(
+                currentPlayer,
+                station,
+                answer,
+                eidTreasures,
+                sessionState.claimedLegendaryIds,
+            );
+        },
+        [currentPlayer, station, sessionState.claimedLegendaryIds],
+    );
 
-    /* ─── Handle player answer (pure resolution) ─── */
-    const handleResolveAnswer = useCallback((answer: string) => {
-        return resolveTurn(
-            currentPlayer,
-            station,
-            answer,
-            eidTreasures,
-            claimedLegendaryIds
-        );
-    }, [currentPlayer, station, claimedLegendaryIds]);
+    /* ─── Round complete: apply player update, show treasure if available ─── */
+    const handleRoundComplete = useCallback(
+        (outcome: TurnOutcome) => {
+            setSessionState((prev) =>
+                applyPlayerUpdate(
+                    prev,
+                    prev.currentPlayerIndex,
+                    () => outcome.updatedPlayer,
+                ),
+            );
+            setLastRoundResult(outcome.roundResult);
 
-    /* ─── Round complete handler (state application) ─── */
-    const handleRoundComplete = useCallback((outcome: TurnOutcome) => {
-        updateCurrentPlayer(() => outcome.updatedPlayer);
-        setLastRoundResult(outcome.roundResult);
+            if (outcome.treasureOpportunity) {
+                setRawActiveTreasure(outcome.treasureOpportunity);
+                setShowTreasureOpportunity(true);
+            }
+        },
+        [],
+    );
 
-        if (outcome.treasureOpportunity) {
-            setActiveTreasure(outcome.treasureOpportunity);
-            setShowTreasureOpportunity(true);
-        }
-    }, [updateCurrentPlayer]);
-
-    /* ─── Open treasure: spend stars, record opened treasure, check win ─── */
+    /* ─── Open treasure: delegate economy to session-engine, no instant win check ─── */
     const handleOpenTreasure = useCallback(() => {
-        if (!activeTreasure) return;
+        if (!rawActiveTreasure) return;
 
-        const outcome = resolveTreasureOpen(currentPlayer, activeTreasure);
-        
-        updateCurrentPlayer(() => outcome.updatedPlayer);
+        setSessionState((prev) =>
+            applyTreasureOpen(prev, prev.currentPlayerIndex, rawActiveTreasure),
+        );
 
-        if (activeTreasure.rarity === "legendary") {
-            setClaimedLegendaryIds((prev) => [...prev, activeTreasure.id]);
-        }
-
-        if (activeTreasure.reward.type === "title") {
+        if (rawActiveTreasure.reward.type === "title") {
             const title = pickRandomTitle(currentPlayer.titles);
             setAwardedTitle(title);
-            // TODO: persist title to player when session state is centralized
+            // TODO: persist title to player record when session state is centralized
         }
-
-        if (outcome.isWinner) {
-            setWinnerId(currentPlayer.id);
-        }
-    }, [activeTreasure, currentPlayer, updateCurrentPlayer]);
+    }, [rawActiveTreasure, currentPlayer.titles]);
 
     /* ─── Dismiss treasure ─── */
     const handleDismissTreasure = useCallback(() => {
         setShowTreasureOpportunity(false);
-        setActiveTreasure(null);
+        setRawActiveTreasure(null);
         setAwardedTitle(null);
     }, []);
 
-    /* ─── Next station handler ─── */
+    /* ─── Next station: advance session turn via session-engine ─── */
     const handleNextStation = useCallback(() => {
-        // Track tiny mission completion for social continuity
-        updateCurrentPlayer((p) => resolveTurnEnd(p, lastRoundResult));
+        // Compute next state (pure) from current snapshot
+        const nextState = advanceTurn(sessionState, lastRoundResult);
+        setSessionState(nextState);
+
+        // If session just completed, initialize the ending ceremony
+        if (nextState.isComplete) {
+            setCeremony(createEndingCeremonyState(nextState));
+        }
 
         setStationIndex((prev) => prev + 1);
-        setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
-
         setShowTreasureOpportunity(false);
-        setActiveTreasure(null);
+        setRawActiveTreasure(null);
         setAwardedTitle(null);
         setLastRoundResult(null);
-    }, [lastRoundResult, players.length, updateCurrentPlayer]);
+    }, [lastRoundResult, sessionState]);
+
+    /* ─── Advance ending ceremony phase ─── */
+    const handleAdvanceCeremony = useCallback(() => {
+        setCeremony((prev) => (prev ? advanceCeremonyPhase(prev) : prev));
+    }, []);
 
     return {
-        players,
+        sessionState,
+        ceremony,
         currentPlayer,
         station,
         stationIndex,
-        winnerId,
         showTreasureOpportunity,
         activeTreasure,
         awardedTitle,
@@ -188,18 +221,157 @@ function useGameSession(initialPlayers: Player[], stations: Station[]) {
         handleOpenTreasure,
         handleDismissTreasure,
         handleNextStation,
+        handleAdvanceCeremony,
+        progressLabel: getSessionProgressLabel(sessionState),
     };
 }
 
 /* ═══════════════════════════════════════════════════════════
-   PLAY PAGE
+   ENDING CEREMONY VIEW
+   
+   Architecture is established — phase-driven orchestration is wired.
+   Full cinematic UI is built incrementally in subsequent iterations.
+   
+   Current state: structural placeholder with correct phase flow,
+   correct data binding, and the ceremony state model.
+   ═══════════════════════════════════════════════════════════ */
+const CEREMONY_EMOJI: Record<string, string> = {
+    "intro": "🌙",
+    "session-summary": "✨",
+    "titles-reveal": "🏅",
+    "player-reveals": "🗝️",
+    "ranking-reveal": "📜",
+    "winner-reveal": "👑",
+    "closing": "💫",
+};
+
+const CEREMONY_LABEL: Record<string, string> = {
+    "intro": "الليلة قربت تخلص...",
+    "session-summary": "كنوز الجلسة",
+    "titles-reveal": "الألقاب المكتسبة",
+    "player-reveals": "كنوز الليلة",
+    "ranking-reveal": "الترتيب النهائي",
+    "winner-reveal": "الفايز!",
+    "closing": "شكرًا على الجلسة ✨",
+};
+
+function EndingCeremonyView({
+    ceremony,
+    onAdvance,
+}: {
+    ceremony: EndingCeremonyState;
+    onAdvance: () => void;
+}) {
+    const isLastPhase = ceremony.phase === "closing";
+
+    return (
+        <ScreenContainer className="justify-center items-center">
+            <motion.div
+                key={ceremony.phase}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+                className="flex flex-col items-center gap-8 text-center max-w-sm px-6"
+            >
+                {/* Phase emoji */}
+                <motion.div
+                    initial={{ scale: 0.85, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
+                    className="text-5xl"
+                >
+                    {CEREMONY_EMOJI[ceremony.phase]}
+                </motion.div>
+
+                {/* Phase heading */}
+                <Headline className="text-secondary text-2xl">
+                    {CEREMONY_LABEL[ceremony.phase]}
+                </Headline>
+
+                {/* ─── Phase: winner-reveal ─── */}
+                {ceremony.phase === "winner-reveal" && (
+                    <div className="flex flex-col items-center gap-3">
+                        <Headline className="text-primary text-4xl">
+                            {ceremony.finalScores[0]?.player.name}
+                        </Headline>
+                        <Muted className="text-sm opacity-60">
+                            {ceremony.finalScores[0]?.hiddenPoints} نقاط كنوز
+                        </Muted>
+                    </div>
+                )}
+
+                {/* ─── Phase: session-summary — treasure counts ─── */}
+                {ceremony.phase === "session-summary" && (
+                    <div className="flex flex-col gap-3 w-full">
+                        {ceremony.finalScores.map((score) => (
+                            <div
+                                key={score.player.id}
+                                className="flex justify-between items-center"
+                            >
+                                <Muted>{score.player.name}</Muted>
+                                <Muted className="opacity-50">
+                                    🗝️ {score.player.openedTreasures.length}
+                                </Muted>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* ─── Phase: ranking-reveal — scores last to first ─── */}
+                {ceremony.phase === "ranking-reveal" && (
+                    <div className="flex flex-col gap-3 w-full">
+                        {[...ceremony.finalScores].reverse().map((score) => (
+                            <div
+                                key={score.player.id}
+                                className="flex justify-between items-center"
+                            >
+                                <Muted>#{score.rank} {score.player.name}</Muted>
+                                <Muted className="opacity-50">
+                                    {score.hiddenPoints} نقطة
+                                </Muted>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* ─── Architecture placeholder note (intro only) ─── */}
+                {ceremony.phase === "intro" && (
+                    <Muted className="text-xs leading-relaxed opacity-30">
+                        [Ending Ceremony — Phase-driven architecture established]
+                    </Muted>
+                )}
+
+                {/* ─── Advance button ─── */}
+                {!isLastPhase && (
+                    <button
+                        onClick={onAdvance}
+                        className="mt-2 rounded-full border border-secondary/20 bg-card/60 px-6 py-2.5 text-sm text-secondary/80 backdrop-blur-sm transition-all hover:bg-card/80 active:scale-95"
+                    >
+                        {ceremony.phase === "winner-reveal"
+                            ? "اختتام الجلسة"
+                            : "متابعة ✨"}
+                    </button>
+                )}
+            </motion.div>
+        </ScreenContainer>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PLAY PAGE — Presentation / composition layer
+   
+   The page renders gameplay based on session-engine state.
+   It does NOT manage progression logic, round counting,
+   player advancement, or economy calculations.
+   All of that lives in session-engine.ts.
    ═══════════════════════════════════════════════════════════ */
 export default function PlayPage() {
     const {
+        sessionState,
+        ceremony,
         currentPlayer,
         station,
         stationIndex,
-        winnerId,
         showTreasureOpportunity,
         activeTreasure,
         awardedTitle,
@@ -208,25 +380,17 @@ export default function PlayPage() {
         handleOpenTreasure,
         handleDismissTreasure,
         handleNextStation,
+        handleAdvanceCeremony,
+        progressLabel,
     } = useGameSession(MOCK_PLAYERS, ALL_STATIONS);
 
-    /* ─── Session Ending Placeholder ─── */
-    if (winnerId) {
+    /* ─── Ending Ceremony ─── */
+    if (ceremony) {
         return (
-            <ScreenContainer className="justify-center items-center">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col items-center gap-6 text-center max-w-sm"
-                >
-                    <div className="text-6xl">🎉</div>
-                    <Headline className="text-secondary text-3xl">الجلسة خلصت!</Headline>
-                    <Muted className="text-sm leading-relaxed">
-                        هنا هيتعمل الـ Session Ending Cinematic Reveal.
-                        (النقاط المخفية والكنوز هتتعرض واحد واحد).
-                    </Muted>
-                </motion.div>
-            </ScreenContainer>
+            <EndingCeremonyView
+                ceremony={ceremony}
+                onAdvance={handleAdvanceCeremony}
+            />
         );
     }
 
@@ -288,7 +452,7 @@ export default function PlayPage() {
                     ═══════════════════════════════════════════ */}
                 {showTreasureOpportunity ? (
                     <TreasureOpportunityCard
-                        treasure={activeTreasure ? toHiddenTreasureReveal(activeTreasure) : null}
+                        treasure={activeTreasure}
                         awardedTitle={awardedTitle}
                         onOpenTreasure={handleOpenTreasure}
                         onDismiss={handleDismissTreasure}
@@ -304,7 +468,7 @@ export default function PlayPage() {
                 )}
 
                 {/* ═══════════════════════════════════════════
-                    📊 STATION PROGRESS
+                    📊 SESSION PROGRESS — Round indicator
                     ═══════════════════════════════════════════ */}
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -314,19 +478,19 @@ export default function PlayPage() {
                 >
                     <div className="flex items-center gap-2">
                         <Muted className="text-[11px]">
-                            المحطة {Math.min(stationIndex + 1, ALL_STATIONS.length)} من {ALL_STATIONS.length}
+                            {progressLabel}
                         </Muted>
                     </div>
 
-                    {/* Station dots */}
+                    {/* Round dots — each dot = one round */}
                     <div className="flex items-center gap-1.5">
-                        {ALL_STATIONS.map((s, i) => (
+                        {Array.from({ length: sessionState.totalRounds }).map((_, i) => (
                             <div
-                                key={s.id}
+                                key={i}
                                 className={
-                                    i === stationIndex % ALL_STATIONS.length
+                                    i + 1 === sessionState.currentRound
                                         ? "h-2 w-4 rounded-full bg-secondary/60 transition-all duration-300"
-                                        : i < stationIndex
+                                        : i + 1 < sessionState.currentRound
                                             ? "h-1.5 w-1.5 rounded-full bg-secondary/30 transition-all duration-300"
                                             : "h-1.5 w-1.5 rounded-full bg-border/40 transition-all duration-300"
                                 }

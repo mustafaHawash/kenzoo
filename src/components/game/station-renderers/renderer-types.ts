@@ -1,4 +1,5 @@
 
+import React from "react";
 import type { Station, StationType } from "@/types/station";
 
 /**
@@ -37,7 +38,7 @@ export interface StationRendererProps {
  * A station renderer is a function component that receives
  * StationRendererProps and renders its gameplay interaction UI.
  */
-export type StationRenderer = (props: StationRendererProps) => JSX.Element;
+export type StationRenderer = (props: StationRendererProps) => React.JSX.Element | null;
 
 /**
  * Registry mapping station types to their renderer components.

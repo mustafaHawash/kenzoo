@@ -1,14 +1,13 @@
 import { Station } from "@/types/station";
 import { Player } from "@/types/player";
 import { RoundResult } from "@/types/session";
-import { 
-    pickTreasureByRarity, 
-    Treasure, 
-    TREASURE_APPEARANCE_MIN_STARS, 
-    STARS_REQUIRED_BY_RARITY, 
+import {
+    pickTreasureByRarity,
+    Treasure,
+    TREASURE_APPEARANCE_MIN_STARS,
+    STARS_REQUIRED_BY_RARITY,
     HIDDEN_POINTS_BY_RARITY,
-    HIDDEN_TREASURE_WIN_THRESHOLD,
-    OpenedTreasureRecord 
+    OpenedTreasureRecord,
 } from "@/types/treasure";
 
 export type TurnOutcome = {
@@ -20,11 +19,17 @@ export type TurnOutcome = {
     treasureOpportunity: Treasure | null;
 };
 
-export type TreasureOutcome = {
-    /** The player's updated state (stars deducted, treasure added) */
+/**
+ * Outcome of a player opening a treasure.
+ *
+ * Does NOT include a win check — the session runs for a fixed number of rounds.
+ * Hidden points are accumulated silently and scored only at the ending ceremony.
+ */
+export type TreasureOpenOutcome = {
+    /** The player's updated state (stars deducted, treasure count incremented) */
     updatedPlayer: Player;
-    /** True if the player reached the hidden point threshold */
-    isWinner: boolean;
+    /** The record appended to player.openedTreasures — used in ceremony reveal */
+    record: OpenedTreasureRecord;
 };
 
 /**
@@ -43,7 +48,6 @@ export function resolveTurn(
 ): TurnOutcome {
     // Basic correctness logic (can be expanded for fuzzy matching later)
     const isCorrect = answer === station.answer;
-    let newStars = player.stars;
 
     const roundResult: RoundResult = {
         isCorrect,
@@ -54,50 +58,54 @@ export function resolveTurn(
             : undefined,
     };
 
-    // Stars are added ONLY if no treasure is unlocked (treasures cost stars later)
-    if (roundResult.starsEarned > 0 && !roundResult.treasureUnlocked) {
-        newStars += roundResult.starsEarned;
-    }
+    // FIX: Stars are ALWAYS awarded immediately on correct answer.
+    // Treasures consume stars only when the player chooses to open them —
+    // NOT at the moment of unlock. This ensures the economy is player-driven.
+    const newStars = player.stars + roundResult.starsEarned;
 
     let treasureOpportunity: Treasure | null = null;
-    // Treasure only appears if correct, treasure is enabled, and player can afford the max hidden cost
+    // Treasure opportunity appears only when player can afford the max possible hidden cost (7★)
     if (roundResult.isCorrect && roundResult.treasureUnlocked && newStars >= TREASURE_APPEARANCE_MIN_STARS) {
         treasureOpportunity = pickTreasureByRarity(
             treasurePool,
             claimedLegendaryIds,
-            player.difficulty
         );
     }
 
     return {
         roundResult,
         updatedPlayer: { ...player, stars: newStars },
-        treasureOpportunity
+        treasureOpportunity,
     };
 }
 
 /**
  * Processes a player opening a treasure.
- * Deducts hidden star cost, accumulates hidden points, and checks win condition.
- * 
- * This is a pure runtime function that returns the calculated economy impact.
+ *
+ * Deducts hidden star cost, records the opened treasure for the ending ceremony,
+ * and increments the visible treasure count.
+ *
+ * WIN CONDITION is intentionally removed.
+ * The session runs for a fixed number of rounds. Hidden points are scoring weights
+ * revealed ONLY during the ending ceremony — not instant victory triggers.
+ *
+ * Called by session-engine.applyTreasureOpen() — not directly by the page.
+ *
+ * Pure function — returns updated player and the appended record.
  */
 export function resolveTreasureOpen(
     player: Player,
-    treasure: Treasure
-): TreasureOutcome {
+    treasure: Treasure,
+): TreasureOpenOutcome {
     const cost = STARS_REQUIRED_BY_RARITY[treasure.rarity];
     const hiddenPoints = HIDDEN_POINTS_BY_RARITY[treasure.rarity];
-    
+
     const record: OpenedTreasureRecord = {
         treasureId: treasure.id,
         rarity: treasure.rarity,
         hiddenPoints,
         starsConsumed: cost,
     };
-
-    const currentHiddenPoints = player.openedTreasures.reduce((sum, t) => sum + t.hiddenPoints, 0);
-    const newTotalHidden = currentHiddenPoints + hiddenPoints;
 
     const updatedPlayer: Player = {
         ...player,
@@ -106,10 +114,7 @@ export function resolveTreasureOpen(
         openedTreasures: [...player.openedTreasures, record],
     };
 
-    return {
-        updatedPlayer,
-        isWinner: newTotalHidden >= HIDDEN_TREASURE_WIN_THRESHOLD
-    };
+    return { updatedPlayer, record };
 }
 
 /**

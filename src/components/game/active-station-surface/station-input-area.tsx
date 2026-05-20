@@ -76,7 +76,7 @@ export function StationInputArea({
             >
                 <Muted className="text-xs">
                     {station.reward.canUnlockTreasure
-                        ? "🗝️ ممكن كنز .. ممكن لا"
+                        ? "🗝️ كنــزو محتمل"
                         : "✨ نجم وبيجمع اخواته"}
                 </Muted>
                 <Label className="text-secondary text-xs">
