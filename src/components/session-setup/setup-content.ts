@@ -4,35 +4,69 @@ import type {
     SetupStepDefinition,
     ThemeDefinition,
 } from "./setup-types";
+import {
+    validatePlayersStep,
+    validateSessionLengthStep,
+    validateThemeStep,
+    validateBeginStep,
+} from "./setup-validation";
+import { getAllAvatars } from "./avatar-registry";
+import { PlayersStep } from "./players-step";
+import { SessionLengthStep } from "./session-length-step";
+import { ThemeStep } from "./theme-step";
+import { BeginSessionStep } from "./begin-session-step";
 
+/**
+ * Data-driven setup step definitions.
+ *
+ * The flow is driven entirely by `order`.
+ * No hardcoded stepOrder arrays exist outside this file.
+ * Validation hooks determine orchestration readiness per step.
+ */
 export const setupSteps: SetupStepDefinition[] = [
     {
         id: "players",
+        order: 0,
         eyebrow: "الدعوة",
-        title: "مين هيشارك الليلة؟",
-        subtitle: "ضيوف الحكاية، واحد واحد بهدوء.",
+        title: "مين هيكون معانا الليلة؟",
+        subtitle: "مين أول واحد هيشارك الليلة؟",
+        component: PlayersStep,
+        validate: validatePlayersStep,
     },
     {
         id: "length",
+        order: 1,
         eyebrow: "إيقاع الجلسة",
-        title: "قد إيه تحبوا تسهروا؟",
-        subtitle: "اختاروا الوقت اللي يناسب قعدتكم الليلة.",
+        title: "قد إيه تحبوا تقعدوا؟",
+        subtitle: "اختاروا الوقت اللي يناسب قعدتكم.",
+        component: SessionLengthStep,
+        validate: validateSessionLengthStep,
     },
     {
         id: "theme",
-        eyebrow: "باب الحكاية",
-        title: "الليلة شكلها هتميل لإيه؟",
-        subtitle: "كل طريق بيفتح سكة لكنوز ومشاعر مختلفة.",
+        order: 2,
+        eyebrow: "جو الليلة",
+        title: "تحبوا الليلة تكون إزاي؟",
+        subtitle: "كل جو بيفتح باب لحكاية مختلفة.",
+        component: ThemeStep,
+        validate: validateThemeStep,
     },
     {
         id: "begin",
+        order: 3,
         eyebrow: "لحظة البداية",
-        title: "الورق جاهز يتفتح",
-        subtitle: "لمّة دافية، فوانيس منورة، وسر مستني يظهر.",
+        title: "كل حاجة جاهزة",
+        subtitle: "لمّة دافية وحكاية مستنية تبدأ.",
+        component: BeginSessionStep,
+        validate: validateBeginStep,
     },
 ];
 
-export const avatarOptions = ["🌙", "🕯️", "🔮", "📖", "✨", "🗝️", "🌿", "⭐"];
+/** Steps sorted by order — the single source of truth for flow sequence */
+export const sortedSteps = [...setupSteps].sort((a, b) => a.order - b.order);
+
+/** Available avatars — sourced from the avatar registry */
+export const avatarOptions = getAllAvatars();
 
 export const sessionLengthOptions: SessionLengthDefinition[] = [
     {
@@ -40,14 +74,14 @@ export const sessionLengthOptions: SessionLengthDefinition[] = [
         label: "قصيرة 🌙",
         rounds: 3,
         mood: "هادية وخفيفة",
-        description: "لمّة صغيرة تفتح باب الحكاية من غير استعجال.",
+        description: "لمّة صغيرة وسريعة، بس فيها كل الدفا.",
     },
     {
         id: "normal",
         label: "ليلة عادية ✨",
         rounds: 4,
         mood: "متوازنة ودافئة",
-        description: "الإيقاع الأساسي لكنزو: مساحة كفاية للضحك والاكتشاف.",
+        description: "الإيقاع الأساسي: مساحة كفاية للضحك والاكتشاف.",
     },
     {
         id: "long",
@@ -81,24 +115,20 @@ export const generationPhrases = [
     "الكنوز لسه بتستخبى...",
     "بنقلب صفحات الليلة...",
     "الفوانيس بتصحى واحدة واحدة...",
-    "واضح إن الليلة مخبية حاجة غريبة...",
-    "بنرتب الأسرار بهدوء...",
+    "بنرتب كل حاجة بهدوء...",
+    "الحكاية بتاخد شكلها...",
 ];
 
+/**
+ * Creates the initial empty gathering state.
+ *
+ * Players begin with an empty list — no pre-filled forms,
+ * no instant validation anxiety. The first interaction is
+ * an invitation, not a form to fill.
+ *
+ * The "add player" action is the first gesture.
+ */
 export function createInitialPlayers(): SetupPlayer[] {
-    return [
-        {
-            id: "player-1",
-            name: "",
-            avatar: "🌙",
-            ageGroup: "adult",
-        },
-        {
-            id: "player-2",
-            name: "",
-            avatar: "🕯️",
-            ageGroup: "adult",
-        },
-    ];
+    return [];
 }
 

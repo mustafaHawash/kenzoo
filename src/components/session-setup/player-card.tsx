@@ -1,91 +1,159 @@
 "use client";
 
-import { PlayerAvatarPicker } from "./player-avatar-picker";
 import type { SetupPlayer, SetupPlayerAgeGroup } from "./setup-types";
-import { Label } from "@/components/ui/typography";
+import { getAllAvatars } from "./avatar-registry";
 import { cn } from "@/lib/utils";
 
 export function PlayerCard({
     player,
     index,
     canRemove,
+    isEditing,
+    onToggleEdit,
     onUpdate,
     onRemove,
+    validationError,
 }: {
     player: SetupPlayer;
     index: number;
     canRemove: boolean;
+    isEditing: boolean;
+    onToggleEdit: () => void;
     onUpdate: (player: SetupPlayer) => void;
     onRemove: () => void;
+    validationError?: string;
 }) {
     const updateAgeGroup = (ageGroup: SetupPlayerAgeGroup) => {
         onUpdate({ ...player, ageGroup });
     };
 
-    return (
-        <article className="relative overflow-hidden rounded-[28px] border border-secondary/14 bg-surface-elevated/34 p-4 shadow-[0_18px_70px_rgba(31,27,24,0.10)] backdrop-blur-md">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(216,179,106,0.14),transparent_36%)]" />
+    const trimmedName = player.name.trim();
+    const displayName = trimmedName || `ضيف ${index + 1}`;
 
-            <div className="relative flex flex-col gap-4">
-                <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                        <div className="flex size-11 items-center justify-center rounded-2xl border border-secondary/20 bg-secondary/12 text-xl">
-                            {player.avatar}
-                        </div>
-                        <div>
-                            <Label className="text-primary">ضيف الليلة {index + 1}</Label>
-                            <p className="text-xs leading-5 text-muted-foreground">
-                                اسم صغير يكفي لفتح الباب.
-                            </p>
-                        </div>
+    /* ─── Collapsed: warm social chip — tap to edit ─── */
+    if (!isEditing) {
+        return (
+            <button
+                type="button"
+                onClick={onToggleEdit}
+                className={cn(
+                    "group flex w-full items-center gap-3 rounded-2xl border px-3.5 py-2.5 text-right",
+                    "transition-all duration-(--duration-normal) ease-(--ease-soft)",
+                    "border-secondary/12 bg-surface-elevated/20 hover:border-secondary/24 hover:bg-surface-elevated/36",
+                )}
+            >
+                <div className="flex size-9 items-center justify-center rounded-xl bg-secondary/8 text-base">
+                    {player.avatar}
+                </div>
+                <div className="flex flex-1 flex-col gap-0 overflow-hidden">
+                    <span className={cn(
+                        "truncate text-sm",
+                        trimmedName ? "text-foreground/90" : "text-muted-foreground/60",
+                    )}>
+                        {displayName}
+                    </span>
+                </div>
+                <span className="text-[10px] text-muted-foreground/40">
+                    {player.ageGroup === "kid" ? "طفل" : "كبير"}
+                </span>
+            </button>
+        );
+    }
+
+    /* ─── Expanded: light social editing surface ─── */
+    return (
+        <article className={cn(
+            "relative overflow-hidden rounded-2xl border p-3.5",
+            "transition-all duration-(--duration-normal) ease-(--ease-soft)",
+            validationError
+                ? "border-destructive/24 bg-surface-elevated/28"
+                : "border-secondary/16 bg-surface-elevated/28",
+        )}>
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(216,179,106,0.08),transparent_36%)]" />
+
+            <div className="relative flex flex-col gap-2.5">
+                {/* Name input row: avatar + input + remove */}
+                <div className="flex items-center gap-2.5">
+                    <div className="flex size-9 items-center justify-center rounded-xl bg-secondary/10 text-base">
+                        {player.avatar}
                     </div>
+
+                    <input
+                        value={player.name}
+                        onChange={(event) => onUpdate({ ...player, name: event.target.value })}
+                        placeholder="الاسم"
+                        autoFocus
+                        className={cn(
+                            "h-9 flex-1 rounded-xl border bg-background/30 px-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/50",
+                            validationError
+                                ? "border-destructive/28 focus:border-destructive/48 focus:ring-1 focus:ring-destructive/10"
+                                : "border-secondary/10 focus:border-secondary/32 focus:ring-1 focus:ring-secondary/10",
+                        )}
+                    />
 
                     {canRemove && (
                         <button
                             type="button"
                             onClick={onRemove}
-                            className="rounded-full px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
+                            className="rounded-lg px-2 py-1.5 text-[11px] text-muted-foreground/60 transition-colors hover:bg-foreground/5 hover:text-foreground"
                         >
                             إزالة
                         </button>
                     )}
                 </div>
 
-                <input
-                    value={player.name}
-                    onChange={(event) => onUpdate({ ...player, name: event.target.value })}
-                    placeholder="اسم اللاعب"
-                    className="h-12 rounded-2xl border border-secondary/14 bg-background/36 px-4 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/70 focus:border-secondary/40 focus:ring-2 focus:ring-secondary/12"
-                />
+                {/* Validation hint — only when editing */}
+                {validationError && (
+                    <p className="pr-12 text-[11px] leading-4 text-destructive/70">
+                        {validationError}
+                    </p>
+                )}
 
-                <PlayerAvatarPicker
-                    value={player.avatar}
-                    onChange={(avatar) => onUpdate({ ...player, avatar })}
-                />
-
-                <div className="grid grid-cols-2 gap-2 rounded-2xl border border-secondary/10 bg-background/24 p-1">
-                    {[
-                        { id: "adult" as const, label: "كبير" },
-                        { id: "kid" as const, label: "طفل" },
-                    ].map((option) => {
-                        const isSelected = player.ageGroup === option.id;
-
-                        return (
+                {/* Compact row: avatar picker + age toggle */}
+                <div className="flex items-center gap-2">
+                    {/* Mini avatar picker — sourced from registry */}
+                    <div className="flex gap-1">
+                        {getAllAvatars().slice(0, 4).map((avatar) => (
                             <button
-                                key={option.id}
+                                key={avatar}
                                 type="button"
-                                onClick={() => updateAgeGroup(option.id)}
+                                onClick={() => onUpdate({ ...player, avatar })}
                                 className={cn(
-                                    "h-10 rounded-xl text-sm font-medium transition-all duration-(--duration-normal) ease-(--ease-soft)",
-                                    isSelected
-                                        ? "bg-secondary/20 text-foreground shadow-[0_0_18px_rgba(216,179,106,0.10)]"
-                                        : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground",
+                                    "flex size-7 items-center justify-center rounded-lg text-sm transition-all",
+                                    player.avatar === avatar
+                                        ? "bg-secondary/16 ring-1 ring-secondary/30"
+                                        : "text-muted-foreground/50 hover:bg-foreground/5 hover:text-foreground",
                                 )}
                             >
-                                {option.label}
+                                {avatar}
                             </button>
-                        );
-                    })}
+                        ))}
+                    </div>
+
+                    {/* Age group pills */}
+                    <div className="mr-auto flex gap-1">
+                        {[
+                            { id: "adult" as const, label: "كبير" },
+                            { id: "kid" as const, label: "طفل" },
+                        ].map((option) => {
+                            const isSelected = player.ageGroup === option.id;
+                            return (
+                                <button
+                                    key={option.id}
+                                    type="button"
+                                    onClick={() => updateAgeGroup(option.id)}
+                                    className={cn(
+                                        "rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all duration-(--duration-normal) ease-(--ease-soft)",
+                                        isSelected
+                                            ? "bg-secondary/16 text-foreground"
+                                            : "text-muted-foreground/50 hover:bg-foreground/5 hover:text-foreground",
+                                    )}
+                                >
+                                    {option.label}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         </article>

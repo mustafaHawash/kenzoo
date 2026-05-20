@@ -1,121 +1,127 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { OpeningSceneAtmosphere } from "@/components/atmosphere/opening-scene-atmosphere";
 import { Button } from "@/components/ui/button";
-import { Body, Display, Label, Muted } from "@/components/ui/typography";
-import { BeginSessionStep } from "./begin-session-step";
-import { createInitialPlayers, setupSteps } from "./setup-content";
-import { PlayersStep } from "./players-step";
-import { SessionLengthStep } from "./session-length-step";
+import { LanternButton } from "@/components/ui/lantern-button";
+import { Body, Display, Label } from "@/components/ui/typography";
+import { createInitialPlayers, sortedSteps } from "./setup-content";
 import { SessionStepTransition } from "./session-step-transition";
 import { SetupGenerationTransition } from "./setup-generation-transition";
-import { ThemeStep } from "./theme-step";
-import type { SessionSetupState, SetupStep, GenerationTransitionStatus, SessionConfigPayload } from "./setup-types";
-import { sessionLengthOptions } from "./setup-content";
+import { buildSessionConfig } from "./build-session-config";
+import { startSessionGeneration } from "./generation-orchestration";
+import type { SessionSetupState, GenerationTransitionStatus } from "./setup-types";
 import { cn } from "@/lib/utils";
 
+/* ─── Initial state ─── */
 const initialSetupState: SessionSetupState = {
     players: createInitialPlayers(),
     sessionLengthId: "normal",
     themeId: "eid-el-adha",
 };
 
-const stepOrder: SetupStep[] = ["players", "length", "theme", "begin"];
+/* ═══════════════════════════════════════════════════════════
+   SESSION SETUP SHELL — Data-Driven Orchestrator
+   ═══════════════════════════════════════════════════════════
 
+   This shell:
+     - Collects raw setup state
+     - Drives flow from sortedSteps (data-driven, not hardcoded)
+     - Owns ALL navigation (next, back, continue, begin)
+     - Delegates payload preparation to build-session-config.ts
+     - Delegates generation to generation-orchestration.ts
+     - Uses step.validate() for orchestration readiness
+
+   This shell does NOT:
+     - Normalize payloads
+     - Know timer mechanics
+     - Contain generation logic
+     - Allow step components to own navigation
+
+   Layout philosophy:
+     - Viewport-stable: min-h-dvh, overflow-hidden
+     - Flex-based: header / content / footer
+     - Contained scrolling only inside step content
+     - Mobile-native: no page-level scrolling
+   ═══════════════════════════════════════════════════════════ */
 export function SessionSetupShell() {
     const router = useRouter();
     const [setup, setSetup] = useState<SessionSetupState>(initialSetupState);
     const [stepIndex, setStepIndex] = useState(0);
     const [generationStatus, setGenerationStatus] = useState<GenerationTransitionStatus>("idle");
+    const generationCleanupRef = useRef<(() => void) | null>(null);
 
-    const activeStep = stepOrder[stepIndex];
-    const stepDefinition = setupSteps.find((step) => step.id === activeStep) ?? setupSteps[0];
+    /* ─── Data-driven step resolution ─── */
+    const activeStepDef = sortedSteps[stepIndex];
+    const activeStepId = activeStepDef.id;
     const canGoBack = stepIndex > 0 && generationStatus === "idle";
+    const validation = activeStepDef.validate(setup);
+    const canGoNext = validation.isValid;
+    const isLastStep = stepIndex >= sortedSteps.length - 1;
 
-    const namedPlayerCount = useMemo(
-        () => setup.players.filter((player) => player.name.trim().length > 0).length,
-        [setup.players],
-    );
-
+    /* ─── Navigation ─── */
     const goNext = () => {
-        setStepIndex((current) => Math.min(current + 1, stepOrder.length - 1));
+        if (!canGoNext) return;
+        setStepIndex((current) => Math.min(current + 1, sortedSteps.length - 1));
     };
 
     const goBack = () => {
         setStepIndex((current) => Math.max(current - 1, 0));
     };
 
-    const buildSessionConfig = (): SessionConfigPayload => {
-        const lengthDef = sessionLengthOptions.find((l) => l.id === setup.sessionLengthId);
-        
-        return {
-            players: setup.players.map(({ name, avatar, ageGroup }) => ({ name, avatar, ageGroup })),
-            rounds: lengthDef?.rounds ?? 4,
-            themeId: setup.themeId,
-        };
-    };
+    /* ─── Generation orchestration ─── */
+    const beginGeneration = useCallback(() => {
+        const payload = buildSessionConfig(setup);
 
-    const beginGeneration = () => {
-        setGenerationStatus("preparing");
-        const payload = buildSessionConfig();
-        
-        // Simulating async generation delay, to be replaced by actual logic later
-        window.setTimeout(() => {
-            console.log("Generated config payload:", payload);
-            setGenerationStatus("ready");
-        }, 3200);
-    };
+        const cleanup = startSessionGeneration(payload, {
+            onPreparing: () => setGenerationStatus("preparing"),
+            onReady: () => setGenerationStatus("ready"),
+        });
+
+        generationCleanupRef.current = cleanup;
+    }, [setup]);
 
     const completeGeneration = useCallback(() => {
         router.push("/play");
     }, [router]);
 
-    const renderActiveStep = () => {
-        switch (activeStep) {
-            case "players":
-                return (
-                    <PlayersStep
-                        players={setup.players}
-                        onPlayersChange={(players) =>
-                            setSetup((current) => ({ ...current, players }))
-                        }
-                    />
-                );
-            case "length":
-                return (
-                    <SessionLengthStep
-                        selectedLengthId={setup.sessionLengthId}
-                        onSelectLength={(sessionLengthId) =>
-                            setSetup((current) => ({ ...current, sessionLengthId }))
-                        }
-                    />
-                );
-            case "theme":
-                return (
-                    <ThemeStep
-                        selectedThemeId={setup.themeId}
-                        onSelectTheme={(themeId) =>
-                            setSetup((current) => ({ ...current, themeId }))
-                        }
-                    />
-                );
-            case "begin":
-                return <BeginSessionStep setup={setup} onBegin={beginGeneration} />;
-            default:
-                return null;
-        }
+    // Cleanup generation on unmount
+    useEffect(() => {
+        return () => {
+            generationCleanupRef.current?.();
+        };
+    }, []);
+
+    /* ─── Unified setup change handler ─── */
+    const handleSetupChange = useCallback(
+        <K extends keyof SessionSetupState>(key: K, value: SessionSetupState[K]) => {
+            setSetup((current) => ({ ...current, [key]: value }));
+        },
+        [],
+    );
+
+    /* ─── Data-driven step rendering ─── */
+    const StepComponent = activeStepDef.component;
+
+    /* ─── Step-specific continue labels — warm, not mechanical ─── */
+    const continueLabels: Record<typeof activeStepId, string> = {
+        players: "كملوا الإيقاع ✨",
+        length: "اختاروا الجو ✨",
+        theme: "جهزوا الليلة ✨",
+        begin: "ابدأ الليلة ✨",
     };
 
     return (
-        <main className="relative min-h-dvh overflow-hidden bg-background text-foreground">
+        <main className="relative h-dvh overflow-hidden bg-background text-foreground">
             <OpeningSceneAtmosphere />
 
-            <section className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col px-5 py-6">
-                <header className="flex items-center justify-between gap-3">
+            <section className="relative z-10 mx-auto flex h-dvh w-full max-w-xl flex-col px-5 pt-[env(safe-area-inset-top)]">
+
+                {/* ─── Header: back + progress ─── */}
+                <header className="flex shrink-0 items-center justify-between gap-3 pt-6 pb-2">
                     <Button
                         type="button"
                         variant="ghost"
@@ -128,9 +134,9 @@ export function SessionSetupShell() {
                     </Button>
 
                     <div className="flex items-center gap-1.5" aria-label="تقدم التجهيز">
-                        {stepOrder.map((step, index) => (
+                        {sortedSteps.map((step, index) => (
                             <span
-                                key={step}
+                                key={step.id}
                                 className={cn(
                                     "h-1.5 rounded-full transition-all duration-300",
                                     index === stepIndex
@@ -144,48 +150,62 @@ export function SessionSetupShell() {
                     </div>
                 </header>
 
-                <div className="flex flex-1 flex-col justify-center gap-7 py-7">
-                    <motion.div
-                        key={activeStep}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.38, ease: "easeOut" }}
-                        className="flex flex-col gap-3 text-center"
-                    >
-                        <Label className="text-secondary">{stepDefinition.eyebrow}</Label>
-                        <Display className="text-[2.35rem] leading-tight text-primary sm:text-[3.2rem]">
-                            {stepDefinition.title}
-                        </Display>
-                        <Body className="mx-auto max-w-sm text-balance text-sm leading-7 text-muted-foreground sm:text-base">
-                            {stepDefinition.subtitle}
-                        </Body>
-                    </motion.div>
+                {/* ─── Step header: animated eyebrow + title + subtitle ─── */}
+                <motion.div
+                    key={`${activeStepId}-header`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.32, ease: "easeOut" }}
+                    className="shrink-0 pb-4 pt-2 text-center"
+                >
+                    <Label className="text-secondary">{activeStepDef.eyebrow}</Label>
+                    <Display className="text-[2rem] leading-tight text-primary sm:text-[2.6rem]">
+                        {activeStepDef.title}
+                    </Display>
+                    <Body className="mx-auto max-w-sm text-balance text-sm leading-6 text-muted-foreground sm:text-base">
+                        {activeStepDef.subtitle}
+                    </Body>
+                </motion.div>
 
-                    <form
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            goNext();
-                        }}
-                    >
-                        <SessionStepTransition stepKey={activeStep}>
-                            {renderActiveStep()}
-                        </SessionStepTransition>
-                    </form>
+                {/* ─── Step content: contained scrolling area ─── */}
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-0.5 pb-4 scrollbar-none">
+                    <SessionStepTransition stepKey={activeStepId}>
+                        <StepComponent
+                            setup={setup}
+                            onSetupChange={handleSetupChange}
+                            onBegin={beginGeneration}
+                        />
+                    </SessionStepTransition>
+                </div>
 
-                    <AnimatePresence>
-                        {activeStep === "players" && namedPlayerCount === 0 && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
+                {/* ─── Footer: grounded cinematic action area ─── */}
+                <footer className="shrink-0 border-t border-secondary/8 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3">
+                    {/* Validation hint — calm, not alarming */}
+                    <AnimatePresence mode="wait">
+                        {!canGoNext && validation.reason && (
+                            <motion.p
+                                key={validation.reason}
+                                initial={{ opacity: 0, y: 4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -4 }}
+                                transition={{ duration: 0.2 }}
+                                className="mb-2.5 text-center text-xs leading-5 text-muted-foreground/60"
                             >
-                                <Muted className="text-center text-xs leading-6">
-                                    ممكن تسيبوا الأسماء فاضية دلوقتي، بس الاسم بيخلي النداء أدفى.
-                                </Muted>
-                            </motion.div>
+                                {validation.reason}
+                            </motion.p>
                         )}
                     </AnimatePresence>
-                </div>
+
+                    {/* Continue / Begin — single unified action */}
+                    <LanternButton
+                        type="button"
+                        onClick={isLastStep ? beginGeneration : goNext}
+                        disabled={!canGoNext}
+                        className="w-full bg-secondary text-secondary-foreground disabled:opacity-40"
+                    >
+                        {continueLabels[activeStepId]}
+                    </LanternButton>
+                </footer>
             </section>
 
             <SetupGenerationTransition

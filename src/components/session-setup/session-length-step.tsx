@@ -2,18 +2,13 @@
 
 import { sessionLengthOptions } from "./setup-content";
 import { SessionLengthCard } from "./session-length-card";
-import type { SessionLengthDefinition } from "./setup-types";
-import { LanternButton } from "@/components/ui/lantern-button";
+import type { SessionLengthDefinition, StepComponentProps } from "./setup-types";
 
-export function SessionLengthStep({
-    selectedLengthId,
-    onSelectLength,
-}: {
-    selectedLengthId: SessionLengthDefinition["id"];
-    onSelectLength: (id: SessionLengthDefinition["id"]) => void;
-}) {
+export function SessionLengthStep({ setup, onSetupChange }: StepComponentProps) {
+    const selectedLengthId = setup.sessionLengthId;
+    const onSelectLength = (id: SessionLengthDefinition["id"]) => onSetupChange("sessionLengthId", id);
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
             {sessionLengthOptions.map((length) => (
                 <SessionLengthCard
                     key={length.id}
@@ -22,10 +17,6 @@ export function SessionLengthStep({
                     onSelect={() => onSelectLength(length.id)}
                 />
             ))}
-
-            <LanternButton type="submit" className="mt-1 bg-secondary text-secondary-foreground">
-                افتحوا باب الحكاية
-            </LanternButton>
         </div>
     );
 }

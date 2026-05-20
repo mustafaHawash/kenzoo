@@ -1,8 +1,8 @@
 // app/play/page.tsx
 "use client";
 
-import { useState, useCallback } from "react";
-import { motion } from "framer-motion";
+import { useState, useCallback, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 
 import { ScreenContainer } from "@/components/ui/layout/screen-container";
@@ -14,7 +14,7 @@ import { eidQuizStations } from "@/content/themes/eid-el-adha/quiz";
 import { eidRiddleStations } from "@/content/themes/eid-el-adha/riddles";
 import { eidTreasures } from "@/content/themes/eid-el-adha/treasures";
 import { pickRandomTitle } from "@/content/themes/eid-el-adha/titles";
-import { toHiddenTreasureReveal, type Treasure } from "@/types/treasure";
+import { toGameplayTreasureView } from "@/types/treasure";
 
 import {
     resolveTurn,
@@ -26,6 +26,7 @@ import {
     advanceTurn,
     applyTurnOutcome,
     applyTreasureOpen,
+    clearActiveTreasure,
     createEndingCeremonyState,
     advanceCeremonyPhase,
     getSessionProgressLabel,
@@ -122,12 +123,16 @@ function useGameSession(initialPlayers: Player[], stations: Station[]) {
     const [awardedTitle, setAwardedTitle] = useState<string | null>(null);
     const [lastRoundResult, setLastRoundResult] = useState<RoundResult | null>(null);
 
+    /* ─── Ref to read latest state in callbacks without stale closures ─── */
+    const sessionStateRef = useRef(sessionState);
+    sessionStateRef.current = sessionState;
+
     const currentPlayer = sessionState.players[sessionState.currentPlayerIndex];
     const station = stations[stationIndex % stations.length];
     
     // Exposed to UI: strictly isolated from hidden values
     const activeTreasure = sessionState.activeTreasure 
-        ? toHiddenTreasureReveal(sessionState.activeTreasure) 
+        ? toGameplayTreasureView(sessionState.activeTreasure.treasure) 
         : null;
 
     /* ─── Resolve answer: pure resolution, no state side effects ─── */
@@ -150,49 +155,59 @@ function useGameSession(initialPlayers: Player[], stations: Station[]) {
             setSessionState((prev) => applyTurnOutcome(prev, outcome));
             setLastRoundResult(outcome.roundResult);
 
-            if (outcome.treasureOpportunity) {
-                setShowTreasureOpportunity(true);
-            }
+            // We don't show the treasure here anymore.
+            // The result screen must show first.
+            // Treasure will show when they click "Continue" and trigger handleNextStation.
         },
         [],
     );
 
-    /* ─── Open treasure: delegate economy to session-engine, no instant win check ─── */
+    /* ─── Open treasure: delegate economy to session-engine ─── */
     const handleOpenTreasure = useCallback(() => {
-        const rawTreasure = sessionState.activeTreasure;
+        const rawTreasure = sessionStateRef.current.activeTreasure;
         if (!rawTreasure) return;
 
         setSessionState((prev) => applyTreasureOpen(prev));
 
-        if (rawTreasure.reward.type === "title") {
+        if (rawTreasure.treasure.reward.type === "title") {
             const title = pickRandomTitle(currentPlayer.titles);
             setAwardedTitle(title);
-            // TODO: persist title to player record when session state is centralized
         }
-    }, [sessionState.activeTreasure, currentPlayer.titles]);
+    }, [currentPlayer.titles]);
 
-    /* ─── Dismiss treasure ─── */
+    /* ─── Dismiss treasure: only close the overlay and clear the pending opportunity ─── */
     const handleDismissTreasure = useCallback(() => {
         setShowTreasureOpportunity(false);
         setAwardedTitle(null);
+        setSessionState((prev) => clearActiveTreasure(prev));
     }, []);
 
     /* ─── Next station: advance session turn via session-engine ─── */
     const handleNextStation = useCallback(() => {
-        // Compute next state (pure) from current snapshot
-        const nextState = advanceTurn(sessionState, lastRoundResult);
-        setSessionState(nextState);
+        // Use functional updater to avoid stale sessionState reads
+        let nextState: SessionState | null = null;
 
-        // If session just completed, initialize the ending ceremony
-        if (nextState.isComplete) {
-            setCeremony(createEndingCeremonyState(nextState));
+        setSessionState((prev) => {
+            nextState = advanceTurn(prev, lastRoundResult);
+            return nextState;
+        });
+
+        // Ceremony check must happen outside the updater (side effect)
+        if (nextState!.isComplete) {
+            setCeremony(createEndingCeremonyState(nextState!));
+            return;
         }
 
         setStationIndex((prev) => prev + 1);
-        setShowTreasureOpportunity(false);
-        setAwardedTitle(null);
         setLastRoundResult(null);
-    }, [lastRoundResult, sessionState]);
+
+        if (nextState!.activeTreasure) {
+            setShowTreasureOpportunity(true);
+        } else {
+            setShowTreasureOpportunity(false);
+            setAwardedTitle(null);
+        }
+    }, [lastRoundResult]);
 
     /* ─── Advance ending ceremony phase ─── */
     const handleAdvanceCeremony = useCallback(() => {
@@ -227,7 +242,9 @@ function useGameSession(initialPlayers: Player[], stations: Station[]) {
    Current state: structural placeholder with correct phase flow,
    correct data binding, and the ceremony state model.
    ═══════════════════════════════════════════════════════════ */
-const CEREMONY_EMOJI: Record<string, string> = {
+type CeremonyPhase = "intro" | "session-summary" | "titles-reveal" | "player-reveals" | "ranking-reveal" | "winner-reveal" | "closing";
+
+const CEREMONY_EMOJI: Record<CeremonyPhase, string> = {
     "intro": "🌙",
     "session-summary": "✨",
     "titles-reveal": "🏅",
@@ -237,7 +254,7 @@ const CEREMONY_EMOJI: Record<string, string> = {
     "closing": "💫",
 };
 
-const CEREMONY_LABEL: Record<string, string> = {
+const CEREMONY_LABEL: Record<CeremonyPhase, string> = {
     "intro": "الليلة قربت تخلص...",
     "session-summary": "كنوز الجلسة",
     "titles-reveal": "الألقاب المكتسبة",
@@ -343,10 +360,10 @@ function EndingCeremonyView({
                     </div>
                 )}
 
-                {/* ─── Architecture placeholder note (intro only) ─── */}
-                {ceremony.phase === "intro" && (
-                    <Muted className="text-xs leading-relaxed opacity-30">
-                        [Ending Ceremony — Phase-driven architecture established]
+                {/* ─── Closing phase: warm farewell ─── */}
+                {ceremony.phase === "closing" && (
+                    <Muted className="text-sm leading-relaxed opacity-50">
+                        الليلة خلصت، بس الذكرى باقية ✨
                     </Muted>
                 )}
 
@@ -464,14 +481,7 @@ export default function PlayPage() {
                 {/* ═══════════════════════════════════════════
                     🃏 ACTIVE GAMEPLAY SURFACE / TREASURE OPPORTUNITY
                     ═══════════════════════════════════════════ */}
-                {showTreasureOpportunity ? (
-                    <TreasureOpportunityCard
-                        treasure={activeTreasure}
-                        awardedTitle={awardedTitle}
-                        onOpenTreasure={handleOpenTreasure}
-                        onDismiss={handleDismissTreasure}
-                    />
-                ) : (
+                <div className="relative w-full">
                     <ActiveStationSurface
                         station={station}
                         playerName={currentPlayer.name}
@@ -479,7 +489,20 @@ export default function PlayPage() {
                         onRoundComplete={handleRoundComplete}
                         onNextStation={handleNextStation}
                     />
-                )}
+
+                    <AnimatePresence>
+                        {showTreasureOpportunity && (
+                            <div className="absolute inset-0 z-50">
+                                <TreasureOpportunityCard
+                                    treasure={activeTreasure}
+                                    awardedTitle={awardedTitle}
+                                    onOpenTreasure={handleOpenTreasure}
+                                    onDismiss={handleDismissTreasure}
+                                />
+                            </div>
+                        )}
+                    </AnimatePresence>
+                </div>
 
                 {/* ═══════════════════════════════════════════
                     📊 SESSION PROGRESS — Round indicator

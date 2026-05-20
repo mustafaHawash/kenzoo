@@ -141,36 +141,17 @@ export type Treasure = {
  * The visible portion of a treasure shown to the UI during gameplay.
  * Contains ONLY the data needed to render the mystery and emotional reveal.
  * Excludes rarity, star cost, and hidden points to strictly enforce the mystery.
+ * NO cinematic data that could leak rarity is included.
  */
-export type HiddenTreasureReveal = Omit<Treasure, "rarity" | "starsRequired"> & {
-    /** 
-     * Cinematic instructions derived from rarity, replacing explicit rarity knowledge.
-     * Allows the UI to render subtle variances without knowing the underlying economy.
-     */
-    cinematic: {
-        glowOpacity: number;
-        emojiSizeClass: string;
-        revealDuration: number;
-        hasPulse: boolean;
-    };
-};
+export type GameplayTreasureView = Omit<Treasure, "rarity" | "starsRequired">;
 
 /**
- * Transforms a raw Treasure into a HiddenTreasureReveal, safely stripping out
- * all hidden economic data and replacing rarity with cinematic styling instructions.
+ * Transforms a raw Treasure into a GameplayTreasureView, safely stripping out
+ * all hidden economic data and rarity.
  */
-export function toHiddenTreasureReveal(treasure: Treasure): HiddenTreasureReveal {
+export function toGameplayTreasureView(treasure: Treasure): GameplayTreasureView {
     const { rarity, starsRequired, ...safeData } = treasure;
-
-    return {
-        ...safeData,
-        cinematic: {
-            glowOpacity: rarity === "legendary" ? 0.22 : rarity === "rare" ? 0.18 : 0.15,
-            emojiSizeClass: rarity === "legendary" ? "text-6xl" : rarity === "rare" ? "text-[52px]" : "text-5xl",
-            revealDuration: rarity === "legendary" ? 1400 : rarity === "rare" ? 1100 : 900,
-            hasPulse: rarity === "legendary",
-        },
-    };
+    return safeData;
 }
 
 /**

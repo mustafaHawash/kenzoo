@@ -80,7 +80,7 @@ export type SessionState = {
      * The pending treasure opportunity for the current player, if any.
      * Strict isolation: the UI NEVER holds this in its own state.
      */
-    activeTreasure: Treasure | null;
+    activeTreasure: { treasure: Treasure; ownerId: string } | null;
 
     /** Legendary treasure IDs already claimed this session — excluded from future rolls. */
     claimedLegendaryIds: string[];
@@ -220,7 +220,9 @@ export function advanceTurn(
         currentRound: nextRound,
         globalTurnIndex: state.globalTurnIndex + 1,
         isComplete,
-        activeTreasure: null,
+        // activeTreasure is preserved across the turn boundary because the overlay
+        // may be shown *after* the state has advanced to the next player.
+        activeTreasure: state.activeTreasure,
     };
 }
 
@@ -244,7 +246,9 @@ export function applyTurnOutcome(
     return {
         ...state,
         players: updatedPlayers,
-        activeTreasure: outcome.treasureOpportunity,
+        activeTreasure: outcome.treasureOpportunity 
+            ? { treasure: outcome.treasureOpportunity, ownerId: state.players[state.currentPlayerIndex].id }
+            : null,
     };
 }
 
@@ -287,10 +291,15 @@ export function applyPlayerUpdate(
 export function applyTreasureOpen(
     state: SessionState,
 ): SessionState {
-    const treasure = state.activeTreasure;
-    if (!treasure) return state;
+    const active = state.activeTreasure;
+    if (!active) return state;
 
-    const playerIndex = state.currentPlayerIndex;
+    const { treasure, ownerId } = active;
+    
+    // Find the player who actually earned the treasure
+    const playerIndex = state.players.findIndex((p) => p.id === ownerId);
+    if (playerIndex === -1) return state;
+
     const player = state.players[playerIndex];
     const { updatedPlayer } = resolveTreasureOpen(player, treasure);
 
@@ -308,6 +317,17 @@ export function applyTreasureOpen(
         players: updatedPlayers,
         claimedLegendaryIds,
         activeTreasure: null, // Clear after opening
+    };
+}
+
+/**
+ * Clears the active treasure opportunity from session state.
+ * Called when the player dismisses the treasure overlay.
+ */
+export function clearActiveTreasure(state: SessionState): SessionState {
+    return {
+        ...state,
+        activeTreasure: null,
     };
 }
 

@@ -7,7 +7,7 @@ import { CozyCard } from "@/components/ui/cozy-card";
 import { LanternButton } from "@/components/ui/lantern-button";
 import { Headline, Muted, Body } from "@/components/ui/typography";
 
-import type { HiddenTreasureReveal } from "@/types/treasure";
+import type { GameplayTreasureView } from "@/types/treasure";
 
 import {
     treasureCardEntrance,
@@ -15,7 +15,6 @@ import {
     sparkle,
     rewardReveal,
     glowRing,
-    legendaryEmojiPulse,
 } from "./motion";
 
 /* ─── Mystery messages shown BEFORE opening (all rarities identical) ─── */
@@ -33,7 +32,7 @@ function pickMysteryMessage(): string {
 
 /* ─── Props ─── */
 interface TreasureOpportunityCardProps {
-    treasure: HiddenTreasureReveal | null;
+    treasure: GameplayTreasureView | null;
     /** The randomly picked title for "title" reward type (set when treasure is opened) */
     awardedTitle?: string | null;
     onOpenTreasure: () => void;
@@ -106,7 +105,7 @@ export function TreasureOpportunityCard({
         revealTimeoutRef.current = setTimeout(() => {
             revealTimeoutRef.current = null;
             setPhase("revealed");
-        }, treasure.cinematic.revealDuration);
+        }, 1100);
     };
 
     return (
@@ -126,7 +125,7 @@ export function TreasureOpportunityCard({
                         className="pointer-events-none absolute inset-0"
                         style={{
                             background: phase === "revealed" && treasure
-                                ? `radial-gradient(circle at center, rgba(246,208,140,${treasure.cinematic.glowOpacity}), transparent 60%)`
+                                ? `radial-gradient(circle at center, rgba(246,208,140,0.15), transparent 60%)`
                                 : "radial-gradient(circle at center, rgba(246,208,140,0.13), transparent 60%)",
                         }}
                     />
@@ -231,22 +230,16 @@ export function TreasureOpportunityCard({
                                 animate="animate"
                                 className="flex flex-col items-center gap-5 w-full"
                             >
-                                {/* Emoji — subtle motion and size variance based on cinematic props */}
+                                {/* Emoji — unified size and motion */}
                                 <motion.span
-                                    variants={treasure.cinematic.hasPulse ? legendaryEmojiPulse : undefined}
-                                    animate={treasure.cinematic.hasPulse ? "animate" : undefined}
-                                    className={treasure.cinematic.emojiSizeClass}
+                                    className="text-5xl"
                                 >
                                     {treasure.emoji}
                                 </motion.span>
 
                                 {/* No explicit rarity badges. Rarity is felt, not read. */}
 
-                                <Headline className={
-                                    treasure.cinematic.emojiSizeClass === "text-6xl" ? "text-secondary text-2xl text-center"
-                                        : treasure.cinematic.emojiSizeClass === "text-[52px]" ? "text-secondary text-[22px] text-center"
-                                            : "text-secondary text-xl text-center"
-                                }>
+                                <Headline className="text-secondary text-xl text-center">
                                     {treasure.title}
                                 </Headline>
                                 <Muted className="text-xs text-center italic text-muted-foreground/60">{treasure.flavor}</Muted>

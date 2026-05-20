@@ -2,18 +2,13 @@
 
 import { themeOptions } from "./setup-content";
 import { ThemeCard } from "./theme-card";
-import type { ThemeDefinition } from "./setup-types";
-import { LanternButton } from "@/components/ui/lantern-button";
+import type { ThemeDefinition, StepComponentProps } from "./setup-types";
 
-export function ThemeStep({
-    selectedThemeId,
-    onSelectTheme,
-}: {
-    selectedThemeId: ThemeDefinition["id"];
-    onSelectTheme: (id: ThemeDefinition["id"]) => void;
-}) {
+export function ThemeStep({ setup, onSetupChange }: StepComponentProps) {
+    const selectedThemeId = setup.themeId;
+    const onSelectTheme = (id: ThemeDefinition["id"]) => onSetupChange("themeId", id);
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
             {themeOptions.map((theme) => (
                 <ThemeCard
                     key={theme.id}
@@ -22,10 +17,6 @@ export function ThemeStep({
                     onSelect={() => onSelectTheme(theme.id)}
                 />
             ))}
-
-            <LanternButton type="submit" className="mt-1 bg-secondary text-secondary-foreground">
-                جهزوا الليلة
-            </LanternButton>
         </div>
     );
 }
