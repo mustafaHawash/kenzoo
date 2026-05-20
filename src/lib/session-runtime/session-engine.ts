@@ -4,19 +4,20 @@
  * Lightweight central runtime orchestrator for Kenzoo gameplay sessions.
  *
  * RESPONSIBILITIES:
- *   - Round progression (fixed-length: default 4 rounds × N players)
- *   - Turn progression and next player selection
+ *   - Path-based progression (4 paths per player, persistent between turns)
+ *   - Turn progression and next player selection (round-robin)
+ *   - Path completion detection (first player to complete all 4 paths triggers ending)
  *   - Hidden progression tracking (silent point accumulation)
- *   - Session completion detection (after all rounds complete — NO early termination)
  *   - Treasure economy coordination
  *   - Ending ceremony orchestration and phase sequencing
  *
  * PHILOSOPHY:
  *   - Pure functions only — no side effects, no Zustand, no reducers
  *   - Lightweight orchestration — not an enterprise engine
- *   - Fixed-length sessions — the session ALWAYS completes all rounds
+ *   - Path-based sessions — players progress through persistent paths
  *   - Hidden scoring — points are final scoring weights, NOT instant victory triggers
  *   - The winner is revealed ONLY via the cinematic ending ceremony
+ *   - Wrong answer pauses the path and ends the turn — progression is saved
  *
  * NOT:
  *   - A Redux store
@@ -27,86 +28,103 @@
 
 import type { Player } from "@/types/player";
 import type { Treasure } from "@/types/treasure";
+import type { PlayerJourneyState, JourneyPath, ActivePathSession } from "@/types/path";
+import { advancePathProgression, hasCompletedAllPaths, getNextStation } from "@/types/path";
 import { HIDDEN_POINTS_BY_RARITY } from "@/types/treasure";
 import { resolveTreasureOpen, resolveTurnEnd } from "./turn-engine";
 import type { RoundResult } from "@/types/session";
 
 /* ─── Session Configuration ──────────────────────────────── */
 
-/** Session length to round mapping */
-export const ROUNDS_BY_LENGTH: Record<import("@/types/session").SessionLength, number> = {
+/** Session length to stations-per-path mapping */
+export const STATIONS_BY_LENGTH: Record<import("@/types/session").SessionLength, number> = {
     short: 3,
     normal: 4,
     long: 5,
 };
+
+/** Number of paths each player receives */
+export const PATHS_PER_PLAYER = 4;
+
+/** @deprecated Use STATIONS_BY_LENGTH instead. Preserved for migration. */
+export const ROUNDS_BY_LENGTH = STATIONS_BY_LENGTH;
 
 /* ─── Session State ──────────────────────────────────────── */
 
 /**
  * The runtime state of an active session.
  *
- * Owned by the page via useState.
- * session-engine functions are pure transformers — they return new state,
- * never mutate in place.
+ * Path-based model:
+ *   - Each player has a PlayerJourneyState with 4 paths
+ *   - Path progression is persistent between turns
+ *   - Wrong answer pauses the path, saves progression, ends the turn
+ *   - First player to complete all 4 paths triggers session ending
  */
 export type SessionState = {
     players: Player[];
 
+    /** Per-player journey state — 4 paths each with individual progression */
+    journeys: PlayerJourneyState[];
+
     /** 0-indexed index into players[] — whose turn it is */
     currentPlayerIndex: number;
-
-    /** 1-indexed current round (starts at 1, ends at totalRounds) */
-    currentRound: number;
 
     /** Session length chosen during setup (short, normal, long) */
     sessionLength: import("@/types/session").SessionLength;
 
-    /** Total rounds in this session. Default: DEFAULT_TOTAL_ROUNDS */
-    totalRounds: number;
+    /** Number of stations per path. Derived from sessionLength. */
+    stationsPerPath: number;
 
-    /**
-     * Global turn counter across all rounds.
-     * Increments once per player turn, regardless of round.
-     */
+    /** Global turn counter across the entire session. */
     globalTurnIndex: number;
 
-    /**
-     * True when all rounds have completed.
-     * The page transitions to the ending ceremony when this becomes true.
-     */
+    /** True when any player has completed all 4 paths. */
     isComplete: boolean;
 
-    /** 
-     * The pending treasure opportunity for the current player, if any.
-     * Strict isolation: the UI NEVER holds this in its own state.
-     */
+    /** Currently active path session, or null on path-selection screen. */
+    activePath: ActivePathSession | null;
+
+    /** Pending treasure opportunity — UI NEVER holds this directly. */
     activeTreasure: { treasure: Treasure; ownerId: string } | null;
 
-    /** Legendary treasure IDs already claimed this session — excluded from future rolls. */
+    /** Legendary treasure IDs already claimed this session. */
     claimedLegendaryIds: string[];
 };
 
-/* ─── Ending Ceremony ────────────────────────────────────── */
+/* ─── Gameplay Phase ────────────────────────────────────── */
 
 /**
- * Phase-driven ending ceremony.
+ * The phase-driven gameplay flow.
  *
- * Each phase is a distinct cinematic moment.
- * Phases advance one at a time — slow, emotional, memorable.
+ * path-selection -> question -> reveal -> result -> (treasure) -> transition -> next
  *
- * Order: intro → session-summary → titles-reveal → player-reveals
- *        → ranking-reveal → winner-reveal → closing
+ * After a correct answer:
+ *   - If more stations remain -> back to "question" (same path)
+ *   - If path completed -> "transition" -> next player -> "path-selection"
+ *
+ * After a wrong answer:
+ *   - Path progression saved -> "transition" -> next player -> "path-selection"
  */
-export type EndingCeremonyPhase =
-    | "intro"            // "الليلة قربت تخلص..."
-    | "session-summary"  // Total treasures opened + rarity distribution
-    | "titles-reveal"    // Earned titles revealed one by one
-    | "player-reveals"   // Each player's cinematic treasure spotlight
-    | "ranking-reveal"   // Rankings revealed progressively (last place first)
-    | "winner-reveal"    // Final cinematic winner reveal
-    | "closing";         // Optional: emotional session memory or highlight
+export type GameplayPhase =
+    | "path-selection"
+    | "question"
+    | "reveal"
+    | "result"
+    | "treasure"
+    | "transition"
+    | "ending";
 
-/** The phase advancement order — used by advanceCeremonyPhase(). */
+/* ─── Ending Ceremony ────────────────────────────────────── */
+
+export type EndingCeremonyPhase =
+    | "intro"
+    | "session-summary"
+    | "titles-reveal"
+    | "player-reveals"
+    | "ranking-reveal"
+    | "winner-reveal"
+    | "closing";
+
 const CEREMONY_PHASE_ORDER: EndingCeremonyPhase[] = [
     "intro",
     "session-summary",
@@ -117,76 +135,141 @@ const CEREMONY_PHASE_ORDER: EndingCeremonyPhase[] = [
     "closing",
 ];
 
-/**
- * Final score entry for one player — computed at session end, revealed in ceremony.
- *
- * HIDDEN during gameplay. Visible only during ending ceremony.
- */
 export type PlayerFinalScore = {
     player: Player;
-
-    /** Accumulated hidden treasure points — final scoring weight */
     hiddenPoints: number;
-
-    /** 1-indexed final ranking (1 = winner) */
     rank: number;
 };
 
-/**
- * The state of an active ending ceremony.
- * Created once the session completes. Advances phase by phase.
- */
 export type EndingCeremonyState = {
     phase: EndingCeremonyPhase;
-
-    /** Final scores ordered by rank (rank 1 first = winner first) */
     finalScores: PlayerFinalScore[];
-
-    /** The winning player's ID */
     winnerId: string;
 };
 
 /* ─── Factory ────────────────────────────────────────────── */
 
 /**
- * Creates the initial session state from a player list and optional config.
- *
- * Call this once at the beginning of a session.
- * Example: const state = createSessionState(players, "normal") // 4 rounds default
+ * Creates the initial session state.
+ * Journeys are created by generateSession() — for now, pass pre-built journeys.
  */
 export function createSessionState(
     players: Player[],
+    journeys: PlayerJourneyState[],
     sessionLength: import("@/types/session").SessionLength = "normal",
 ): SessionState {
-    const totalRounds = ROUNDS_BY_LENGTH[sessionLength];
+    const stationsPerPath = STATIONS_BY_LENGTH[sessionLength];
 
     return {
         players,
+        journeys,
         currentPlayerIndex: 0,
-        currentRound: 1,
-        totalRounds,
         sessionLength,
+        stationsPerPath,
         globalTurnIndex: 0,
         isComplete: false,
+        activePath: null,
         activeTreasure: null,
         claimedLegendaryIds: [],
+    };
+}
+
+/* ─── Path Selection ────────────────────────────────────── */
+
+/**
+ * Player selects a path to attempt.
+ * Creates an ActivePathSession from the current journey state.
+ * The path opens at the player's saved progression point.
+ */
+export function selectPath(
+    state: SessionState,
+    pathId: string,
+): SessionState {
+    const currentJourney = state.journeys[state.currentPlayerIndex];
+    const path = currentJourney.paths.find((p) => p.id === pathId);
+
+    if (!path || path.completed) return state;
+
+    const station = getNextStation(path);
+    if (!station) return state;
+
+    const activePath: ActivePathSession = {
+        pathId: path.id,
+        playerId: currentJourney.playerId,
+        currentStation: station,
+        currentStationIndex: path.currentStationIndex,
+        totalStations: path.stations.length,
+        stationsClearedThisTurn: 0,
+        starsEarnedThisTurn: 0,
+    };
+
+    return {
+        ...state,
+        activePath,
+    };
+}
+
+/* ─── Path Progression ──────────────────────────────────── */
+
+/**
+ * Advances the active path after a correct answer.
+ * Commits station completion to the journey state.
+ * If the path is completed, checks if the player completed all 4 paths.
+ */
+export function advanceActivePath(
+    state: SessionState,
+    starsEarned: number,
+): SessionState {
+    if (!state.activePath) return state;
+
+    const { pathId, playerId } = state.activePath;
+
+    const updatedJourneys = state.journeys.map((journey) => {
+        if (journey.playerId !== playerId) return journey;
+
+        const updatedPaths = journey.paths.map((path) => {
+            if (path.id !== pathId) return path;
+            return advancePathProgression(path);
+        });
+
+        const allCompleted = updatedPaths.every((p) => p.completed);
+
+        return {
+            ...journey,
+            paths: updatedPaths,
+            allPathsCompleted: allCompleted,
+        };
+    });
+
+    const currentJourney = updatedJourneys[state.currentPlayerIndex];
+    const isComplete = currentJourney.allPathsCompleted;
+
+    const updatedPath = currentJourney.paths.find((p) => p.id === pathId)!;
+    const nextStation = getNextStation(updatedPath);
+
+    const updatedActivePath: ActivePathSession | null = nextStation
+        ? {
+            ...state.activePath,
+            currentStation: nextStation,
+            currentStationIndex: updatedPath.currentStationIndex,
+            stationsClearedThisTurn: state.activePath.stationsClearedThisTurn + 1,
+            starsEarnedThisTurn: state.activePath.starsEarnedThisTurn + starsEarned,
+        }
+        : null;
+
+    return {
+        ...state,
+        journeys: updatedJourneys,
+        activePath: updatedActivePath,
+        isComplete,
     };
 }
 
 /* ─── Turn Advancement ───────────────────────────────────── */
 
 /**
- * Advances the session to the next turn after the current player completes theirs.
- *
- * Turn structure:
- *   - Each player plays once per round (left to right through players[])
- *   - After all players have played, the round increments
- *   - After totalRounds rounds, isComplete becomes true
- *
- * Also applies resolveTurnEnd() to the current player
- * (tiny mission completion tracking).
- *
- * Pure function — returns updated SessionState.
+ * Advances the session to the next player's turn.
+ * Clears the active path session and moves to the next player in round-robin.
  */
 export function advanceTurn(
     state: SessionState,
@@ -194,7 +277,6 @@ export function advanceTurn(
 ): SessionState {
     const playerCount = state.players.length;
 
-    // Apply turn-end resolution (tiny mission tracking) to current player
     const updatedPlayers = state.players.map((p, i) =>
         i === state.currentPlayerIndex
             ? resolveTurnEnd(p, lastResult)
@@ -202,38 +284,22 @@ export function advanceTurn(
     );
 
     const nextPlayerIndex = (state.currentPlayerIndex + 1) % playerCount;
-    const isLastPlayerInRound = nextPlayerIndex === 0;
-
-    // Round increments after all players complete their turn
-    const nextRound = isLastPlayerInRound
-        ? state.currentRound + 1
-        : state.currentRound;
-
-    // Session completes when the last player finishes the last round
-    const isComplete =
-        isLastPlayerInRound && state.currentRound >= state.totalRounds;
 
     return {
         ...state,
         players: updatedPlayers,
         currentPlayerIndex: nextPlayerIndex,
-        currentRound: nextRound,
         globalTurnIndex: state.globalTurnIndex + 1,
-        isComplete,
-        // activeTreasure is preserved across the turn boundary because the overlay
-        // may be shown *after* the state has advanced to the next player.
-        activeTreasure: state.activeTreasure,
+        activePath: null,
+        activeTreasure: null,
     };
 }
 
 /* ─── Player & Turn Update ───────────────────────────────── */
 
 /**
- * Applies the outcome of a player's turn to the session state.
+ * Applies the outcome of a station answer to the session state.
  * Captures the updated player and any resulting treasure opportunity.
- *
- * This strict boundary ensures the UI NEVER holds the raw Treasure
- * in its own state variables.
  */
 export function applyTurnOutcome(
     state: SessionState,
@@ -246,7 +312,7 @@ export function applyTurnOutcome(
     return {
         ...state,
         players: updatedPlayers,
-        activeTreasure: outcome.treasureOpportunity 
+        activeTreasure: outcome.treasureOpportunity
             ? { treasure: outcome.treasureOpportunity, ownerId: state.players[state.currentPlayerIndex].id }
             : null,
     };
@@ -254,9 +320,6 @@ export function applyTurnOutcome(
 
 /**
  * Applies an immutable player update to session state.
- *
- * Used after turn resolution to apply star changes and other per-player updates.
- * Pure function — returns updated SessionState.
  */
 export function applyPlayerUpdate(
     state: SessionState,
@@ -275,28 +338,13 @@ export function applyPlayerUpdate(
 
 /**
  * Applies a treasure opening to session state.
- *
- * Consumes the internally tracked state.activeTreasure. The UI does not pass
- * the treasure payload.
- *
- * Deducts hidden star cost, records the opened treasure (for ceremony reveal),
- * and tracks legendary claims to exclude from future rolls.
- *
- * IMPORTANT:
- *   Does NOT check win condition — the session runs to completion.
- *   Hidden points are accumulated silently and only scored at ceremony time.
- *
- * Pure function — returns updated SessionState.
+ * Deducts hidden star cost, records the opened treasure, tracks legendary claims.
  */
-export function applyTreasureOpen(
-    state: SessionState,
-): SessionState {
+export function applyTreasureOpen(state: SessionState): SessionState {
     const active = state.activeTreasure;
     if (!active) return state;
 
     const { treasure, ownerId } = active;
-    
-    // Find the player who actually earned the treasure
     const playerIndex = state.players.findIndex((p) => p.id === ownerId);
     if (playerIndex === -1) return state;
 
@@ -316,13 +364,12 @@ export function applyTreasureOpen(
         ...state,
         players: updatedPlayers,
         claimedLegendaryIds,
-        activeTreasure: null, // Clear after opening
+        activeTreasure: null,
     };
 }
 
 /**
  * Clears the active treasure opportunity from session state.
- * Called when the player dismisses the treasure overlay.
  */
 export function clearActiveTreasure(state: SessionState): SessionState {
     return {
@@ -335,11 +382,8 @@ export function clearActiveTreasure(state: SessionState): SessionState {
 
 /**
  * Computes final hidden point totals for all players.
- *
  * Called ONLY when session.isComplete === true.
  * Results are fed into the ending ceremony — never shown during active gameplay.
- *
- * Returns scores sorted by rank (rank 1 = most points = winner).
  */
 export function computeFinalScores(state: SessionState): PlayerFinalScore[] {
     const scored = state.players.map((player) => {
@@ -350,7 +394,6 @@ export function computeFinalScores(state: SessionState): PlayerFinalScore[] {
         return { player, hiddenPoints };
     });
 
-    // Sort descending by hidden points (most points = rank 1)
     const sorted = [...scored].sort((a, b) => b.hiddenPoints - a.hiddenPoints);
 
     return sorted.map((entry, index) => ({
@@ -363,15 +406,13 @@ export function computeFinalScores(state: SessionState): PlayerFinalScore[] {
 
 /**
  * Creates the initial ending ceremony state once a session completes.
- *
  * Computes final scores and sets the starting phase to "intro".
- * The page transitions to the ceremony when session.isComplete becomes true.
  */
 export function createEndingCeremonyState(
     state: SessionState,
 ): EndingCeremonyState {
     const finalScores = computeFinalScores(state);
-    const winner = finalScores[0]; // rank 1 = highest hidden points
+    const winner = finalScores[0];
 
     return {
         phase: "intro",
@@ -382,11 +423,7 @@ export function createEndingCeremonyState(
 
 /**
  * Advances the ending ceremony to the next phase.
- *
- * Each call moves the ceremony forward one step.
  * Stops at "closing" — the final phase.
- *
- * Pure function — returns updated EndingCeremonyState.
  */
 export function advanceCeremonyPhase(
     ceremony: EndingCeremonyState,
@@ -406,20 +443,25 @@ export function advanceCeremonyPhase(
 /* ─── Utility ────────────────────────────────────────────── */
 
 /**
- * Returns a human-readable round progress label.
- * Example: "الجولة 2 من 4"
- *
- * Used in the session progress indicator during gameplay.
+ * Returns a human-readable path progress label.
+ * Example: "المسار 2 من 4"
  */
 export function getSessionProgressLabel(state: SessionState): string {
-    return `الجولة ${state.currentRound} من ${state.totalRounds}`;
+    const journey = state.journeys[state.currentPlayerIndex];
+    if (!journey) return "";
+    const completed = journey.paths.filter((p) => p.completed).length;
+    return `${completed} من ${PATHS_PER_PLAYER} مسارات`;
 }
 
 /**
- * Returns total turns remaining in the session.
- * Includes the current turn.
+ * Returns total remaining stations across all uncompleted paths for all players.
  */
-export function getRemainingTurns(state: SessionState): number {
-    const totalTurns = state.players.length * state.totalRounds;
-    return Math.max(0, totalTurns - state.globalTurnIndex);
+export function getRemainingStations(state: SessionState): number {
+    return state.journeys.reduce((total, journey) => {
+        return total + journey.paths.reduce((pathTotal, path) => {
+            if (path.completed) return pathTotal;
+            return pathTotal + (path.stations.length - path.currentStationIndex);
+        }, 0);
+    }, 0);
 }
+

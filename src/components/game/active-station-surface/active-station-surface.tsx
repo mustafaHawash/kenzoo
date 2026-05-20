@@ -20,7 +20,9 @@ interface ActiveStationSurfaceProps {
     playerName: string;
     onResolveAnswer: (answer: string) => TurnOutcome;
     onRoundComplete: (outcome: TurnOutcome) => void;
-    onNextStation: () => void;
+    /** Called when the player continues from the result phase.
+     *  The shell decides whether to show treasure or transition to next station. */
+    onContinueFromResult: () => void;
 }
 
 /* ─── Game phase ─── */
@@ -55,7 +57,7 @@ export function ActiveStationSurface({
     playerName,
     onResolveAnswer,
     onRoundComplete,
-    onNextStation,
+    onContinueFromResult,
 }: ActiveStationSurfaceProps) {
     const [phase, setPhase] = useState<GamePhase>("playing");
     const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
@@ -84,14 +86,14 @@ export function ActiveStationSurface({
         }, REVEAL_DELAY_MS);
     }, [currentAnswer, onResolveAnswer, onRoundComplete]);
 
-    /* ─── Next station ─── */
-    const handleNext = useCallback(() => {
+    /* ─── Continue from result ─── */
+    const handleContinue = useCallback(() => {
         setPhase("playing");
         setSelectedChoice(null);
         setTextInput("");
         setTurnOutcome(null);
-        onNextStation();
-    }, [onNextStation]);
+        onContinueFromResult();
+    }, [onContinueFromResult]);
 
     return (
         <AnimatePresence mode="wait">
@@ -159,7 +161,7 @@ export function ActiveStationSurface({
                             <ResultPhase
                                 station={station}
                                 result={turnOutcome.roundResult}
-                                onNext={handleNext}
+                                onNext={handleContinue}
                             />
                         )}
                     </div>

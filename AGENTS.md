@@ -97,11 +97,12 @@ the full gameplay experience from session setup until session ending.
 A Session contains:
 
 - players
-- stations
+- paths (4 per player)
+- stations (inside paths)
 - stars
 - treasures
 - turns
-- progression
+- path progression
 - rewards
 - titles
 - atmosphere
@@ -110,37 +111,39 @@ Gameplay Flow:
 
 Start
 ↓
-Session Setup
+Session Setup (players, length, theme)
 ↓
-Players
+Session Generation (creates 4 paths per player)
 ↓
-Theme Selection
+Player Turn Begins
 ↓
-Session Generation
+Player Chooses ONE of Their 4 Paths
 ↓
-Current Player Chooses a Mysterious Path
+Path Opens at Current Saved Progression
 ↓
-Current Station in Path Opens
+Player Attempts Stations Sequentially Inside Path
 ↓
-Gameplay Interaction Begins
+Correct Answer: Gain Stars + Possible Treasure + Continue Deeper in Path
 ↓
-Correct Answer: Advance in Path / Wrong Answer: Station Disappears & Turn Ends
+Wrong Answer: Path Pauses + Progression Saved + Turn Ends
 ↓
-Possible Treasure Opportunity
-↓
-Next Player Turn
+Next Player Turn (round-robin)
 ↓
 Return to Player Journey Board
 ↓
-Loop for Fixed Rounds (default: 4 rounds per player)
+First Player to Complete ALL 4 Paths Triggers Session Ending
 ↓
-Loop Until All Rounds Complete
-↓
-Session Ending
-↓
-Titles, Rewards, Memories
+Ending Ceremony (treasures, titles, rankings)
 ↓
 New Session
+
+IMPORTANT PATH RULES:
+- Path progression is PERSISTENT between turns
+- If a player fails at station 2/4, next turn they continue from station 3/4
+- A player may clear MULTIPLE stations in ONE turn if they keep answering correctly
+- Players choose ANY path every turn — they are NOT locked into one path
+- Each path contains N stations where N = selected session length
+- Wrong answer immediately pauses the path and ends the turn
 
 The game should feel:
 
@@ -220,13 +223,18 @@ a visible optimization system.
 
 # Session Length Philosophy
 
+Session length determines the number of stations per path.
+
 Session length options:
 
-- قصيرة 🌙 = 3 rounds
-- ليلة عادية ✨ = 4 rounds
-- سهرة طويلة 🔥 = 5 rounds
+- قصيرة 🌙 = 3 stations per path
+- ليلة عادية ✨ = 4 stations per path
+- سهرة طويلة 🔥 = 5 stations per path
 
-Replace numeric round selection with these named lengths.
+Each player always has 4 paths.
+Session length controls how deep each path goes.
+
+Example: "ليلة عادية" → 4 paths × 4 stations = 16 total stations per player.
 
 ---
 
@@ -305,11 +313,26 @@ Each path contains:
 number of stations equal to session length.
 
 Example:
-5-round session → each path contains 5 sequential stations.
+"ليلة عادية" session → each path contains 4 sequential stations.
 
 Stations inside a path remain sequential.
 Players may choose ANY path every turn.
 Players are NOT locked into one path.
+
+Path progression is PERSISTENT:
+- If a player answers correctly, they advance to the next station in that path
+- If a player answers incorrectly, the path PAUSES and their turn ends
+- Next turn, the player can return to the same path and continue from where they paused
+- Progression is saved per-path — failing one path does not affect other paths
+
+Session end condition:
+The FIRST player to complete ALL 4 paths triggers the session ending.
+The ending ceremony then begins for all players.
+
+Higher difficulty stations:
+- reward more stars
+- have higher treasure probability
+- BUT difficulty is HIDDEN from players
 
 ---
 
@@ -570,32 +593,30 @@ NOT:
 
 # Session Ending Philosophy
 
-Sessions are fixed-length.
+Sessions end when the FIRST player completes ALL 4 paths.
 
-The session ALWAYS completes all rounds.
+This is the official session end condition.
+There are NO round-based endings.
+There is NO fixed turn count.
 
-Default session structure:
-
-- 4 rounds
-- each player plays once per round
-
-Example:
-3 players × 4 rounds = 12 total turns
-
-The session does NOT end early.
-There is NO instant victory trigger during gameplay.
+The session does NOT end based on:
+- hidden treasure points
+- fixed round counts
+- treasure totals
+- time limits
 
 Hidden treasure points are:
 FINAL SCORING WEIGHTS — not instant victory triggers.
 
-The winner is revealed ONLY after all rounds complete,
-via the cinematic ending ceremony.
+The winner is revealed ONLY during the ending ceremony,
+based on hidden treasure point totals.
 
 Players should NEVER know during gameplay:
 
 - their exact hidden treasure points
 - their ranking
 - how close they are to winning
+- how close another player is to completing all paths
 
 The ending ceremony should feel:
 
@@ -615,38 +636,36 @@ NOT:
 
 ---
 
-# Fixed-Length Session Structure
+# Path-Based Session Structure
 
-Sessions run for a fixed number of rounds.
+Sessions are path-based, NOT round-based.
 
-Default:
+Each player has 4 paths.
+Each path contains N stations (N = session length).
+Players take turns in round-robin order.
 
-- 4 rounds total
-- each player plays once per round
+Turn structure:
 
-Total turns = number of players × total rounds
+- Current player chooses a path
+- Player attempts stations sequentially in that path
+- Correct answer: advance to next station, continue turn
+- Wrong answer: path pauses, turn ends
+- Next player takes their turn
 
-Example:
-3 players × 4 rounds = 12 total turns
+Session completion:
 
-Turn advancement:
+- The FIRST player to complete ALL 4 paths triggers the ending
+- All players experience the ending ceremony together
+- The winner is determined by hidden treasure points (NOT path completion order)
 
-- after each turn, the next player plays (round-robin)
-- after all players play once, the round increments
-- after all rounds complete, the session ends
+Path completion tracking:
 
-The session is ALWAYS completed in full.
-No early termination. No instant win triggers.
-
-Session completion is tracked by:
-
-- currentRound
-- totalRounds
-- currentPlayerIndex
-- players.length
+- Each path tracks: currentStationIndex, completed status
+- Per-player journey state: paths[] with individual progression
+- Session completion: check if any player has all 4 paths completed
 
 This is orchestrated by:
-`session-engine.ts` → `advanceTurn()`
+`session-engine.ts` → path progression functions
 
 ---
 

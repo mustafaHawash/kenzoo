@@ -1,3 +1,4 @@
+//path src/components/game/active-station-surface/index.ts
 
 export { ActiveStationSurface } from "./active-station-surface";
 export { StationHeader } from "./station-header";

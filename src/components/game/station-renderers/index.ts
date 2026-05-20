@@ -25,7 +25,6 @@ import { RiddleRenderer } from "./riddle-renderer";
 import { GuessRenderer } from "./guess-renderer";
 import { MemoryRenderer } from "./memory-renderer";
 import { PuzzleRenderer } from "./puzzle-renderer";
-import { TreasureRenderer } from "./treasure-renderer";
 import { MysteryRenderer } from "./mystery-renderer";
 import { StoryRenderer } from "./story-renderer";
 
@@ -35,7 +34,6 @@ export const stationRenderers: StationRendererRegistry = {
     guess: GuessRenderer,
     memory: MemoryRenderer,
     puzzle: PuzzleRenderer,
-    treasure: TreasureRenderer,
     mystery: MysteryRenderer,
     story: StoryRenderer,
 };
@@ -49,6 +47,5 @@ export { RiddleRenderer } from "./riddle-renderer";
 export { GuessRenderer } from "./guess-renderer";
 export { MemoryRenderer } from "./memory-renderer";
 export { PuzzleRenderer } from "./puzzle-renderer";
-export { TreasureRenderer } from "./treasure-renderer";
 export { MysteryRenderer } from "./mystery-renderer";
 export { StoryRenderer } from "./story-renderer";

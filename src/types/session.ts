@@ -2,7 +2,8 @@ import { Player } from "./player";
 import { Station, TinyMission } from "./station";
 import { Theme, SessionMood } from "./theme";
 
-export type RoundResult = {
+/** Result of answering a single station — still used per-station resolution */
+export type StationResult = {
     isCorrect: boolean;
 
     starsEarned: number;
@@ -12,6 +13,10 @@ export type RoundResult = {
     tinyMission?: TinyMission;
 };
 
+/** @deprecated Use StationResult instead. Preserved for migration. */
+export type RoundResult = StationResult;
+
+/** @deprecated Rounds are no longer the progression model. Use path-based progression instead. */
 export type Round = {
     id: string;
 
@@ -25,13 +30,14 @@ export type Round = {
 };
 
 /**
- * Named session lengths (replaces arbitrary numeric rounds).
- *  - short = 3 rounds
- *  - normal = 4 rounds
- *  - long = 5 rounds
+ * Named session lengths — determines stations per path.
+ *  - short = 3 stations per path
+ *  - normal = 4 stations per path
+ *  - long = 5 stations per path
  */
 export type SessionLength = "short" | "normal" | "long";
 
+/** @deprecated This type represents the old round-based session model. The runtime now uses SessionState from session-engine.ts with path-based progression. Preserved for reference only. */
 export type Session = {
     id: string;
 
@@ -41,8 +47,10 @@ export type Session = {
 
     players: Player[];
 
+    /** @deprecated Use path-based journeys instead */
     rounds: Round[];
 
+    /** @deprecated No longer used in path-based model */
     currentRoundIndex: number;
 
     currentPlayerIndex: number;
@@ -51,13 +59,7 @@ export type Session = {
 
     sessionLength: SessionLength;
 
-    /**
-     * Fixed-length session structure.
-     * The session ALWAYS runs for exactly this many rounds.
-     * Derived from sessionLength (short=3, normal=4, long=5).
-     * There is NO early termination based on hidden point totals.
-     * Total turns = totalRounds × N players.
-     */
+    /** @deprecated Use stationsPerPath from SessionState instead */
     totalRounds: number;
 
     createdAt: string;

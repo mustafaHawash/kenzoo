@@ -6,7 +6,6 @@ export type StationType =
     | "guess"
     | "memory"
     | "puzzle"
-    | "treasure"
     | "mystery"
     | "story";
 

@@ -143,15 +143,36 @@ export type Treasure = {
  * Excludes rarity, star cost, and hidden points to strictly enforce the mystery.
  * NO cinematic data that could leak rarity is included.
  */
-export type GameplayTreasureView = Omit<Treasure, "rarity" | "starsRequired">;
+export type GameplayTreasureView = Omit<Treasure, "rarity" | "starsRequired" | "reward"> & {
+    /** Safe display text for the reward — no hidden values leaked */
+    rewardText: string;
+};
+
+/**
+ * Derives a safe reward display text from a TreasureRewardDetail.
+ * Never reveals star amounts, hidden points, or rarity.
+ */
+function deriveRewardText(reward: TreasureRewardDetail): string {
+    switch (reward.type) {
+        case "stars": return `+${reward.starsAmount ?? 0} نجوم`;
+        case "double-stars": return "الجولة الجاية نجوم مزدوجة";
+        case "bonus-turn": return "جولة إضافية";
+        case "title": return reward.titleText ?? "لقب جديد";
+        case "wisdom": return reward.message ?? "حكمة خاصة";
+        case "secret": return "سر مخفي";
+        case "atmosphere": return "لمسة سحرية";
+        case "real-gift": return "هدية حقيقية";
+        default: return "مفاجأة";
+    }
+}
 
 /**
  * Transforms a raw Treasure into a GameplayTreasureView, safely stripping out
  * all hidden economic data and rarity.
  */
 export function toGameplayTreasureView(treasure: Treasure): GameplayTreasureView {
-    const { rarity, starsRequired, ...safeData } = treasure;
-    return safeData;
+    const { rarity, starsRequired, reward, ...safeData } = treasure;
+    return { ...safeData, rewardText: deriveRewardText(reward) };
 }
 
 /**

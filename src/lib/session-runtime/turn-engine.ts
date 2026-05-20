@@ -44,7 +44,8 @@ export function resolveTurn(
     station: Station,
     answer: string,
     treasurePool: Treasure[],
-    claimedLegendaryIds: string[]
+    claimedLegendaryIds: string[],
+    treasureProbabilityMultiplier: number = 1,
 ): TurnOutcome {
     // Basic correctness logic (can be expanded for fuzzy matching later)
     const isCorrect = answer === station.answer;
@@ -66,10 +67,14 @@ export function resolveTurn(
     let treasureOpportunity: Treasure | null = null;
     // Treasure opportunity appears only when player can afford the max possible hidden cost (7★)
     if (roundResult.isCorrect && roundResult.treasureUnlocked && newStars >= TREASURE_APPEARANCE_MIN_STARS) {
-        treasureOpportunity = pickTreasureByRarity(
-            treasurePool,
-            claimedLegendaryIds,
-        );
+        // Path difficulty multiplier increases the chance of a treasure appearing
+        const shouldAppear = Math.random() < Math.min(1, treasureProbabilityMultiplier);
+        if (shouldAppear) {
+            treasureOpportunity = pickTreasureByRarity(
+                treasurePool,
+                claimedLegendaryIds,
+            );
+        }
     }
 
     return {
