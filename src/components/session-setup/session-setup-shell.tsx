@@ -14,7 +14,8 @@ import { SessionLengthStep } from "./session-length-step";
 import { SessionStepTransition } from "./session-step-transition";
 import { SetupGenerationTransition } from "./setup-generation-transition";
 import { ThemeStep } from "./theme-step";
-import type { SessionSetupState, SetupStep } from "./setup-types";
+import type { SessionSetupState, SetupStep, GenerationTransitionStatus, SessionConfigPayload } from "./setup-types";
+import { sessionLengthOptions } from "./setup-content";
 import { cn } from "@/lib/utils";
 
 const initialSetupState: SessionSetupState = {
@@ -29,11 +30,11 @@ export function SessionSetupShell() {
     const router = useRouter();
     const [setup, setSetup] = useState<SessionSetupState>(initialSetupState);
     const [stepIndex, setStepIndex] = useState(0);
-    const [isGenerating, setIsGenerating] = useState(false);
+    const [generationStatus, setGenerationStatus] = useState<GenerationTransitionStatus>("idle");
 
     const activeStep = stepOrder[stepIndex];
     const stepDefinition = setupSteps.find((step) => step.id === activeStep) ?? setupSteps[0];
-    const canGoBack = stepIndex > 0 && !isGenerating;
+    const canGoBack = stepIndex > 0 && generationStatus === "idle";
 
     const namedPlayerCount = useMemo(
         () => setup.players.filter((player) => player.name.trim().length > 0).length,
@@ -48,13 +49,66 @@ export function SessionSetupShell() {
         setStepIndex((current) => Math.max(current - 1, 0));
     };
 
+    const buildSessionConfig = (): SessionConfigPayload => {
+        const lengthDef = sessionLengthOptions.find((l) => l.id === setup.sessionLengthId);
+        
+        return {
+            players: setup.players.map(({ name, avatar, ageGroup }) => ({ name, avatar, ageGroup })),
+            rounds: lengthDef?.rounds ?? 4,
+            themeId: setup.themeId,
+        };
+    };
+
     const beginGeneration = () => {
-        setIsGenerating(true);
+        setGenerationStatus("preparing");
+        const payload = buildSessionConfig();
+        
+        // Simulating async generation delay, to be replaced by actual logic later
+        window.setTimeout(() => {
+            console.log("Generated config payload:", payload);
+            setGenerationStatus("ready");
+        }, 3200);
     };
 
     const completeGeneration = useCallback(() => {
         router.push("/play");
     }, [router]);
+
+    const renderActiveStep = () => {
+        switch (activeStep) {
+            case "players":
+                return (
+                    <PlayersStep
+                        players={setup.players}
+                        onPlayersChange={(players) =>
+                            setSetup((current) => ({ ...current, players }))
+                        }
+                    />
+                );
+            case "length":
+                return (
+                    <SessionLengthStep
+                        selectedLengthId={setup.sessionLengthId}
+                        onSelectLength={(sessionLengthId) =>
+                            setSetup((current) => ({ ...current, sessionLengthId }))
+                        }
+                    />
+                );
+            case "theme":
+                return (
+                    <ThemeStep
+                        selectedThemeId={setup.themeId}
+                        onSelectTheme={(themeId) =>
+                            setSetup((current) => ({ ...current, themeId }))
+                        }
+                    />
+                );
+            case "begin":
+                return <BeginSessionStep setup={setup} onBegin={beginGeneration} />;
+            default:
+                return null;
+        }
+    };
 
     return (
         <main className="relative min-h-dvh overflow-hidden bg-background text-foreground">
@@ -114,36 +168,7 @@ export function SessionSetupShell() {
                         }}
                     >
                         <SessionStepTransition stepKey={activeStep}>
-                            {activeStep === "players" && (
-                                <PlayersStep
-                                    players={setup.players}
-                                    onPlayersChange={(players) =>
-                                        setSetup((current) => ({ ...current, players }))
-                                    }
-                                />
-                            )}
-
-                            {activeStep === "length" && (
-                                <SessionLengthStep
-                                    selectedLengthId={setup.sessionLengthId}
-                                    onSelectLength={(sessionLengthId) =>
-                                        setSetup((current) => ({ ...current, sessionLengthId }))
-                                    }
-                                />
-                            )}
-
-                            {activeStep === "theme" && (
-                                <ThemeStep
-                                    selectedThemeId={setup.themeId}
-                                    onSelectTheme={(themeId) =>
-                                        setSetup((current) => ({ ...current, themeId }))
-                                    }
-                                />
-                            )}
-
-                            {activeStep === "begin" && (
-                                <BeginSessionStep setup={setup} onBegin={beginGeneration} />
-                            )}
+                            {renderActiveStep()}
                         </SessionStepTransition>
                     </form>
 
@@ -164,8 +189,8 @@ export function SessionSetupShell() {
             </section>
 
             <SetupGenerationTransition
-                active={isGenerating}
-                onComplete={completeGeneration}
+                status={generationStatus}
+                onReady={completeGeneration}
             />
         </main>
     );

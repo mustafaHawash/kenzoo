@@ -31,11 +31,11 @@ export function BeginSessionStep({
                     <Label className="text-secondary">{selectedTheme?.title}</Label>
                     <Body className="text-balance text-xl leading-9 text-foreground">
                         {namedPlayers.length > 0
-                            ? `${namedPlayers.join("، ")}... الليلة مستنياكم.`
-                            : "الليلة مستنية أصحاب الحكاية."}
+                            ? `${namedPlayers.join("، ")}... الليلة بتفتح أبوابها.`
+                            : "الكل جاهز، والورق مستني يتفتح."}
                     </Body>
                     <Muted className="text-sm leading-7">
-                        {selectedLength?.label}، {selectedLength?.rounds} جولات، وكل الأسرار هتبدأ بعد لحظة.
+                        {selectedLength?.label}، {selectedLength?.rounds} جولات، وسر صغير مستني في آخر الطريق.
                     </Muted>
                 </div>
 

@@ -46,3 +46,11 @@ export type SetupStepDefinition = {
     subtitle: string;
 };
 
+// This represents the normalized payload sent to the session generation system
+export type SessionConfigPayload = {
+    players: Omit<SetupPlayer, "id">[];
+    rounds: number;
+    themeId: ThemeDefinition["id"];
+    // Future expansion: language, difficulty weights, etc.
+};
+

@@ -5,18 +5,19 @@ import { motion } from "framer-motion";
 
 import { generationPhrases } from "./setup-content";
 import { Body, Label, Muted } from "@/components/ui/typography";
+import type { GenerationTransitionStatus } from "./setup-types";
 
 export function SetupGenerationTransition({
-    active,
-    onComplete,
+    status,
+    onReady,
 }: {
-    active: boolean;
-    onComplete: () => void;
+    status: GenerationTransitionStatus;
+    onReady: () => void;
 }) {
     const [phraseIndex, setPhraseIndex] = useState(0);
 
     useEffect(() => {
-        if (!active) {
+        if (status === "idle" || status === "ready") {
             return;
         }
 
@@ -24,15 +25,19 @@ export function SetupGenerationTransition({
             setPhraseIndex((current) => (current + 1) % generationPhrases.length);
         }, 1300);
 
-        const completionTimer = window.setTimeout(onComplete, 4300);
-
         return () => {
             window.clearInterval(phraseTimer);
-            window.clearTimeout(completionTimer);
         };
-    }, [active, onComplete]);
+    }, [status]);
 
-    if (!active) {
+    useEffect(() => {
+        if (status === "ready") {
+            const timer = window.setTimeout(onReady, 800); // Short delay to show ready state if needed, or straight transition
+            return () => window.clearTimeout(timer);
+        }
+    }, [status, onReady]);
+
+    if (status === "idle") {
         return null;
     }
 
@@ -54,11 +59,13 @@ export function SetupGenerationTransition({
                 </motion.div>
 
                 <div className="flex flex-col gap-3">
-                    <Label className="text-secondary">الليلة بتتجهز...</Label>
-                    <Body className="min-h-14 text-balance text-lg leading-8 text-foreground">
-                        {generationPhrases[phraseIndex]}
+                    <Label className="text-secondary">
+                        {status === "preparing" ? "الليلة بتتجهز..." : "كل حاجة جاهزة ✨"}
+                    </Label>
+                    <Body className="min-h-14 text-balance text-lg leading-8 text-foreground transition-opacity duration-500">
+                        {status === "preparing" ? generationPhrases[phraseIndex] : "يلا نبدأ الحكاية..."}
                     </Body>
-                    <Muted className="text-xs leading-6">
+                    <Muted className="text-xs leading-6 opacity-0">
                         هنا بعدين هنستقبل توليد الجلسة، المحتوى، الثيمات، وأي انتظار ديناميكي من غير ما الإحساس يكسر.
                     </Muted>
                 </div>
