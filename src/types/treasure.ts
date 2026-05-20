@@ -23,21 +23,20 @@
 
 /* ─── Treasure reward types ─── */
 export type TreasureRewardType =
-    | "stars"          // Bonus stars inside the treasure
-    | "double-stars"   // Next correct answer earns double stars
-    | "bonus-turn"     // Player gets an extra turn
-    | "title"          // Unlocks a new player title
-    | "real-gift"      // A real-world gift (for special events)
-    | "wisdom"         // A beautiful message or quote
-    | "secret"         // A hidden reveal or easter egg
-    | "atmosphere";    // A tiny ambiance enhancement
+    | "stars" // Bonus stars inside the treasure
+    | "double-stars" // Next correct answer earns double stars
+    | "bonus-turn" // Player gets an extra turn
+    | "title" // Unlocks a new player title
+    | "real-gift" // A real-world gift (for special events)
+    | "wisdom" // A beautiful message or quote
+    | "secret" // A hidden reveal or easter egg
+    | "atmosphere"; // A tiny ambiance enhancement
 
 /* ─── Treasure rarity ─── */
 export type TreasureRarity =
-    | "common"     // ~60% weighted chance — warm, satisfying
-    | "rare"       // ~28% weighted chance — exciting, memorable
+    | "common" // ~60% weighted chance — warm, satisfying
+    | "rare" // ~28% weighted chance — exciting, memorable
     | "legendary"; // ~12% weighted chance — unforgettable moment
-
 
 /* ─── Hidden treasure point values (NEVER shown during gameplay) ─── */
 export const HIDDEN_POINTS_BY_RARITY: Record<TreasureRarity, number> = {
@@ -45,7 +44,6 @@ export const HIDDEN_POINTS_BY_RARITY: Record<TreasureRarity, number> = {
     rare: 5,
     legendary: 7,
 };
-
 
 /**
  * @deprecated
@@ -57,7 +55,6 @@ export const HIDDEN_POINTS_BY_RARITY: Record<TreasureRarity, number> = {
  */
 export const HIDDEN_TREASURE_WIN_THRESHOLD = 21;
 
-
 /**
  * The minimum stars a player must have for a treasure opportunity to appear.
  * Set to 7 because that is the maximum possible hidden star cost.
@@ -65,14 +62,12 @@ export const HIDDEN_TREASURE_WIN_THRESHOLD = 21;
  */
 export const TREASURE_APPEARANCE_MIN_STARS = 7;
 
-
 /* ─── Stars consumed by rarity (hidden from player before opening) ─── */
 export const STARS_REQUIRED_BY_RARITY: Record<TreasureRarity, number> = {
     common: 3,
     rare: 5,
     legendary: 7,
 };
-
 
 /* ─── Reward details ─── */
 export type TreasureRewardDetail = {
@@ -87,7 +82,6 @@ export type TreasureRewardDetail = {
     /** For "wisdom"/"secret"/"atmosphere": the message content */
     message?: string;
 };
-
 
 /* ─── Opened treasure record (stored per-player, hidden during session) ─── */
 export type OpenedTreasureRecord = {
@@ -143,7 +137,10 @@ export type Treasure = {
  * Excludes rarity, star cost, and hidden points to strictly enforce the mystery.
  * NO cinematic data that could leak rarity is included.
  */
-export type GameplayTreasureView = Omit<Treasure, "rarity" | "starsRequired" | "reward"> & {
+export type GameplayTreasureView = Omit<
+    Treasure,
+    "rarity" | "starsRequired" | "reward"
+> & {
     /** Safe display text for the reward — no hidden values leaked */
     rewardText: string;
 };
@@ -154,15 +151,24 @@ export type GameplayTreasureView = Omit<Treasure, "rarity" | "starsRequired" | "
  */
 function deriveRewardText(reward: TreasureRewardDetail): string {
     switch (reward.type) {
-        case "stars": return `+${reward.starsAmount ?? 0} نجوم`;
-        case "double-stars": return "الجولة الجاية نجوم مزدوجة";
-        case "bonus-turn": return "جولة إضافية";
-        case "title": return reward.titleText ?? "لقب جديد";
-        case "wisdom": return reward.message ?? "حكمة خاصة";
-        case "secret": return "سر مخفي";
-        case "atmosphere": return "لمسة سحرية";
-        case "real-gift": return "هدية حقيقية";
-        default: return "مفاجأة";
+        case "stars":
+            return `+${reward.starsAmount ?? 0} نجوم`;
+        case "double-stars":
+            return "الجولة الجاية نجوم مزدوجة";
+        case "bonus-turn":
+            return "جولة إضافية";
+        case "title":
+            return reward.titleText ?? "لقب جديد";
+        case "wisdom":
+            return reward.message ?? "حكمة خاصة";
+        case "secret":
+            return "سر مخفي";
+        case "atmosphere":
+            return "لمسة سحرية";
+        case "real-gift":
+            return "هدية حقيقية";
+        default:
+            return "مفاجأة";
     }
 }
 
@@ -170,7 +176,9 @@ function deriveRewardText(reward: TreasureRewardDetail): string {
  * Transforms a raw Treasure into a GameplayTreasureView, safely stripping out
  * all hidden economic data and rarity.
  */
-export function toGameplayTreasureView(treasure: Treasure): GameplayTreasureView {
+export function toGameplayTreasureView(
+    treasure: Treasure,
+): GameplayTreasureView {
     const { rarity, starsRequired, reward, ...safeData } = treasure;
     return { ...safeData, rewardText: deriveRewardText(reward) };
 }
@@ -192,12 +200,13 @@ export function pickTreasureByRarity(
 ): Treasure {
     // Exclude claimed legendary treasures
     const available = pool.filter(
-        (t) => !(t.rarity === "legendary" && claimedLegendaryIds.includes(t.id)),
+        (t) =>
+            !(t.rarity === "legendary" && claimedLegendaryIds.includes(t.id)),
     );
 
     // Standard internal pacing weights (invisible to players)
     const legendaryThreshold = 0.12;
-    const rareThreshold = 0.40;
+    const rareThreshold = 0.4;
     const roll = Math.random();
     let targetRarity: TreasureRarity;
 
@@ -219,7 +228,8 @@ export function pickTreasureByRarity(
 
         if (candidates.length === 0) {
             // All treasures claimed — return a safe default from the original pool
-            const safeDefault = pool.find((t) => t.rarity === "common") ?? pool[0];
+            const safeDefault =
+                pool.find((t) => t.rarity === "common") ?? pool[0];
             if (!safeDefault) {
                 throw new Error("pickTreasureByRarity: treasure pool is empty");
             }
@@ -231,6 +241,3 @@ export function pickTreasureByRarity(
 
     return filtered[Math.floor(Math.random() * filtered.length)];
 }
-
-
-
