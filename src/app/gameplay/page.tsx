@@ -7,10 +7,9 @@ import Image from "next/image";
 
 import { ScreenContainer } from "@/components/ui/layout/screen-container";
 import { Headline, Body, Label, Muted } from "@/components/ui/typography";
-import type { JourneyPath, PlayerJourneyState, PathStationSlot } from "@/types/path";
+import type { JourneyPath, PlayerJourneyState } from "@/types/path";
 import { getCompletedPathCount } from "@/types/path";
-import type { Station } from "@/types/station";
-import type { SessionMood } from "@/types/theme";
+import { MOCK_PLAYERS, MOCK_JOURNEYS } from "@/content/mock-session";
 
 /* ─── Animation variants ─── */
 const containerVariants: Variants = {
@@ -42,103 +41,8 @@ const pathCardHover = {
     hover: { scale: 1.02, transition: { duration: 0.2, ease: "easeOut" as const } },
 };
 
-/* ─── Mock journey data (replace with session context) ─── */
-/* ─── Mock station factory ─── */
-const MOCK_MOOD: SessionMood = "cozy";
-
-function mockStation(overrides: Partial<Station> & { id: string; type: Station["type"]; question: string; answer: string; stars: number }): Station {
-    return {
-        category: "islamic",
-        title: overrides.question,
-        description: overrides.question,
-        theme: "eid-al-adha",
-        mood: MOCK_MOOD,
-        difficulty: 1,
-        targetAgeGroup: "adult",
-        hint: undefined,
-        explanation: undefined,
-        choices: overrides.type === "quiz" ? ["أ", "ب", "ج", "د"] : undefined,
-        tinyMissionPool: [],
-        reward: { stars: overrides.stars, canUnlockTreasure: true },
-        status: "active",
-        ...overrides,
-    };
-}
-
-function mockSlot(id: string, type: Station["type"], question: string, answer: string, stars: number): PathStationSlot {
-    return { station: mockStation({ id, type, question, answer, stars }), completed: false };
-}
-
-const MOCK_JOURNEY: PlayerJourneyState = {
-    playerId: "player-1",
-    allPathsCompleted: false,
-    paths: [
-        {
-            id: "path-moon",
-            emoji: "🌙",
-            title: "حكايات القمر",
-            subtitle: "أسرار الليل الهادئ",
-            difficultyTier: 1,
-            treasureProbabilityMultiplier: 0.8,
-            stations: [
-                mockSlot("s1", "quiz", "س1", "a", 2),
-                mockSlot("s2", "riddle", "س2", "b", 3),
-                mockSlot("s3", "quiz", "س3", "c", 4),
-                mockSlot("s4", "riddle", "س4", "d", 5),
-            ],
-            currentStationIndex: 0,
-            completed: false,
-        },
-        {
-            id: "path-locked",
-            emoji: "🔮",
-            title: "الغرفة المقفولة",
-            subtitle: "غموض بلا نهاية",
-            difficultyTier: 2,
-            treasureProbabilityMultiplier: 1.0,
-            stations: [
-                mockSlot("s5", "quiz", "س5", "a", 3),
-                mockSlot("s6", "riddle", "س6", "b", 4),
-                mockSlot("s7", "quiz", "س7", "c", 5),
-                mockSlot("s8", "riddle", "س8", "d", 6),
-            ],
-            currentStationIndex: 0,
-            completed: false,
-        },
-        {
-            id: "path-secrets",
-            emoji: "🕯️",
-            title: "أسرار الليلة",
-            subtitle: "خيوط الضوء الخافت",
-            difficultyTier: 3,
-            treasureProbabilityMultiplier: 1.2,
-            stations: [
-                mockSlot("s9", "quiz", "س9", "a", 4),
-                mockSlot("s10", "riddle", "س10", "b", 5),
-                mockSlot("s11", "quiz", "س11", "c", 6),
-                mockSlot("s12", "riddle", "س12", "d", 7),
-            ],
-            currentStationIndex: 0,
-            completed: false,
-        },
-        {
-            id: "path-unknown",
-            emoji: "👁️",
-            title: "باب المجهول",
-            subtitle: "ما وراء الظلام",
-            difficultyTier: 4,
-            treasureProbabilityMultiplier: 1.5,
-            stations: [
-                mockSlot("s13", "quiz", "س13", "a", 5),
-                mockSlot("s14", "riddle", "س14", "b", 6),
-                mockSlot("s15", "quiz", "س15", "c", 7),
-                mockSlot("s16", "riddle", "س16", "d", 8),
-            ],
-            currentStationIndex: 0,
-            completed: false,
-        },
-    ],
-};
+/* ─── Mock journey data (replace with real session context) ─── */
+const MOCK_JOURNEY = MOCK_JOURNEYS[0]; // Current player's journey
 
 /* ─── Path Card Component ─── */
 function PathCard({
@@ -232,10 +136,11 @@ export default function GameplayScreen() {
     const router = useRouter();
 
     // TODO: Replace with session context
+    const currentPlayer = MOCK_PLAYERS[0];
     const journey = MOCK_JOURNEY;
-    const playerName = "مصطفى";
-    const playerStars = 27;
-    const playerTreasures = 2;
+    const playerName = currentPlayer.name;
+    const playerStars = currentPlayer.stars;
+    const playerTreasures = currentPlayer.treasures;
 
     const completedPaths = getCompletedPathCount(journey);
 

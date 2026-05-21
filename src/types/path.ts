@@ -143,6 +143,11 @@ export type ActivePathSession = {
 
     /** Stars earned during this turn so far */
     starsEarnedThisTurn: number;
+
+    /** Hidden treasure probability multiplier for this path.
+     *  Harder paths have higher treasure probability.
+     *  This is NEVER shown to players. */
+    treasureProbabilityMultiplier: number;
 };
 
 /* ─── Utility ─── */

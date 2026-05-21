@@ -48,8 +48,8 @@ export const HIDDEN_POINTS_BY_RARITY: Record<TreasureRarity, number> = {
 /**
  * @deprecated
  * The session NO LONGER ends when a player reaches this threshold.
- * Sessions run for a fixed number of rounds (default: 4).
- * The winner is the player with the most hidden points after all rounds complete.
+ * Sessions end when a player completes all 4 paths.
+ * The winner is the player with the most hidden points at the ending ceremony.
  *
  * Preserved for reference only — do NOT use as an instant victory trigger.
  */

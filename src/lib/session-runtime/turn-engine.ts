@@ -22,7 +22,7 @@ export type TurnOutcome = {
 /**
  * Outcome of a player opening a treasure.
  *
- * Does NOT include a win check — the session runs for a fixed number of rounds.
+ * Does NOT include a win check — the session ends when a player completes all 4 paths.
  * Hidden points are accumulated silently and scored only at the ending ceremony.
  */
 export type TreasureOpenOutcome = {

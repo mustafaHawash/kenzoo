@@ -46,21 +46,86 @@ export const STATIONS_BY_LENGTH: Record<import("@/types/session").SessionLength,
 /** Number of paths each player receives */
 export const PATHS_PER_PLAYER = 4;
 
-/** @deprecated Use STATIONS_BY_LENGTH instead. Preserved for migration. */
-export const ROUNDS_BY_LENGTH = STATIONS_BY_LENGTH;
 
-/* ─── Session State ──────────────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════
+   SESSION STATE BOUNDARIES
+
+   ┌──────────────────────────────────────────────────────┐
+   │  PERSISTENT SESSION STATE                            │
+   │  (Serializable, deterministic, future-Zustand-ready) │
+   │                                                      │
+   │  This is the GAMEPLAY TRUTH.                         │
+   │  It survives: page navigation, tab switches,         │
+   │  future persistence, session restore, multiplayer.   │
+   │                                                      │
+   │  Contains ONLY:                                      │
+   │    - Player data & economy                           │
+   │    - Journey progression                             │
+   │    - Turn tracking                                   │
+   │    - Session completion                              │
+   │    - Treasure claim history                          │
+   │                                                      │
+   │  Does NOT contain:                                   │
+   │    - Active path session (runtime-only)              │
+   │    - Pending treasure (runtime-only)                 │
+   │    - UI phase state                                  │
+   │    - Animation timing                                │
+   │    - Component interaction state                     │
+   ╞══════════════════════════════════════════════════════╡
+   │  RUNTIME-ONLY STATE                                 │
+   │  (Ephemeral, never persisted, never serialized)      │
+   │                                                      │
+   │  This is the CURRENT INTERACTION context.            │
+   │  It resets on: navigation, page reload, turn end.    │
+   │                                                      │
+   │  Contains:                                           │
+   │    - activePath (which path is currently being played)│
+   │    - activeTreasure (pending treasure opportunity)    │
+   │    - gameplayPhase (question/reveal/result/etc.)     │
+   │    - lastResult (most recent answer outcome)         │
+   │    - awardedTitle (treasure title reward)            │
+   │    - Component interaction state (choices, inputs)   │
+   ╞══════════════════════════════════════════════════════╡
+   │  FUTURE ZUSTAND OWNERSHIP                           │
+   │                                                      │
+   │  Zustand store will contain:                         │
+   │    PersistentSessionState ONLY                       │
+   │                                                      │
+   │  Zustand store will NOT contain:                     │
+   │    - GameplayPhase                                   │
+   │    - ActivePathSession                               │
+   │    - Active treasure opportunity                     │
+   │    - Animation/reveal timing                         │
+   │    - Local component state                           │
+   ╚══════════════════════════════════════════════════════╝
+   ═════════════════════════════════════════════════════════ */
+
+/* ─── Persistent Session State ──────────────────────────── */
 
 /**
- * The runtime state of an active session.
+ * The persistent gameplay truth of an active session.
  *
- * Path-based model:
- *   - Each player has a PlayerJourneyState with 4 paths
- *   - Path progression is persistent between turns
- *   - Wrong answer pauses the path, saves progression, ends the turn
- *   - First player to complete all 4 paths triggers session ending
+ * SERIALIZATION CONTRACT:
+ *   - All fields are JSON-serializable (no functions, no Symbols, no DOM refs)
+ *   - All fields are deterministic (no Date.now(), no Math.random() at rest)
+ *   - All fields are stable (no transient UI state)
+ *   - All fields are isolated from runtime/UI state
+ *
+ * PERSISTENCE GUARANTEE:
+ *   This type can be safely:
+ *     - JSON.stringify / JSON.parse (round-trip safe)
+ *     - Stored in localStorage / IndexedDB
+ *     - Sent over WebSocket / HTTP
+ *     - Restored after page reload
+ *     - Synced across multiplayer clients
+ *
+ * FUTURE ZUSTAND:
+ *   This is exactly what the Zustand store will contain.
+ *   No runtime-only state should ever leak into this structure.
  */
-export type SessionState = {
+export type PersistentSessionState = {
+    /** All players and their current economy state */
     players: Player[];
 
     /** Per-player journey state — 4 paths each with individual progression */
@@ -81,15 +146,55 @@ export type SessionState = {
     /** True when any player has completed all 4 paths. */
     isComplete: boolean;
 
-    /** Currently active path session, or null on path-selection screen. */
-    activePath: ActivePathSession | null;
-
-    /** Pending treasure opportunity — UI NEVER holds this directly. */
-    activeTreasure: { treasure: Treasure; ownerId: string } | null;
-
     /** Legendary treasure IDs already claimed this session. */
     claimedLegendaryIds: string[];
 };
+
+/* ─── Runtime-Only State ───────────────────────────────── */
+
+/**
+ * Ephemeral runtime state that exists ONLY during active gameplay.
+ *
+ * This state is NOT serialized, NOT persisted, and NOT part of
+ * the gameplay truth. It represents the current interaction context.
+ *
+ * LIFECYCLE:
+ *   - Created when a player starts a path or receives a treasure
+ *   - Cleared when a turn ends (advanceTurn) or path completes
+ *   - Never survives page navigation or reload
+ *
+ * BOUNDARY RULE:
+ *   If removing this state would NOT change the final game outcome,
+ *   then it belongs here, NOT in PersistentSessionState.
+ */
+export type RuntimeSessionState = {
+    /** Currently active path session, or null on path-selection screen.
+     *  RUNTIME-ONLY: which path is being played RIGHT NOW.
+     *  Does not affect final scores or progression if lost. */
+    activePath: ActivePathSession | null;
+
+    /** Pending treasure opportunity — UI NEVER holds this directly.
+     *  RUNTIME-ONLY: a treasure is waiting to be opened or dismissed.
+     *  If lost (e.g., page reload), the opportunity is simply missed.
+     *  The player's economy is already committed — this is just the UI event. */
+    activeTreasure: { treasure: Treasure; ownerId: string } | null;
+};
+
+/* ─── Combined Session State (current architecture) ─────── */
+
+/**
+ * The full runtime state of an active session.
+ *
+ * Combines persistent gameplay truth with runtime-only interaction state.
+ *
+ * MIGRATION NOTE:
+ *   Currently, both persistent and runtime state live in one type
+ *   for simplicity. When Zustand is added:
+ *     - PersistentSessionState → Zustand store
+ *     - RuntimeSessionState → React component state (useGameSession hook)
+ *   The split is already defined above — just move the fields.
+ */
+export type SessionState = PersistentSessionState & RuntimeSessionState;
 
 /* ─── Gameplay Phase ────────────────────────────────────── */
 
@@ -149,9 +254,65 @@ export type EndingCeremonyState = {
 
 /* ─── Factory ────────────────────────────────────────────── */
 
+/* ─── Journey Initialization ─────────────────────────────── */
+
+/**
+ * Creates an empty PlayerJourneyState for a player.
+ *
+ * IMPORTANT: This is a runtime-safe placeholder.
+ * Each path gets 0 stations — real content must be injected
+ * via injectJourneyPaths() or by passing pre-built journeys.
+ *
+ * This guarantees that state.journeys[i] is NEVER undefined.
+ */
+export function createEmptyJourney(playerId: string): PlayerJourneyState {
+    return {
+        playerId,
+        paths: Array.from({ length: PATHS_PER_PLAYER }, (_, i) => ({
+            id: `path-${playerId}-${i}`,
+            emoji: "🌙",
+            title: `مسار ${i + 1}`,
+            subtitle: "",
+            difficultyTier: (i + 1) as 1 | 2 | 3 | 4,
+            treasureProbabilityMultiplier: 1,
+            stations: [],
+            currentStationIndex: 0,
+            completed: false,
+        })),
+        allPathsCompleted: false,
+    };
+}
+
+/**
+ * Injects real paths into a player's journey, replacing placeholder paths.
+ * Used when session content becomes available (e.g., from gameplay/page.tsx).
+ */
+export function injectJourneyPaths(
+    state: SessionState,
+    playerId: string,
+    paths: JourneyPath[],
+): SessionState {
+    return {
+        ...state,
+        journeys: state.journeys.map((j) =>
+            j.playerId === playerId ? { ...j, paths } : j,
+        ),
+    };
+}
+
+/* ─── Factory ────────────────────────────────────────────── */
+
 /**
  * Creates the initial session state.
- * Journeys are created by generateSession() — for now, pass pre-built journeys.
+ *
+ * INITIALIZATION GUARANTEE:
+ *   - If journeys are provided, they are used directly.
+ *   - If journeys array is empty or too short, empty placeholder journeys
+ *     are auto-generated for each player.
+ *   - state.journeys[i] is NEVER undefined for any valid player index.
+ *
+ * Real path content should be injected via injectJourneyPaths()
+ * or by passing pre-built journeys from the gameplay page.
  */
 export function createSessionState(
     players: Player[],
@@ -160,9 +321,14 @@ export function createSessionState(
 ): SessionState {
     const stationsPerPath = STATIONS_BY_LENGTH[sessionLength];
 
+    // GUARANTEE: Every player has a journey entry — never undefined
+    const safeJourneys = players.map((player, i) =>
+        journeys[i] ?? createEmptyJourney(player.id),
+    );
+
     return {
         players,
-        journeys,
+        journeys: safeJourneys,
         currentPlayerIndex: 0,
         sessionLength,
         stationsPerPath,
@@ -186,12 +352,13 @@ export function selectPath(
     pathId: string,
 ): SessionState {
     const currentJourney = state.journeys[state.currentPlayerIndex];
-    const path = currentJourney.paths.find((p) => p.id === pathId);
+    if (!currentJourney) return state; // Runtime safety: no journey exists
 
+    const path = currentJourney.paths.find((p) => p.id === pathId);
     if (!path || path.completed) return state;
 
     const station = getNextStation(path);
-    if (!station) return state;
+    if (!station) return state; // Runtime safety: no available station
 
     const activePath: ActivePathSession = {
         pathId: path.id,
@@ -201,6 +368,7 @@ export function selectPath(
         totalStations: path.stations.length,
         stationsClearedThisTurn: 0,
         starsEarnedThisTurn: 0,
+        treasureProbabilityMultiplier: path.treasureProbabilityMultiplier,
     };
 
     return {
@@ -242,9 +410,13 @@ export function advanceActivePath(
     });
 
     const currentJourney = updatedJourneys[state.currentPlayerIndex];
+    if (!currentJourney) return state; // Runtime safety
+
     const isComplete = currentJourney.allPathsCompleted;
 
-    const updatedPath = currentJourney.paths.find((p) => p.id === pathId)!;
+    const updatedPath = currentJourney.paths.find((p) => p.id === pathId);
+    if (!updatedPath) return state; // Runtime safety: path must exist
+
     const nextStation = getNextStation(updatedPath);
 
     const updatedActivePath: ActivePathSession | null = nextStation
@@ -385,7 +557,7 @@ export function clearActiveTreasure(state: SessionState): SessionState {
  * Called ONLY when session.isComplete === true.
  * Results are fed into the ending ceremony — never shown during active gameplay.
  */
-export function computeFinalScores(state: SessionState): PlayerFinalScore[] {
+export function computeFinalScores(state: PersistentSessionState): PlayerFinalScore[] {
     const scored = state.players.map((player) => {
         const hiddenPoints = player.openedTreasures.reduce(
             (sum, t) => sum + t.hiddenPoints,
@@ -409,7 +581,7 @@ export function computeFinalScores(state: SessionState): PlayerFinalScore[] {
  * Computes final scores and sets the starting phase to "intro".
  */
 export function createEndingCeremonyState(
-    state: SessionState,
+    state: PersistentSessionState,
 ): EndingCeremonyState {
     const finalScores = computeFinalScores(state);
     const winner = finalScores[0];
@@ -446,7 +618,7 @@ export function advanceCeremonyPhase(
  * Returns a human-readable path progress label.
  * Example: "المسار 2 من 4"
  */
-export function getSessionProgressLabel(state: SessionState): string {
+export function getSessionProgressLabel(state: PersistentSessionState): string {
     const journey = state.journeys[state.currentPlayerIndex];
     if (!journey) return "";
     const completed = journey.paths.filter((p) => p.completed).length;
@@ -456,12 +628,103 @@ export function getSessionProgressLabel(state: SessionState): string {
 /**
  * Returns total remaining stations across all uncompleted paths for all players.
  */
-export function getRemainingStations(state: SessionState): number {
+export function getRemainingStations(state: PersistentSessionState): number {
     return state.journeys.reduce((total, journey) => {
+        if (!journey) return total; // Runtime safety
         return total + journey.paths.reduce((pathTotal, path) => {
             if (path.completed) return pathTotal;
             return pathTotal + (path.stations.length - path.currentStationIndex);
         }, 0);
     }, 0);
+}
+
+/* ─── Serialization Boundary ─────────────────────────────── */
+
+/**
+ * Extracts the persistent (serializable) portion of session state.
+ *
+ * USE CASES:
+ *   - JSON.stringify for localStorage/IndexedDB
+ *   - WebSocket broadcast for multiplayer
+ *   - Session restore after page reload
+ *   - Future Zustand store hydration
+ *
+ * GUARANTEE:
+ *   The returned object contains ONLY gameplay truth.
+ *   No runtime-only state (activePath, activeTreasure) is included.
+ *   Round-trip safe: JSON.parse(extractPersistentState(state)) is valid.
+ */
+export function extractPersistentState(state: SessionState): PersistentSessionState {
+    return {
+        players: state.players,
+        journeys: state.journeys,
+        currentPlayerIndex: state.currentPlayerIndex,
+        sessionLength: state.sessionLength,
+        stationsPerPath: state.stationsPerPath,
+        globalTurnIndex: state.globalTurnIndex,
+        isComplete: state.isComplete,
+        claimedLegendaryIds: state.claimedLegendaryIds,
+    };
+}
+
+/**
+ * Reconstructs a full SessionState from persisted data.
+ *
+ * Runtime-only fields (activePath, activeTreasure) are set to null.
+ * The player must re-select a path after restore.
+ *
+ * FUTURE ZUSTAND:
+ *   This is the hydration function for the Zustand store.
+ */
+export function hydrateSessionState(persistent: PersistentSessionState): SessionState {
+    return {
+        ...persistent,
+        activePath: null,
+        activeTreasure: null,
+    };
+}
+
+/* ─── Ending Runtime Handoff ─────────────────────────────── */
+
+/**
+ * Determines whether the session should transition to the ending ceremony.
+ *
+ * COMPLETION RULE:
+ *   The session ends ONLY when a player completes ALL 4 paths.
+ *
+ * OWNERSHIP:
+ *   - session-engine determines: isComplete, winner, ceremony payload
+ *   - page/router handles: navigation to /ending (when finalized)
+ *
+ * Accepts both SessionState and PersistentSessionState.
+ */
+export function shouldTriggerEnding(state: PersistentSessionState): boolean {
+    return state.isComplete;
+}
+
+/**
+ * Creates the ending ceremony payload for handoff to the ending page.
+ *
+ * The ending page (when finalized) will receive this payload
+ * and render the cinematic ceremony phases.
+ *
+ * This function is the CLEAN HANDOFF POINT between:
+ *   - Active gameplay runtime (play/page.tsx)
+ *   - Ending ceremony runtime (ending/page.tsx — not yet built)
+ *
+ * Accepts both SessionState and PersistentSessionState.
+ */
+export function createEndingPayload(state: PersistentSessionState): {
+    ceremony: EndingCeremonyState;
+    finalScores: PlayerFinalScore[];
+    winnerId: string;
+} {
+    const finalScores = computeFinalScores(state);
+    const ceremony = createEndingCeremonyState(state);
+    return {
+        ceremony,
+        finalScores,
+        winnerId: ceremony.winnerId,
+    };
 }
 

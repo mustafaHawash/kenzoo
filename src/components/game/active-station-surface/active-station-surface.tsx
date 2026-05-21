@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CozyCard } from "@/components/ui/cozy-card";
 
 import type { Station } from "@/types/station";
-import type { TurnOutcome } from "@/lib/session-runtime/turn-engine";
+import type { RoundResult } from "@/types/session";
 
 import { phaseTransition } from "./motion";
 import { StationHeader } from "./station-header";
@@ -15,85 +15,82 @@ import { StationInputArea } from "./station-input-area";
 import { RevealPhase } from "./reveal-phase";
 import { ResultPhase } from "./result-phase";
 
+/* ═══════════════════════════════════════════════════════════
+   ACTIVE STATION SURFACE — Pure Interaction Renderer
+
+   AUTHORITY: NONE.
+   This component renders gameplay UI and emits callbacks.
+   It does NOT own phases, sequencing, or progression.
+
+   Phase ownership: play/page.tsx (via useGameSession hook)
+   Progression ownership: session-engine.ts
+   Timing ownership: play/page.tsx
+
+   This component ONLY:
+     - Renders the current phase UI
+     - Manages local interaction state (choice selection, text input)
+     - Emits: onSubmit(answer), onContinue()
+
+   It NEVER decides:
+     - Next phase
+     - Next station
+     - Progression commit
+     - Treasure timing
+     - Transition timing
+   ═══════════════════════════════════════════════════════════ */
+
+/** Surface-level gameplay phase — controlled by the orchestrator, not this component */
+export type SurfacePhase = "question" | "reveal" | "result";
+
 interface ActiveStationSurfaceProps {
+    /** The station to render */
     station: Station;
-    playerName: string;
-    onResolveAnswer: (answer: string) => TurnOutcome;
-    onRoundComplete: (outcome: TurnOutcome) => void;
-    /** Called when the player continues from the result phase.
-     *  The shell decides whether to show treasure or transition to next station. */
-    onContinueFromResult: () => void;
+
+    /** Current gameplay phase — controlled by the orchestrator */
+    phase: SurfacePhase;
+
+    /** The result of the last answer — provided during "result" phase */
+    result: RoundResult | null;
+
+    /** Player submits an answer. The orchestrator handles resolution. */
+    onSubmit: (answer: string) => void;
+
+    /** Player continues from the result phase. The orchestrator decides what happens next. */
+    onContinue: () => void;
 }
 
-/* ─── Game phase ─── */
-type GamePhase = "playing" | "revealing" | "result";
-
-/**
- * Reveal delay in ms.
- * Calm but not sluggish — 800ms feels cinematic without testing patience.
- */
-const REVEAL_DELAY_MS = 800;
-
-/* ═══════════════════════════════════════════════════════════
-   ACTIVE STATION SURFACE — Orchestrator
-   ═══════════════════════════════════════════════════════════
-
-   This component owns the gameplay phase state and orchestrates
-   the flow between playing → revealing → result.
-
-   It does NOT contain rendering logic for any phase.
-   Each phase is delegated to a focused child component.
-
-   Gameplay logic (answer evaluation, result computation) lives here.
-   Visual components receive data + callbacks and only render.
-
-   Scalability:
-     - New station types add renderers in StationInputArea
-     - New phases (treasure reveal, mission countdown) add new phase components
-     - The orchestrator just manages phase transitions
-   ═══════════════════════════════════════════════════════════ */
 export function ActiveStationSurface({
     station,
-    playerName,
-    onResolveAnswer,
-    onRoundComplete,
-    onContinueFromResult,
+    phase,
+    result,
+    onSubmit,
+    onContinue,
 }: ActiveStationSurfaceProps) {
-    const [phase, setPhase] = useState<GamePhase>("playing");
+    /* ─── Local interaction state (purely UI — no runtime authority) ─── */
     const [selectedChoice, setSelectedChoice] = useState<string | null>(null);
     const [textInput, setTextInput] = useState("");
-    const [turnOutcome, setTurnOutcome] = useState<TurnOutcome | null>(null);
+
+    /* ─── Reset interaction state when station changes ─── */
+    const resetInteraction = useCallback(() => {
+        setSelectedChoice(null);
+        setTextInput("");
+    }, []);
 
     /* ─── Derive current answer from interaction state ─── */
     const currentAnswer = selectedChoice ?? textInput.trim();
     const canSubmit = currentAnswer.length > 0;
 
-    /* ─── Submit answer ─── */
+    /* ─── Submit: emit answer to orchestrator, reset local state ─── */
     const handleSubmit = useCallback(() => {
         if (!currentAnswer) return;
+        onSubmit(currentAnswer);
+        resetInteraction();
+    }, [currentAnswer, onSubmit, resetInteraction]);
 
-        setPhase("revealing");
-
-        // The engine acts purely on the answer, returning a structured decision.
-        const outcome = onResolveAnswer(currentAnswer);
-
-        // We hold the result in memory until the cinematic UI pause completes.
-        setTimeout(() => {
-            setTurnOutcome(outcome);
-            setPhase("result");
-            // Only update global session state AFTER the cinematic reveal is done.
-            onRoundComplete(outcome);
-        }, REVEAL_DELAY_MS);
-    }, [currentAnswer, onResolveAnswer, onRoundComplete]);
-
-    /* ─── Continue from result ─── */
+    /* ─── Continue: emit to orchestrator ─── */
     const handleContinue = useCallback(() => {
-        setPhase("playing");
-        setSelectedChoice(null);
-        setTextInput("");
-        setTurnOutcome(null);
-        onContinueFromResult();
-    }, [onContinueFromResult]);
+        onContinue();
+    }, [onContinue]);
 
     return (
         <AnimatePresence mode="wait">
@@ -137,11 +134,11 @@ export function ActiveStationSurface({
                         {/* ── Station header (badge + title + question + hint) ── */}
                         <StationHeader
                             station={station}
-                            showHintToggle={phase === "playing"}
+                            showHintToggle={phase === "question"}
                         />
 
                         {/* ── Phase content ── */}
-                        {phase === "playing" && (
+                        {phase === "question" && (
                             <StationInputArea
                                 station={station}
                                 selectedChoice={selectedChoice}
@@ -153,14 +150,14 @@ export function ActiveStationSurface({
                             />
                         )}
 
-                        {phase === "revealing" && (
+                        {phase === "reveal" && (
                             <RevealPhase />
                         )}
 
-                        {phase === "result" && turnOutcome && (
+                        {phase === "result" && result && (
                             <ResultPhase
                                 station={station}
-                                result={turnOutcome.roundResult}
+                                result={result}
                                 onNext={handleContinue}
                             />
                         )}

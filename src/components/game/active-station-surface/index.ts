@@ -1,6 +1,6 @@
 //path src/components/game/active-station-surface/index.ts
 
-export { ActiveStationSurface } from "./active-station-surface";
+export { ActiveStationSurface, type SurfacePhase } from "./active-station-surface";
 export { StationHeader } from "./station-header";
 export { StationInputArea } from "./station-input-area";
 export { RevealPhase } from "./reveal-phase";
