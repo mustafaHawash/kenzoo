@@ -983,13 +983,28 @@ useGameSession does NOT:
 - Own ending decisions
 - Contain gameplay business logic
 
+## Zustand Runtime Store
+
+**Location**: `src/store/game-session-store.ts`
+
+Zustand is the SINGLE runtime source of truth.
+It owns: persistent state, runtime state, gameplay phase, ceremony, lifecycle, last result, awarded title.
+
+## useGameSession Hook
+
+**Location**: `src/hooks/useGameSession.ts`
+
+React runtime adapter. Reads from Zustand, coordinates timers, handles navigation.
+Does NOT own gameplay decisions or state.
+
 ## Runtime Ownership
 
 | Decision | Owner |
 |----------|-------|
 | Session creation | `createSession()` |
 | Session validation | `validateSessionInput()` |
-| Session lifecycle | `sessionStore` + `generation-orchestration` |
+| Session lifecycle | Zustand store + `generation-orchestration` |
+| Runtime state | Zustand store (single source of truth) |
 | Gameplay flow decisions | `session-engine` (resolveX functions) |
 | Phase sync | `useGameSession` (adapter only) |
 | Reveal timing | `useGameSession` (cinematic delay only) |
@@ -1002,8 +1017,12 @@ useGameSession does NOT:
 
 `mock-session.ts` provides `createDevSession()` for quick dev testing.
 It is NOT part of the production runtime flow.
-Real sessions always go through: session/setup → createSession() → gameplay.
+Real sessions always go through: session/setup → createSession() → Zustand store → gameplay.
 Runtime pages redirect to /session/setup when no session exists.
+
+## Legacy
+
+`session-store.ts` is DEPRECATED. Zustand is the real runtime owner.
 
 ## Themes Are Content-Only
 

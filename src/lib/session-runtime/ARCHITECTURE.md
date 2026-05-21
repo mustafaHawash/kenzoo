@@ -80,26 +80,44 @@ idle → generating → active → ending → completed
 
 | State | Meaning | Who sets it |
 |-------|---------|-------------|
-| `idle` | No session exists | `sessionStore.clear()` |
+| `idle` | No session exists | Zustand `clearSession()` |
 | `generating` | Session being created | `startSessionGeneration()` |
-| `active` | Gameplay in progress | `sessionStore.setPersistent()` |
+| `active` | Gameplay in progress | Zustand `initSession()` |
 | `ending` | Completion detected | `useGameSession` hook |
 | `completed` | Ceremony done | `useGameSession` hook |
 
 This is NOT UI phase state. It tracks session-level lifecycle ownership.
 
-## Session Store (Immutable-Safe)
+## Zustand Runtime Store (Single Source of Truth)
 
-**Guarantee**: No consumer ever receives a direct mutable reference.
+**Location**: `src/store/game-session-store.ts`
 
-| Method | Returns | Safety |
-|--------|---------|--------|
-| `setPersistent(state)` | void | Deep clones input before storage |
-| `getPersistent()` | `PersistentSessionState \| null` | Always returns deep clone |
-| `getHydrated()` | `SessionState \| null` | Hydrates + deep clones |
-| `updatePersistent(fn)` | void | Receives clone, result deep cloned |
-| `getLifecycle()` | `SessionLifecycleState` | Primitive — no clone needed |
-| `clear()` | void | Resets to idle |
+The Zustand store owns ALL runtime state:
+- PersistentSessionState (gameplay truth)
+- RuntimeSessionState (activePath, activeTreasure)
+- GameplayPhase (current flow phase)
+- EndingCeremonyState (ceremony progression)
+- SessionLifecycleState (session lifecycle)
+- Last round result (for rendering)
+- Awarded title (treasure UI)
+
+**Key methods**:
+
+| Method | Purpose |
+|--------|---------|
+| `initSession(persistent, pathId?)` | Initialize session from setup |
+| `clearSession()` | Reset to idle |
+| `setLifecycle(state)` | Update lifecycle |
+| `setGameplayPhase(phase)` | Update gameplay phase |
+| `commitTurnOutcome(outcome)` | Apply turn result |
+| `continueFromResult()` | Delegate to session-engine |
+| `dismissTreasure()` | Delegate to session-engine |
+| `transitionToNextTurn()` | Delegate to session-engine |
+| `openTreasure()` | Apply treasure open |
+| `advanceCeremony()` | Step ceremony phase |
+| `getHydratedState()` | Reconstruct full SessionState |
+| `getCurrentPlayer()` | Derived selector |
+| `getStation()` | Derived selector |
 
 ## Hydration Flow
 
@@ -131,7 +149,7 @@ Called by `startSessionGeneration()` before `createSession()`.
 │  Zustand Store                      │
 │                                     │
 │  Contains: PersistentSessionState   │
-│  Methods: Same as sessionStore      │
+│  Methods: See game-session-store    │
 │                                     │
 │  Does NOT contain:                  │
 │    - GameplayPhase                  │
@@ -169,7 +187,7 @@ Called by `startSessionGeneration()` before `createSession()`.
 | Transition to next turn | session-engine | `resolveTransition()` |
 | Session creation | session-engine | `createSession()` |
 | Session validation | session-engine | `validateSessionInput()` |
-| Session lifecycle | sessionStore | `setLifecycle()` / `getLifecycle()` |
+| Session lifecycle | Zustand store | `setLifecycle()` / `getLifecycle()` |
 | Reveal timing | useGameSession | `setTimeout` |
 | Phase sync | useGameSession | `setGameplayPhase()` |
 | State sync | useGameSession | `setSessionState()` |
@@ -201,7 +219,7 @@ useGameSession does NOT:
 |----------|-------|
 | Session creation | `createSession()` |
 | Session validation | `validateSessionInput()` |
-| Session lifecycle | `sessionStore` + `generation-orchestration` |
+| Session lifecycle | Zustand store + `generation-orchestration` |
 | Gameplay flow decisions | `session-engine` (resolveX functions) |
 | Phase transitions | `useGameSession` (syncs engine decisions) |
 | Reveal timing | `useGameSession` (cinematic delay only) |
@@ -215,5 +233,12 @@ useGameSession does NOT:
 
 `mock-session.ts` provides `createDevSession()` for quick dev testing.
 It is NOT part of the production runtime flow.
-Real sessions always go through: session/setup → createSession() → gameplay.
+Real sessions always go through: session/setup → createSession() → Zustand store → gameplay.
 Runtime pages redirect to /session/setup when no session exists.
+
+## Legacy: session-store.ts
+
+`session-store.ts` is DEPRECATED.
+It exists only as a transitional artifact.
+Zustand (`game-session-store.ts`) is the real runtime owner.
+All consumers should read from Zustand store directly.

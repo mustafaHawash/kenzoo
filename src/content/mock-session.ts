@@ -10,7 +10,7 @@
  *   landing → session/setup → createSession() → gameplay → play → ending
  *
  * DEV PREVIEW FLOW (this module):
- *   createDevSession() → PersistentSessionState → sessionStore
+ *   createDevSession() → PersistentSessionState → Zustand store
  *
  * Content comes from REAL theme files (quiz.ts, riddles.ts, etc.)
  * Only the player definitions are synthetic.

@@ -1,6 +1,7 @@
 // src/app/gameplay/page.tsx
 "use client";
 
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, type Variants } from "framer-motion";
 import Image from "next/image";
@@ -9,7 +10,7 @@ import { ScreenContainer } from "@/components/ui/layout/screen-container";
 import { Headline, Body, Label, Muted } from "@/components/ui/typography";
 import type { JourneyPath, PlayerJourneyState } from "@/types/path";
 import { getCompletedPathCount } from "@/types/path";
-import { sessionStore } from "@/lib/session-runtime/session-store";
+import { useGameSessionStore } from "@/store/game-session-store";
 
 /* ─── Animation variants ─── */
 const containerVariants: Variants = {
@@ -132,15 +133,37 @@ function PathCard({
 export default function GameplayScreen() {
     const router = useRouter();
 
-    // REAL session only — redirect if none exists
-    const storedSession = sessionStore.getHydrated();
-    if (!storedSession || storedSession.players.length === 0) {
-        // No session — redirect to setup
-        router.replace("/session/setup");
-        return null;
+    // REAL session only — read from Zustand store
+    const persistentState = useGameSessionStore((s) => s.persistentState);
+    const getHydratedState = useGameSessionStore((s) => s.getHydratedState);
+
+    // Redirect to setup if no session — MUST be in useEffect, not during render
+    useEffect(() => {
+        if (!persistentState || persistentState.players.length === 0) {
+            router.replace("/session/setup");
+        }
+    }, [persistentState, router]);
+
+    // No session — show loading while redirect happens
+    if (!persistentState || persistentState.players.length === 0) {
+        return (
+            <ScreenContainer className="justify-center items-center">
+                <Muted>جاري التحميل...</Muted>
+            </ScreenContainer>
+        );
     }
-    const currentPlayer = storedSession.players[0];
-    const journey = storedSession.journeys[0];
+
+    const hydrated = getHydratedState();
+    if (!hydrated) {
+        return (
+            <ScreenContainer className="justify-center items-center">
+                <Muted>جاري التحميل...</Muted>
+            </ScreenContainer>
+        );
+    }
+
+    const currentPlayer = hydrated.players[0];
+    const journey = hydrated.journeys[0];
     const playerName = currentPlayer.name;
     const playerStars = currentPlayer.stars;
     const playerTreasures = currentPlayer.treasures;

@@ -219,6 +219,23 @@ export type GameplayPhase =
     | "transition"
     | "ending";
 
+/* ─── Session Lifecycle ────────────────────────────────── */
+
+/**
+ * Session lifecycle ownership.
+ *
+ * This is NOT UI phase state.
+ * This tracks the lifecycle of the session itself.
+ *
+ * Flow: idle → generating → active → ending → completed
+ */
+export type SessionLifecycleState =
+    | "idle"        // No session exists
+    | "generating"  // Session is being created (cinematic delay / future: AI call)
+    | "active"      // Session is in progress — gameplay is happening
+    | "ending"      // Session completion detected — ceremony pending
+    | "completed";  // Session finished — ceremony done
+
 /* ─── Gameplay Flow Decisions ───────────────────────────── */
 
 /**
@@ -259,7 +276,7 @@ export type GameplayFlowDecision = {
  */
 export function resolveContinueFromResult(
     state: SessionState,
-    lastResult: { isCorrect: boolean; starsEarned: number } | null,
+    lastResult: StationResult | null,
 ): GameplayFlowDecision {
     // Treasure opportunity takes priority — gameplay freezes
     if (state.activeTreasure) {
@@ -304,7 +321,7 @@ export function resolveContinueFromResult(
  */
 export function resolveDismissTreasure(
     state: SessionState,
-    lastResult: { isCorrect: boolean; starsEarned: number } | null,
+    lastResult: StationResult | null,
 ): GameplayFlowDecision {
     // Clear the treasure overlay first
     const cleared = clearActiveTreasure(state);
@@ -343,7 +360,7 @@ export function resolveDismissTreasure(
  */
 export function resolveTransition(
     state: SessionState,
-    lastResult: { isCorrect: boolean; starsEarned: number } | null,
+    lastResult: StationResult | null,
 ): GameplayFlowDecision {
     const next = advanceTurn(state, lastResult);
     return { nextPhase: "path-selection", updatedState: next };

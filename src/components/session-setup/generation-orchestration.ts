@@ -28,7 +28,7 @@ import {
 } from "@/lib/session-runtime/create-session";
 import type { PersistentSessionState } from "@/lib/session-runtime/session-engine";
 import type { SessionLength } from "@/types/session";
-import { sessionStore } from "@/lib/session-runtime/session-store";
+import { useGameSessionStore } from "@/store/game-session-store";
 
 export type GenerationCallbacks = {
     onPreparing: () => void;
@@ -69,7 +69,7 @@ function payloadToInput(payload: SessionConfigPayload): CreateSessionInput {
  *   1. Set lifecycle to "generating"
  *   2. Validate input (fail fast if invalid)
  *   3. Create PersistentSessionState via createSession()
- *   4. Store in sessionStore (immutable-safe)
+ *   4. Store in Zustand runtime store (immutable-safe)
  *   5. Set lifecycle to "active"
  *   6. Notify callback
  *
@@ -87,7 +87,7 @@ export function startSessionGeneration(
     callbacks: GenerationCallbacks,
 ): () => void {
     callbacks.onPreparing();
-    sessionStore.setLifecycle("generating");
+    useGameSessionStore.getState().setLifecycle("generating");
 
     // Cinematic delay for atmosphere — generation itself is instant
     const timer = window.setTimeout(() => {
@@ -103,12 +103,12 @@ export function startSessionGeneration(
             // Create persistent state (gameplay truth only, no runtime)
             const persistentState = createSession(input);
 
-            // Store immutably in session store
-            sessionStore.setPersistent(persistentState);
+            // Store in Zustand runtime store
+            useGameSessionStore.getState().initSession(persistentState);
 
             callbacks.onReady(persistentState);
         } catch (error) {
-            sessionStore.setLifecycle("idle");
+            useGameSessionStore.getState().setLifecycle("idle");
             callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
         }
     }, 3200);

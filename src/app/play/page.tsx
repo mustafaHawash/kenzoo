@@ -1,8 +1,8 @@
 // app/play/page.tsx
 "use client";
 
-import { useState, useCallback, useRef, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
@@ -11,31 +11,7 @@ import { ActiveStationSurface } from "@/components/game/active-station-surface";
 import { TreasureOpportunityCard } from "@/components/game/treasure-opportunity";
 import { Label, Muted, Headline } from "@/components/ui/typography";
 
-import { eidTreasures } from "@/content/themes/eid-el-adha/treasures";
-import { pickRandomTitle } from "@/content/themes/eid-el-adha/titles";
-import { toGameplayTreasureView } from "@/types/treasure";
-
-import { resolveTurn } from "@/lib/session-runtime/turn-engine";
-
-import {
-    createSessionState,
-    hydrateSessionState,
-    applyTurnOutcome,
-    applyTreasureOpen,
-    advanceCeremonyPhase,
-    getSessionProgressLabel,
-    selectPath,
-    resolveContinueFromResult,
-    resolveDismissTreasure,
-    resolveTransition,
-    type SessionState,
-    type EndingCeremonyState,
-    type GameplayPhase,
-} from "@/lib/session-runtime/session-engine";
-
-import type { RoundResult } from "@/types/session";
-
-import { sessionStore } from "@/lib/session-runtime/session-store";
+import { useGameSession } from "@/hooks/useGameSession";
 
 /* ─── Animation ─── */
 const floatBob = {
@@ -45,256 +21,17 @@ const floatBob = {
     },
 };
 
-/**
- * Reveal delay in ms.
- * Calm but not sluggish — 800ms feels cinematic without testing patience.
- * Owned by the orchestrator, NOT by the surface component.
- */
-const REVEAL_DELAY_MS = 800;
-
 /* ═══════════════════════════════════════════════════════════
-    SESSION ORCHESTRATOR HOOK
+    RUNTIME ARCHITECTURE
 
-    THE SINGLE AUTHORITY for gameplay runtime sequencing.
+    Zustand store  → single source of truth (game-session-store)
+    session-engine → gameplay authority (pure functions)
+    useGameSession → React adapter (timers, navigation, UI sync)
+    Components     → pure renderers
 
-    Authority boundaries:
-    ┌──────────────────────────────────────────────────────┐
-    │ THIS HOOK OWNS:                                      │
-    │   - GameplayPhase transitions                        │
-    │   - Reveal timing (setTimeout)                       │
-    │   - Progression commit (advanceActivePath)           │
-    │   - Treasure timing (when to show overlay)           │
-    │   - Transition timing (when to navigate away)        │
-    │   - Turn outcome resolution & commitment             │
-    ├──────────────────────────────────────────────────────┤
-    │ SESSION-ENGINE OWNS:                                 │
-    │   - Pure state computation                           │
-    │   - Path advancement logic                           │
-    │   - Treasure economy                                 │
-    │   - Turn advancement                                 │
-    │   - Ceremony creation                                │
-    ├──────────────────────────────────────────────────────┤
-    │ ACTIVE STATION SURFACE OWNS:                         │
-    │   - NOTHING (pure renderer)                          │
-    │   - Only emits: onSubmit, onContinue                 │
-    │   - Manages local interaction state only             │
-    └──────────────────────────────────────────────────────┘
-
-    Correct runtime flow:
+    Runtime flow:
       question → submit → reveal → result → (treasure) → transition → next
-
-    IMPORTANT:
-      Progression MUST commit BEFORE treasure overlay.
-      Treasure dismissal should ONLY close the overlay.
-      It must NEVER advance progression or select stations.
     ═══════════════════════════════════════════════════════════ */
-function useGameSession(
-    pathId: string | null,
-) {
-    const router = useRouter();
-
-    /* ─── Core session engine state ─── */
-    const [sessionState, setSessionState] = useState<SessionState>(() => {
-        // REAL session only — no mock fallback
-        const stored = sessionStore.getHydrated();
-        if (stored) {
-            let initial = stored;
-            if (pathId) {
-                initial = selectPath(initial, pathId);
-            }
-            return initial;
-        }
-
-        // No session exists — return empty state, will redirect
-        return hydrateSessionState(
-            createSessionState([], [], "normal"),
-        );
-    });
-
-    /* ─── Ending ceremony (null during active gameplay) ─── */
-    const [ceremony, setCeremony] = useState<EndingCeremonyState | null>(null);
-
-    /* ─── Phase-driven gameplay flow — OWNED BY THIS HOOK ─── */
-    const [gameplayPhase, setGameplayPhase] = useState<GameplayPhase>(
-        pathId ? "question" : "path-selection",
-    );
-
-    /* ─── Last round result — needed for result phase rendering ─── */
-    const [lastResult, setLastResult] = useState<RoundResult | null>(null);
-
-    /* ─── Treasure UI state ─── */
-    const [awardedTitle, setAwardedTitle] = useState<string | null>(null);
-
-    /* ─── Refs to read latest state in callbacks without stale closures ─── */
-    const sessionStateRef = useRef(sessionState);
-    const lastResultRef = useRef(lastResult);
-
-    useEffect(() => {
-        sessionStateRef.current = sessionState;
-    }, [sessionState]);
-
-    useEffect(() => {
-        lastResultRef.current = lastResult;
-    }, [lastResult]);
-
-    /* ─── Session guard — redirect if no real session ─── */
-    useEffect(() => {
-        if (sessionState.players.length === 0) {
-            router.replace("/session/setup");
-        }
-    }, [sessionState.players.length, router]);
-
-    /* ─── Derived values ─── */
-    const currentPlayer = sessionState.players[sessionState.currentPlayerIndex];
-    const activePath = sessionState.activePath;
-    const station = activePath?.currentStation ?? null;
-
-    // Exposed to UI: strictly isolated from hidden values
-    const activeTreasure = sessionState.activeTreasure
-        ? toGameplayTreasureView(sessionState.activeTreasure.treasure)
-        : null;
-
-    /* ═══════════════════════════════════════════════════════════
-        SUBMIT — Player submits an answer
-
-        Authority: THIS HOOK
-        1. Resolve answer via turn-engine (pure function)
-        2. Commit outcome to session state (stars, treasure opportunity)
-        3. Transition to "reveal" phase
-        4. Schedule reveal→result transition after cinematic delay
-       ═══════════════════════════════════════════════════════════ */
-    const handleSubmit = useCallback(
-        (answer: string) => {
-            if (!station) return;
-
-            const treasureMultiplier = activePath?.treasureProbabilityMultiplier ?? 1;
-
-            // 1. Pure resolution
-            const outcome = resolveTurn(
-                currentPlayer,
-                station,
-                answer,
-                eidTreasures,
-                sessionState.claimedLegendaryIds,
-                treasureMultiplier,
-            );
-
-            // 2. Commit outcome to session state IMMEDIATELY
-            //    Progression commits BEFORE treasure overlay.
-            setSessionState((prev) => applyTurnOutcome(prev, outcome));
-            setLastResult(outcome.roundResult);
-
-            // 3. Transition to reveal phase
-            setGameplayPhase("reveal");
-
-            // 4. Schedule cinematic reveal→result transition
-            //    This timing is owned by the orchestrator, NOT the surface.
-            setTimeout(() => {
-                setGameplayPhase("result");
-            }, REVEAL_DELAY_MS);
-        },
-        [currentPlayer, station, activePath, sessionState.claimedLegendaryIds],
-    );
-
-    /* ═══════════════════════════════════════════════════════════
-        CONTINUE FROM RESULT — Player clicks continue after seeing result
-
-        Authority: SESSION-ENGINE (via resolveContinueFromResult)
-        This hook is a thin adapter — it syncs the engine's
-        decision into React state.
-       ═══════════════════════════════════════════════════════════ */
-    const handleContinueFromResult = useCallback(() => {
-        const decision = resolveContinueFromResult(
-            sessionStateRef.current,
-            lastResultRef.current,
-        );
-
-        if (decision.updatedState) setSessionState(decision.updatedState);
-        if (decision.ceremony) setCeremony(decision.ceremony);
-        setGameplayPhase(decision.nextPhase);
-    }, []);
-
-    /* ═══════════════════════════════════════════════════════════
-        OPEN TREASURE — Player chooses to open the treasure
-
-        Authority: SESSION-ENGINE
-        Delegates star deduction and record tracking to session-engine.
-       ═══════════════════════════════════════════════════════════ */
-    const handleOpenTreasure = useCallback(() => {
-        const rawTreasure = sessionStateRef.current.activeTreasure;
-        if (!rawTreasure) return;
-
-        setSessionState((prev) => applyTreasureOpen(prev));
-
-        if (rawTreasure.treasure.reward.type === "title") {
-            const title = pickRandomTitle(currentPlayer.titles);
-            setAwardedTitle(title);
-        }
-    }, [currentPlayer.titles]);
-
-    /* ═══════════════════════════════════════════════════════════
-        DISMISS TREASURE — Player closes the treasure overlay
-
-        Authority: SESSION-ENGINE (via resolveDismissTreasure)
-        This hook is a thin adapter — it syncs the engine's
-        decision into React state.
-       ═══════════════════════════════════════════════════════════ */
-    const handleDismissTreasure = useCallback(() => {
-        setAwardedTitle(null);
-
-        const decision = resolveDismissTreasure(
-            sessionStateRef.current,
-            lastResultRef.current,
-        );
-
-        if (decision.updatedState) setSessionState(decision.updatedState);
-        if (decision.ceremony) setCeremony(decision.ceremony);
-        setGameplayPhase(decision.nextPhase);
-    }, []);
-
-    /* ═══════════════════════════════════════════════════════════
-        TRANSITION — Navigate back to gameplay / path selection
-
-        Authority: SESSION-ENGINE (via resolveTransition)
-        This hook syncs state + handles navigation.
-       ═══════════════════════════════════════════════════════════ */
-    const handleTransition = useCallback(() => {
-        const decision = resolveTransition(
-            sessionStateRef.current,
-            lastResultRef.current,
-        );
-
-        if (decision.updatedState) setSessionState(decision.updatedState);
-        setLastResult(null);
-        router.push("/gameplay");
-    }, [router]);
-
-    /* ═══════════════════════════════════════════════════════════
-        ADVANCE CEREMONY — Step through ending ceremony phases
-       ═══════════════════════════════════════════════════════════ */
-    const handleAdvanceCeremony = useCallback(() => {
-        setCeremony((prev) => (prev ? advanceCeremonyPhase(prev) : prev));
-    }, []);
-
-    return {
-        sessionState,
-        ceremony,
-        gameplayPhase,
-        currentPlayer,
-        station,
-        activePath,
-        activeTreasure,
-        awardedTitle,
-        lastResult,
-        handleSubmit,
-        handleContinueFromResult,
-        handleOpenTreasure,
-        handleDismissTreasure,
-        handleTransition,
-        handleAdvanceCeremony,
-        progressLabel: getSessionProgressLabel(sessionState),
-    };
-}
 
 /* ═══════════════════════════════════════════════════════════
     ENDING CEREMONY VIEW
@@ -477,6 +214,15 @@ function PlayPageContent() {
         handleAdvanceCeremony,
         progressLabel,
     } = useGameSession(pathId);
+
+    /* ─── No session — show loading (redirect handled by useGameSession) ─── */
+    if (!sessionState || !currentPlayer) {
+        return (
+            <ScreenContainer className="justify-center items-center">
+                <Muted>جاري التحميل...</Muted>
+            </ScreenContainer>
+        );
+    }
 
     /* ─── Ending Ceremony ─── */
     if (ceremony) {
