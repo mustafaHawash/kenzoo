@@ -10,6 +10,40 @@ import {
     OpenedTreasureRecord,
 } from "@/types/treasure";
 
+/* ─── Treasure Probability Constants ─────────────────────── */
+
+/**
+ * Base probability for a treasure opportunity to appear.
+ *
+ * DESIGN PHILOSOPHY:
+ *   - Treasures should feel special, warm, rewarding, and OCCASIONAL
+ *   - NOT guaranteed, NOT spammy, NOT routine
+ *   - Easy paths → lower chance, Hard paths → noticeably higher chance
+ *   - Legendary feeling preserved even at highest multiplier
+ *
+ * The final probability is: BASE_TREASURE_PROBABILITY × treasureProbabilityMultiplier
+ * Hard-capped at TREASURE_PROBABILITY_CAP to prevent guaranteed treasures.
+ *
+ * Example with current multipliers (0.8 / 1.0 / 1.2 / 1.5):
+ *   - Tier 1 (easy):      0.35 × 0.8 = 0.28 → ~28% chance
+ *   - Tier 2 (medium):    0.35 × 1.0 = 0.35 → ~35% chance
+ *   - Tier 3 (hard):      0.35 × 1.2 = 0.42 → ~42% chance
+ *   - Tier 4 (legendary): 0.35 × 1.5 = 0.525 → ~53% chance (capped)
+ *
+ * FUTURE: When seeded RNG is implemented, replace Math.random()
+ * with a deterministic RngSource passed as a parameter.
+ */
+export const BASE_TREASURE_PROBABILITY = 0.35;
+
+/**
+ * Maximum treasure appearance probability — hard cap.
+ *
+ * No path difficulty can make treasures guaranteed.
+ * Even the hardest path leaves room for mystery.
+ * This prevents economy inflation and treasure spam.
+ */
+export const TREASURE_PROBABILITY_CAP = 0.75;
+
 export type TurnOutcome = {
     /** The resolved result of the station interaction */
     roundResult: RoundResult;
@@ -67,8 +101,14 @@ export function resolveTurn(
     let treasureOpportunity: Treasure | null = null;
     // Treasure opportunity appears only when player can afford the max possible hidden cost (7★)
     if (roundResult.isCorrect && roundResult.treasureUnlocked && newStars >= TREASURE_APPEARANCE_MIN_STARS) {
-        // Path difficulty multiplier increases the chance of a treasure appearing
-        const shouldAppear = Math.random() < Math.min(1, treasureProbabilityMultiplier);
+        // Base probability × multiplier, hard-capped to prevent guaranteed treasures
+        // Easy paths → lower chance, Hard paths → noticeably higher chance
+        // Treasures remain exciting and semi-rare — never guaranteed, never spammy
+        const probability = Math.min(
+            BASE_TREASURE_PROBABILITY * treasureProbabilityMultiplier,
+            TREASURE_PROBABILITY_CAP,
+        );
+        const shouldAppear = Math.random() < probability;
         if (shouldAppear) {
             treasureOpportunity = pickTreasureByRarity(
                 treasurePool,
@@ -90,9 +130,10 @@ export function resolveTurn(
  * Deducts hidden star cost, records the opened treasure for the ending ceremony,
  * and increments the visible treasure count.
  *
- * WIN CONDITION is intentionally removed.
- * The session runs for a fixed number of rounds. Hidden points are scoring weights
- * revealed ONLY during the ending ceremony — not instant victory triggers.
+ * SESSION ENDING: The session ends when a player completes ALL 4 paths.
+ * Hidden points are scoring weights revealed ONLY during the ending ceremony —
+ * they are NOT instant victory triggers.
+ * The winner is the player with the most hidden points at the ending ceremony.
  *
  * Called by session-engine.applyTreasureOpen() — not directly by the page.
  *

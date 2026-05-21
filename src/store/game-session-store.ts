@@ -49,6 +49,42 @@ import type { Player } from "@/types/player";
 import type { Station } from "@/types/station";
 import type { SessionLifecycleState } from "@/lib/session-runtime/session-engine";
 
+/* ─── Valid Phase Transitions ───────────────────────────── */
+
+/**
+ * Defines the valid gameplay phase transitions.
+ *
+ * This map enforces calm, smooth, predictable, cinematic flow.
+ * Invalid transitions are silently rejected — no crashes, no broken states.
+ *
+ * Flow:
+ *   path-selection → question → reveal → result → (treasure | transition)
+ *   treasure → (question | transition | ending)
+ *   transition → path-selection
+ *   ending → ending (ceremony phases)
+ *
+ * Any phase can always transition to "ending" (session completion).
+ */
+const VALID_TRANSITIONS: Record<GameplayPhase, GameplayPhase[]> = {
+    "path-selection": ["question", "ending"],
+    "question": ["reveal", "ending"],
+    "reveal": ["result", "ending"],
+    "result": ["treasure", "transition", "question", "ending"],
+    "treasure": ["question", "transition", "ending"],
+    "transition": ["path-selection", "ending"],
+    "ending": ["ending"], // ceremony phases stay in "ending"
+};
+
+/**
+ * Checks whether a phase transition is valid.
+ * "ending" is always allowed from any phase (session completion can happen anytime).
+ */
+function isValidTransition(from: GameplayPhase, to: GameplayPhase): boolean {
+    if (to === "ending") return true; // session completion always allowed
+    const allowed = VALID_TRANSITIONS[from];
+    return allowed ? allowed.includes(to) : false;
+}
+
 /* ─── Helpers ──────────────────────────────────────────── */
 
 /**
@@ -185,6 +221,12 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
            ═══════════════════════════════════════════════════════════ */
 
         setGameplayPhase: (phase) => {
+            const current = get().gameplayPhase;
+            // Guard: reject invalid transitions silently
+            if (!isValidTransition(current, phase)) {
+                // Stale or duplicate transition — ignore calmly
+                return;
+            }
             set({ gameplayPhase: phase });
         },
 
@@ -212,6 +254,9 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
             const hydrated = state.getHydratedState();
             if (!hydrated) return;
 
+            // Guard: only continue from result phase
+            if (state.gameplayPhase !== "result") return;
+
             const decision = resolveContinueFromResult(hydrated, state.lastResult);
             const updates: Partial<GameSessionState> = {
                 gameplayPhase: decision.nextPhase,
@@ -233,6 +278,11 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
             const state = get();
             const hydrated = state.getHydratedState();
             if (!hydrated) return;
+
+            // Guard: only dismiss when in treasure phase
+            if (state.gameplayPhase !== "treasure") return;
+            // Guard: must have active treasure to dismiss
+            if (!hydrated.activeTreasure) return;
 
             const decision = resolveDismissTreasure(hydrated, state.lastResult);
             const updates: Partial<GameSessionState> = {
@@ -257,8 +307,14 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
             const hydrated = state.getHydratedState();
             if (!hydrated) return;
 
+            // Guard: only transition from transition phase
+            if (state.gameplayPhase !== "transition") return;
+
             const decision = resolveTransition(hydrated, state.lastResult);
-            const updates: Partial<GameSessionState> = { lastResult: null };
+            const updates: Partial<GameSessionState> = {
+                lastResult: null,
+                gameplayPhase: decision.nextPhase,
+            };
 
             if (decision.updatedState) {
                 const { persistent, runtime } = splitState(decision.updatedState);
@@ -274,8 +330,13 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
            ═══════════════════════════════════════════════════════════ */
 
         openTreasure: () => {
-            const hydrated = get().getHydratedState();
+            const state = get();
+            const hydrated = state.getHydratedState();
             if (!hydrated) return;
+
+            // Guard: only open treasure when in treasure phase with active treasure
+            if (state.gameplayPhase !== "treasure") return;
+            if (!hydrated.activeTreasure) return;
 
             const updated = applyTreasureOpen(hydrated);
             const { persistent, runtime } = splitState(updated);

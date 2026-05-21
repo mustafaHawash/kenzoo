@@ -114,14 +114,19 @@ export function useGameSession(pathId: string | null) {
         s.persistentState ? getSessionProgressLabel(s.persistentState) : ""
     );
 
-    /* ─── Refs for timer cleanup ─── */
+    /* ─── Refs for timer cleanup and submit guard ─── */
     const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isSubmittingRef = useRef(false);
+    const isMountedRef = useRef(true);
 
     /* ─── Cleanup on unmount ─── */
     useEffect(() => {
+        isMountedRef.current = true;
         return () => {
+            isMountedRef.current = false;
             if (revealTimerRef.current) {
                 clearTimeout(revealTimerRef.current);
+                revealTimerRef.current = null;
             }
         };
     }, []);
@@ -138,8 +143,15 @@ export function useGameSession(pathId: string | null) {
         (answer: string) => {
             if (!station || !currentPlayer) return;
 
+            // Guard: prevent double submission during reveal phase
+            if (isSubmittingRef.current) return;
+            // Guard: only submit from question phase
+            if (gameplayPhase !== "question") return;
+
             const hydrated = getHydratedState();
             if (!hydrated) return;
+
+            isSubmittingRef.current = true;
 
             const treasureMultiplier = activePath?.treasureProbabilityMultiplier ?? 1;
 
@@ -163,11 +175,14 @@ export function useGameSession(pathId: string | null) {
             // 4. Schedule cinematic reveal→result transition
             if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
             revealTimerRef.current = setTimeout(() => {
+                // Guard: don't fire if component unmounted
+                if (!isMountedRef.current) return;
                 setGameplayPhase("result");
                 revealTimerRef.current = null;
+                isSubmittingRef.current = false;
             }, REVEAL_DELAY_MS);
         },
-        [station, currentPlayer, activePath, getHydratedState, commitTurnOutcome, setLastResult, setGameplayPhase],
+        [station, currentPlayer, activePath, gameplayPhase, getHydratedState, commitTurnOutcome, setLastResult, setGameplayPhase],
     );
 
     /* ═══════════════════════════════════════════════════════════
@@ -184,13 +199,16 @@ export function useGameSession(pathId: string | null) {
         const hydrated = getHydratedState();
         if (!hydrated?.activeTreasure) return;
 
+        // Guard: only open treasure during treasure phase
+        if (gameplayPhase !== "treasure") return;
+
         openTreasure();
 
         if (hydrated.activeTreasure.treasure.reward.type === "title" && currentPlayer) {
             const title = pickRandomTitle(currentPlayer.titles);
             setAwardedTitle(title);
         }
-    }, [getHydratedState, openTreasure, currentPlayer, setAwardedTitle]);
+    }, [getHydratedState, openTreasure, currentPlayer, setAwardedTitle, gameplayPhase]);
 
     /* ═══════════════════════════════════════════════════════════
         DISMISS TREASURE — Delegates to store

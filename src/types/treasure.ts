@@ -18,7 +18,8 @@
  *   - Bonus stars / double-stars are allowed but must not create inflation
  *   - Treasures are emotional, not competitive
  *   - Every treasure should feel unique and worth the wait
- *   - Win condition: 21 hidden treasure points
+ *   - Session ends when a player completes ALL 4 paths (NOT by hidden points)
+ *   - Hidden points are scoring weights revealed at the ending ceremony
  */
 
 /* ─── Treasure reward types ─── */
@@ -46,12 +47,16 @@ export const HIDDEN_POINTS_BY_RARITY: Record<TreasureRarity, number> = {
 };
 
 /**
- * @deprecated
- * The session NO LONGER ends when a player reaches this threshold.
- * Sessions end when a player completes all 4 paths.
+ * @deprecated — REMOVED WIN CONDITION
+ *
+ * The session NO LONGER ends based on hidden treasure points.
+ * Sessions end ONLY when a player completes ALL 4 paths.
+ * Hidden treasure points are scoring weights revealed at the ending ceremony.
  * The winner is the player with the most hidden points at the ending ceremony.
  *
- * Preserved for reference only — do NOT use as an instant victory trigger.
+ * This constant is preserved for HISTORICAL REFERENCE ONLY.
+ * Do NOT use it as a win condition, victory trigger, or session-end check.
+ * The ONLY session-end condition is: player completes all 4 paths.
  */
 export const HIDDEN_TREASURE_WIN_THRESHOLD = 21;
 

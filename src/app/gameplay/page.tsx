@@ -162,8 +162,27 @@ export default function GameplayScreen() {
         );
     }
 
-    const currentPlayer = hydrated.players[0];
-    const journey = hydrated.journeys[0];
+    const currentPlayer = hydrated.players[hydrated.currentPlayerIndex];
+    const journey = hydrated.journeys[hydrated.currentPlayerIndex];
+
+    // Safety: invalid player index — redirect to setup
+    if (!currentPlayer || !journey) {
+        return (
+            <ScreenContainer className="justify-center items-center">
+                <div className="flex flex-col items-center gap-4 text-center">
+                    <Headline className="text-secondary text-xl">حصلت مشكلة</Headline>
+                    <Muted className="text-sm">مفيش لاعب نشط، حاول تاني</Muted>
+                    <button
+                        onClick={() => router.replace("/session/setup")}
+                        className="rounded-full border border-secondary/20 bg-card/60 px-6 py-2.5 text-sm text-secondary/80 backdrop-blur-sm transition-all hover:bg-card/80 active:scale-95"
+                    >
+                        جلسة جديدة
+                    </button>
+                </div>
+            </ScreenContainer>
+        );
+    }
+
     const playerName = currentPlayer.name;
     const playerStars = currentPlayer.stars;
     const playerTreasures = currentPlayer.treasures;

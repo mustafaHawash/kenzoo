@@ -473,8 +473,8 @@ They are ONLY revealed at the session-end ceremony.
 
 **HIDDEN SCORING (SESSION-END REVEAL ONLY):**
 Hidden treasure points are final scoring weights — NOT instant victory triggers.
-The session runs for a fixed number of rounds (default: 4).
-All players complete all rounds. The session NEVER ends early.
+The session ends when the FIRST player completes ALL 4 paths.
+There is NO fixed round count. The session ends based on path completion.
 Hidden point totals are revealed ONLY during the ending ceremony.
 The player with the most hidden points at session end wins.
 Players do NOT know their point total or ranking during gameplay.
@@ -503,6 +503,143 @@ NOT:
 - RPG farming
 - aggressive loot systems
 - hyper-competitive score tracking
+
+---
+
+# Treasure Probability System (Stabilized)
+
+Treasure appearance uses a **base probability × multiplier** system with a hard cap.
+
+**Formula:** `min(BASE_TREASURE_PROBABILITY × treasureProbabilityMultiplier, TREASURE_PROBABILITY_CAP)`
+
+**Constants (defined in turn-engine.ts):**
+
+- `BASE_TREASURE_PROBABILITY = 0.35` — the base chance for any treasure to appear
+- `TREASURE_PROBABILITY_CAP = 0.75` — absolute maximum, never guaranteed
+
+**Multipliers by difficulty tier (defined in compose-journey.ts):**
+
+- Tier 1 (easy): ×0.8 → ~28% chance
+- Tier 2 (medium): ×1.0 → ~35% chance
+- Tier 3 (hard): ×1.2 → ~42% chance
+- Tier 4 (legendary): ×1.5 → ~53% chance
+
+**Design guarantees:**
+
+- No path difficulty can guarantee treasure appearance
+- Even the hardest path leaves room for mystery
+- Easy paths feel rare and special
+- Hard paths feel noticeably more rewarding, still not spammy
+- The economy is self-regulating: spending stars reduces subsequent treasure chances
+
+**Anti-snowball guarantees:**
+
+- Hard cap prevents economy inflation
+- Higher difficulty rewards more stars but costs more on treasure open
+- Treasure appearance requires ≥7 stars — spending reduces future chances
+- No infinite progression loops
+
+**Treasure appearance feel:**
+
+- special
+- warm
+- rewarding
+- occasional
+- semi-rare
+
+NOT:
+
+- guaranteed
+- spammy
+- routine
+- predictable
+
+---
+
+# Gameplay Transition Guarantees (Stabilized)
+
+Gameplay phase transitions are enforced by a **valid transition map**.
+
+**Valid transitions:**
+
+```
+path-selection → question → reveal → result → (treasure | transition)
+treasure → (question | transition)
+transition → path-selection
+ending → ending (ceremony phases)
+```
+
+Any phase can transition to `ending` (session completion can happen anytime).
+
+**Runtime guarantees:**
+
+- Invalid transitions are silently rejected — no crashes, no broken states
+- Double submissions are prevented during reveal phase
+- Treasure overlay only opens during treasure phase
+- Treasure dismiss only works during treasure phase with active treasure
+- Continue from result only works during result phase
+- Transition to next turn only works during transition phase
+- Stale callbacks after unmount are silently discarded
+
+**Gameplay flow should feel:**
+
+- calm
+- smooth
+- predictable
+- cinematic
+- intentional
+
+NOT:
+
+- jumpy
+- flickery
+- race-condition-prone
+- double-triggered
+
+---
+
+# Runtime Stabilization Guarantees
+
+The following runtime safety guarantees are now enforced:
+
+**Phase transition safety:**
+- All phase transitions validated against allowed map
+- Invalid transitions rejected silently (no crashes)
+- Duplicate transitions prevented
+- Reveal→result race conditions eliminated via submit guard
+
+**Treasure overlay lifecycle:**
+- Treasure overlay only renders during treasure phase
+- Double-opening prevented (phase + activeTreasure guards)
+- Dismiss only works with active treasure in correct phase
+- Treasure state cleared on every turn transition
+- No treasure+question overlap possible
+
+**Timer and callback safety:**
+- All timers cleaned up on unmount
+- Stale callbacks discarded via isMountedRef
+- Submit guard prevents double-fire during reveal delay
+- Timer refs nulled after execution
+
+**Navigation safety:**
+- Missing session → redirect to /session/setup
+- Missing activePath → graceful fallback UI
+- Invalid currentPlayerIndex → recovery UI with redirect
+- Direct page access without session → redirect
+
+**Session completion correctness:**
+- Ending triggers ONLY when a player completes ALL 4 paths
+- No premature completion possible
+- No unreachable ending state
+- Hidden points are scoring weights only — NOT victory triggers
+
+**Future seeded RNG compatibility:**
+- Math.random() calls are isolated in 3 locations (ready for replacement):
+  1. turn-engine.ts — treasure probability roll
+  2. turn-engine.ts — tiny mission selection
+  3. treasure.ts — pickTreasureByRarity weighted roll
+- Design recommendation: pass RngSource interface as parameter
+- No architectural changes needed when implementing seeded RNG
 
 ---
 

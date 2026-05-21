@@ -63,8 +63,31 @@ const PATH_ATMOSPHERE: Record<PathDifficultyTier, { emoji: string; title: string
 
 /**
  * Treasure probability multiplier by path difficulty tier.
- * Harder paths = higher treasure chance.
- * This is HIDDEN from players.
+ * Harder paths = higher treasure chance. This is HIDDEN from players.
+ *
+ * BALANCING PHILOSOPHY:
+ *   These multipliers are used with BASE_TREASURE_PROBABILITY (0.35)
+ *   and capped at TREASURE_PROBABILITY_CAP (0.75) in turn-engine.
+ *   Final probability = min(BASE × multiplier, CAP)
+ *
+ *   Current curve (with BASE=0.35, CAP=0.75):
+ *     Tier 1 (easy):      0.35 × 0.8  = 0.28  → ~28% chance
+ *     Tier 2 (medium):    0.35 × 1.0  = 0.35  → ~35% chance
+ *     Tier 3 (hard):      0.35 × 1.2  = 0.42  → ~42% chance
+ *     Tier 4 (legendary): 0.35 × 1.5  = 0.525 → ~53% chance
+ *
+ *   ANTI-SNOWBALL GUARANTEES:
+ *     - No tier guarantees treasure appearance (all < 100%)
+ *     - Hard cap at 75% prevents economy inflation
+ *     - Higher difficulty rewards more stars but also costs more on treasure open
+ *     - The economy is self-regulating: spending stars on treasures reduces
+ *       the chance of subsequent treasure appearances (need ≥7 stars)
+ *
+ *   TREASURE APPEARANCE FEEL:
+ *     - Easy paths: treasures feel rare and special
+ *     - Medium paths: balanced, occasional surprises
+ *     - Hard paths: noticeably more rewarding, still not guaranteed
+ *     - Legendary paths: exciting treasure density, but never spammy
  */
 const TREASURE_MULTIPLIER_BY_TIER: Record<PathDifficultyTier, number> = {
     1: 0.8,

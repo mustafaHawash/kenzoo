@@ -15,8 +15,9 @@
  *   - Pure functions only — no side effects, no Zustand, no reducers
  *   - Lightweight orchestration — not an enterprise engine
  *   - Path-based sessions — players progress through persistent paths
- *   - Hidden scoring — points are final scoring weights, NOT instant victory triggers
- *   - The winner is revealed ONLY via the cinematic ending ceremony
+ *   - Session ends when a player completes ALL 4 paths (NOT by hidden points)
+ *   - Hidden scoring — points are final scoring weights for the ending ceremony, NOT instant victory triggers
+ *   - The winner is the player with the most hidden points, revealed ONLY via the cinematic ending ceremony
  *   - Wrong answer pauses the path and ends the turn — progression is saved
  *
  * NOT:
