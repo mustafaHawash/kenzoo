@@ -27,7 +27,6 @@ import {
     type CreateSessionInput,
 } from "@/lib/session-runtime/create-session";
 import type { PersistentSessionState } from "@/lib/session-runtime/session-engine";
-import type { SessionLength } from "@/types/session";
 import { useGameSessionStore } from "@/store/game-session-store";
 
 export type GenerationCallbacks = {
@@ -44,12 +43,9 @@ export type GenerationCallbacks = {
  * This function bridges the two formats.
  */
 function payloadToInput(payload: SessionConfigPayload): CreateSessionInput {
-    // Map setup's "rounds" to SessionLength
-    const lengthMap: Record<number, SessionLength> = {
-        3: "short",
-        4: "normal",
-        5: "long",
-    };
+    // sessionLength is now passed directly from setup — no more reverse-mapping rounds.
+    // This eliminates the fragile rounds→SessionLength conversion.
+    const sessionLength = payload.sessionLength;
 
     return {
         players: payload.players.map((p) => ({
@@ -57,7 +53,7 @@ function payloadToInput(payload: SessionConfigPayload): CreateSessionInput {
             avatar: p.avatar,
             ageGroup: p.ageGroup,
         })),
-        sessionLength: lengthMap[payload.rounds] ?? "normal",
+        sessionLength,
         themeId: payload.themeId,
     };
 }

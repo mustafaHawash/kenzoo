@@ -59,7 +59,7 @@ export function SessionSetupShell() {
     /* ─── Data-driven step resolution ─── */
     const activeStepDef = sortedSteps[stepIndex];
     const activeStepId = activeStepDef.id;
-    const canGoBack = stepIndex > 0 && generationStatus === "idle";
+    const canGoBack = generationStatus === "idle";
     const validation = activeStepDef.validate(setup);
     const canGoNext = validation.isValid;
     const isLastStep = stepIndex >= sortedSteps.length - 1;
@@ -71,7 +71,12 @@ export function SessionSetupShell() {
     };
 
     const goBack = () => {
-        setStepIndex((current) => Math.max(current - 1, 0));
+        if (stepIndex === 0) {
+            // On first step, back navigates to home page
+            router.push("/");
+        } else {
+            setStepIndex((current) => Math.max(current - 1, 0));
+        }
     };
 
     /* ─── Generation orchestration ─── */

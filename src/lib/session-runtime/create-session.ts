@@ -126,6 +126,9 @@ export type ValidationResult = {
  * Returns: { isValid, errors[] }
  * If isValid is false, errors contains human-readable reasons.
  */
+/** Available theme IDs at the runtime creation boundary */
+const VALID_THEME_IDS: Set<string> = new Set(["eid-el-adha"]);
+
 export function validateSessionInput(input: CreateSessionInput): ValidationResult {
     const errors: string[] = [];
 
@@ -137,11 +140,12 @@ export function validateSessionInput(input: CreateSessionInput): ValidationResul
         errors.push("الحد الأقصى 6 لاعبين");
     }
 
-    // Player names
+    // Player names — STRICT: no fallback names allowed
+    // Kenzoo is identity-driven. Players must intentionally exist.
     const names = input.players.map((p) => p.name.trim());
     const emptyNames = names.filter((n) => n.length === 0);
     if (emptyNames.length > 0) {
-        errors.push("كل اللاعبين لازم يكون عندهم اسم");
+        errors.push("كل اللاعبين لازم يكون عندهم اسم — مفيش أسماء افتراضية");
     }
 
     const duplicateNames = names.filter((n, i) => n && names.indexOf(n) !== i);
@@ -154,9 +158,11 @@ export function validateSessionInput(input: CreateSessionInput): ValidationResul
         errors.push("طول الجلسة غير صالح");
     }
 
-    // Theme
+    // Theme — validate against known available themes
     if (!input.themeId || input.themeId.trim().length === 0) {
         errors.push("يجب اختيار ثيم");
+    } else if (!VALID_THEME_IDS.has(input.themeId)) {
+        errors.push("الثيم المختار مش متاح — اختاروا ثيم متاح");
     }
 
     // Content pool sufficiency

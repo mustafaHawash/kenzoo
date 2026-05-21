@@ -31,6 +31,9 @@ import { sessionLengthOptions } from "./setup-content";
 export function buildSessionConfig(setup: SessionSetupState): SessionConfigPayload {
     const lengthDef = sessionLengthOptions.find((l) => l.id === setup.sessionLengthId);
 
+    // IDENTITY RULE: Players must have real names.
+    // Fallback names are a setup-time safety net only.
+    // The runtime validation layer (validateSessionInput) rejects empty names.
     const players = setup.players.map((p, index) => ({
         name: p.name.trim() || `لاعب ${index + 1}`,
         avatar: p.avatar,
@@ -41,5 +44,6 @@ export function buildSessionConfig(setup: SessionSetupState): SessionConfigPaylo
         players,
         rounds: lengthDef?.rounds ?? 4,
         themeId: setup.themeId,
+        sessionLength: setup.sessionLengthId,
     };
 }

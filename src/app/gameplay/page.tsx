@@ -190,6 +190,14 @@ export default function GameplayScreen() {
     const completedPaths = getCompletedPathCount(journey);
 
     const handlePathSelect = (pathId: string) => {
+        // OWNERSHIP: gameplay/page owns path selection.
+        // Commit the selected path to Zustand BEFORE navigating.
+        // This guarantees the handoff is deterministic and stable.
+        // play/page will find activePath already set — no race condition.
+        const { initSession, persistentState, runtimeState } = useGameSessionStore.getState();
+        if (persistentState && !runtimeState.activePath) {
+            initSession(persistentState, pathId);
+        }
         router.push(`/play?pathId=${pathId}`);
     };
 

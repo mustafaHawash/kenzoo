@@ -113,6 +113,7 @@ export type SetupStepDefinition = {
 export type SessionConfigPayload = {
     players: Omit<SetupPlayer, "id">[];
     rounds: number;
+    sessionLength: SessionLengthDefinition["id"];
     themeId: ThemeDefinition["id"];
     // Future expansion: language, difficulty weights, etc.
 };

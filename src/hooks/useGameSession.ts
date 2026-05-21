@@ -86,12 +86,14 @@ export function useGameSession(pathId: string | null) {
             return;
         }
 
-        // If we have a persistent state but no activePath and pathId is set,
-        // we need to select the path
+        // PATH HANDOFF: If we have a persistent state but no activePath and pathId is set,
+        // we need to select the path. This covers the case where gameplay/page
+        // navigated via URL but the store hasn't been updated yet.
+        // Also covers page refresh where runtimeState is lost.
         if (pathId && !runtimeState.activePath && persistentState) {
             initSession(persistentState, pathId);
         }
-    }, []); // Only on mount
+    }, [lifecycle, persistentState, pathId, runtimeState.activePath, initSession, router]);
 
     /* ─── Session guard ─── */
     useEffect(() => {

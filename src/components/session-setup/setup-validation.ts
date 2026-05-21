@@ -118,12 +118,29 @@ export function validateSessionLengthStep(state: SessionSetupState): ValidationR
 }
 
 /**
+ * Available theme IDs — runtime validation boundary.
+ * Only themes listed here are accepted at runtime.
+ * This prevents invalid or unavailable themes from reaching session creation.
+ */
+const AVAILABLE_THEME_IDS: Set<string> = new Set(["eid-el-adha"]);
+
+/**
  * Validates the theme selection step.
+ *
+ * Checks:
+ *   - Theme ID is present
+ *   - Theme ID is a known available theme
+ *   - Theme is not "coming-soon" (unavailable)
  */
 export function validateThemeStep(state: SessionSetupState): ValidationResult {
     if (!state.themeId) {
         return { isValid: false, reason: "اختاروا جو الليلة" };
     }
+
+    if (!AVAILABLE_THEME_IDS.has(state.themeId)) {
+        return { isValid: false, reason: "الثيم المختار مش متاح دلوقتي" };
+    }
+
     return { isValid: true };
 }
 

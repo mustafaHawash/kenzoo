@@ -2,7 +2,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
 
@@ -193,6 +193,7 @@ function EndingCeremonyView({
       - All paths completed -> ending ceremony
     ═══════════════════════════════════════════════════════════ */
 function PlayPageContent() {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const pathId = searchParams.get("pathId");
 
@@ -234,8 +235,22 @@ function PlayPageContent() {
         );
     }
 
-    /* ─── No active path — redirect to path selection ─── */
+    /* ─── No active path — show loading briefly, then redirect ─── */
+    // play/page MUST NEVER silently lose selected path state.
+    // If we reach here with a pathId but no activePath, the store
+    // hydration may still be in progress. Show loading instead of
+    // immediately showing "no path" error.
     if (!station || !activePath) {
+        // If pathId exists but activePath is null, hydration is pending
+        if (pathId) {
+            return (
+                <ScreenContainer className="justify-center items-center">
+                    <Muted>جاري تحميل المسار...</Muted>
+                </ScreenContainer>
+            );
+        }
+
+        // No pathId at all — genuine missing path, redirect to selection
         return (
             <ScreenContainer className="justify-center items-center">
                 <div className="flex flex-col items-center gap-4 text-center">
@@ -246,7 +261,7 @@ function PlayPageContent() {
                         اختر مسارًا للبدء
                     </Muted>
                     <button
-                        onClick={() => window.location.href = "/gameplay"}
+                        onClick={() => router.push("/gameplay")}
                         className="rounded-full border border-secondary/20 bg-card/60 px-6 py-2.5 text-sm text-secondary/80 backdrop-blur-sm transition-all hover:bg-card/80 active:scale-95"
                     >
                         اختيار مسار
@@ -316,6 +331,8 @@ function PlayPageContent() {
 
                 {/* ═══════════════════════════════════════════
                     🗺️ PATH PROGRESS INDICATOR
+                    Progress derives from: currentStationIndex + completed stations.
+                    Shows completed stations out of total, with station dots.
                     ═══════════════════════════════════════════ */}
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -328,14 +345,14 @@ function PlayPageContent() {
                             {progressLabel}
                         </Muted>
                         <Muted className="text-[10px]">
-                            المحطة {activePath.currentStationIndex + 1} من {activePath.totalStations}
+                            {activePath.currentStationIndex} من {activePath.totalStations} محطات
                         </Muted>
                     </div>
                     <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-soft">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{
-                                width: `${Math.round(((activePath.currentStationIndex) / activePath.totalStations) * 100)}%`,
+                                width: `${Math.round((activePath.currentStationIndex / activePath.totalStations) * 100)}%`,
                             }}
                             transition={{ duration: 0.5, ease: "easeOut" as const }}
                             className="absolute inset-y-0 right-0 rounded-full bg-linear-to-l from-secondary via-amber-400 to-secondary/80"
