@@ -219,6 +219,136 @@ export type GameplayPhase =
     | "transition"
     | "ending";
 
+/* ─── Gameplay Flow Decisions ───────────────────────────── */
+
+/**
+ * The result of a gameplay flow decision.
+ *
+ * session-engine OWNS the decision of what happens next.
+ * The hook OWNS syncing this decision into React state.
+ *
+ * This type tells the hook:
+ *   - What the next phase should be
+ *   - Whether the session state changed (and how)
+ *   - Whether an ending ceremony should start
+ */
+export type GameplayFlowDecision = {
+    /** The next gameplay phase */
+    nextPhase: GameplayPhase;
+
+    /** Updated session state (if changed) */
+    updatedState?: SessionState;
+
+    /** Ending ceremony to start (if session completed) */
+    ceremony?: EndingCeremonyState;
+};
+
+/**
+ * Resolves what happens after a correct answer continues from result phase.
+ *
+ * OWNED BY: session-engine (gameplay authority)
+ * CALLED BY: useGameSession (React adapter)
+ *
+ * Flow:
+ *   - If treasure opportunity exists → show treasure overlay
+ *   - If correct answer → advance path, check completion
+ *   - If wrong answer → transition to path selection
+ *
+ * IMPORTANT: This function makes ONLY the gameplay decision.
+ * It does NOT manage timers, React state, or UI transitions.
+ */
+export function resolveContinueFromResult(
+    state: SessionState,
+    lastResult: { isCorrect: boolean; starsEarned: number } | null,
+): GameplayFlowDecision {
+    // Treasure opportunity takes priority — gameplay freezes
+    if (state.activeTreasure) {
+        return { nextPhase: "treasure" };
+    }
+
+    // No treasure — advance based on answer result
+    if (lastResult?.isCorrect) {
+        const next = advanceActivePath(state, lastResult.starsEarned);
+
+        // Session completed — trigger ending
+        if (next.isComplete) {
+            return {
+                nextPhase: "ending",
+                updatedState: next,
+                ceremony: createEndingCeremonyState(next),
+            };
+        }
+
+        // Path still active — next station
+        if (next.activePath) {
+            return { nextPhase: "question", updatedState: next };
+        }
+
+        // Path completed — back to path selection
+        return { nextPhase: "transition", updatedState: next };
+    }
+
+    // Wrong answer — save progress, end turn
+    return { nextPhase: "transition" };
+}
+
+/**
+ * Resolves what happens after dismissing a treasure overlay.
+ *
+ * OWNED BY: session-engine (gameplay authority)
+ * CALLED BY: useGameSession (React adapter)
+ *
+ * Treasure dismissal ONLY closes the overlay.
+ * Then we advance the path and decide the next phase.
+ * Progression was already committed before the treasure appeared.
+ */
+export function resolveDismissTreasure(
+    state: SessionState,
+    lastResult: { isCorrect: boolean; starsEarned: number } | null,
+): GameplayFlowDecision {
+    // Clear the treasure overlay first
+    const cleared = clearActiveTreasure(state);
+
+    // Now resolve progression (same logic as continue from result)
+    if (lastResult?.isCorrect) {
+        const next = advanceActivePath(cleared, lastResult.starsEarned);
+
+        if (next.isComplete) {
+            return {
+                nextPhase: "ending",
+                updatedState: next,
+                ceremony: createEndingCeremonyState(next),
+            };
+        }
+
+        if (next.activePath) {
+            return { nextPhase: "question", updatedState: next };
+        }
+
+        return { nextPhase: "transition", updatedState: next };
+    }
+
+    // Wrong answer after treasure — transition
+    return { nextPhase: "transition", updatedState: cleared };
+}
+
+/**
+ * Resolves what happens during the transition phase.
+ *
+ * OWNED BY: session-engine (gameplay authority)
+ * CALLED BY: useGameSession (React adapter)
+ *
+ * Advances to the next player's turn.
+ * The hook handles the actual navigation.
+ */
+export function resolveTransition(
+    state: SessionState,
+    lastResult: { isCorrect: boolean; starsEarned: number } | null,
+): GameplayFlowDecision {
+    const next = advanceTurn(state, lastResult);
+    return { nextPhase: "path-selection", updatedState: next };
+}
+
 /* ─── Ending Ceremony ────────────────────────────────────── */
 
 export type EndingCeremonyPhase =
@@ -318,7 +448,7 @@ export function createSessionState(
     players: Player[],
     journeys: PlayerJourneyState[],
     sessionLength: import("@/types/session").SessionLength = "normal",
-): SessionState {
+): PersistentSessionState {
     const stationsPerPath = STATIONS_BY_LENGTH[sessionLength];
 
     // GUARANTEE: Every player has a journey entry — never undefined
@@ -334,8 +464,6 @@ export function createSessionState(
         stationsPerPath,
         globalTurnIndex: 0,
         isComplete: false,
-        activePath: null,
-        activeTreasure: null,
         claimedLegendaryIds: [],
     };
 }

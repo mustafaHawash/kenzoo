@@ -6,32 +6,79 @@
  * The setup shell does NOT know:
  *   - timer mechanics
  *   - loading durations
- *   - fake async details
+ *   - generation internals
  *   - future AI call structure
  *
  * The shell only triggers this orchestrator and reacts to lifecycle callbacks.
  *
+ * This module bridges setup → createSession() → gameplay.
+ *
  * Future expansion:
- *   - Replace setTimeout with real AI generation call
+ *   - Replace with real AI generation call
  *   - Add retry logic
  *   - Add progress streaming
  *   - Add content validation before "ready"
  */
 
 import type { SessionConfigPayload } from "./setup-types";
+import {
+    createSession,
+    validateSessionInput,
+    type CreateSessionInput,
+} from "@/lib/session-runtime/create-session";
+import type { PersistentSessionState } from "@/lib/session-runtime/session-engine";
+import type { SessionLength } from "@/types/session";
+import { sessionStore } from "@/lib/session-runtime/session-store";
 
 export type GenerationCallbacks = {
     onPreparing: () => void;
-    onReady: (payload: SessionConfigPayload) => void;
+    onReady: (state: PersistentSessionState) => void;
     onError?: (error: Error) => void;
 };
 
 /**
+ * Transforms SessionConfigPayload into CreateSessionInput.
+ *
+ * The setup flow produces a raw payload (names, avatars, theme).
+ * createSession() expects a normalized input.
+ * This function bridges the two formats.
+ */
+function payloadToInput(payload: SessionConfigPayload): CreateSessionInput {
+    // Map setup's "rounds" to SessionLength
+    const lengthMap: Record<number, SessionLength> = {
+        3: "short",
+        4: "normal",
+        5: "long",
+    };
+
+    return {
+        players: payload.players.map((p) => ({
+            name: p.name,
+            avatar: p.avatar,
+            ageGroup: p.ageGroup,
+        })),
+        sessionLength: lengthMap[payload.rounds] ?? "normal",
+        themeId: payload.themeId,
+    };
+}
+
+/**
  * Starts the session generation process.
  *
- * Currently uses a simulated delay.
- * When real generation arrives, this function will be the single
- * integration point — no UI code needs to change.
+ * FLOW:
+ *   1. Set lifecycle to "generating"
+ *   2. Validate input (fail fast if invalid)
+ *   3. Create PersistentSessionState via createSession()
+ *   4. Store in sessionStore (immutable-safe)
+ *   5. Set lifecycle to "active"
+ *   6. Notify callback
+ *
+ * The cinematic delay is preserved for atmosphere.
+ * When AI generation arrives, the delay will be replaced by
+ * an async AI call. No UI code needs to change.
+ *
+ * IMPORTANT: This function does NOT own gameplay logic.
+ * It orchestrates lifecycle only.
  *
  * Returns a cleanup function to cancel in-flight generation.
  */
@@ -40,12 +87,30 @@ export function startSessionGeneration(
     callbacks: GenerationCallbacks,
 ): () => void {
     callbacks.onPreparing();
+    sessionStore.setLifecycle("generating");
 
-    // --- Simulated async generation ---
-    // Future: replace with actual generateSession(payload) call
+    // Cinematic delay for atmosphere — generation itself is instant
     const timer = window.setTimeout(() => {
-        console.log("[generation-orchestration] Session generated:", payload);
-        callbacks.onReady(payload);
+        try {
+            const input = payloadToInput(payload);
+
+            // Validate before creation — fail fast
+            const validation = validateSessionInput(input);
+            if (!validation.isValid) {
+                throw new Error(`Invalid session: ${validation.errors.join(", ")}`);
+            }
+
+            // Create persistent state (gameplay truth only, no runtime)
+            const persistentState = createSession(input);
+
+            // Store immutably in session store
+            sessionStore.setPersistent(persistentState);
+
+            callbacks.onReady(persistentState);
+        } catch (error) {
+            sessionStore.setLifecycle("idle");
+            callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
+        }
     }, 3200);
 
     // Cleanup: cancel if component unmounts or generation is restarted

@@ -15,6 +15,7 @@ import { buildSessionConfig } from "./build-session-config";
 import { startSessionGeneration } from "./generation-orchestration";
 import type { SessionSetupState, GenerationTransitionStatus } from "./setup-types";
 import { cn } from "@/lib/utils";
+import type { PersistentSessionState } from "@/lib/session-runtime/session-engine";
 
 /* ─── Initial state ─── */
 const initialSetupState: SessionSetupState = {
@@ -53,6 +54,7 @@ export function SessionSetupShell() {
     const [stepIndex, setStepIndex] = useState(0);
     const [generationStatus, setGenerationStatus] = useState<GenerationTransitionStatus>("idle");
     const generationCleanupRef = useRef<(() => void) | null>(null);
+    const generatedStateRef = useRef<SessionState | null>(null);
 
     /* ─── Data-driven step resolution ─── */
     const activeStepDef = sortedSteps[stepIndex];
@@ -78,14 +80,19 @@ export function SessionSetupShell() {
 
         const cleanup = startSessionGeneration(payload, {
             onPreparing: () => setGenerationStatus("preparing"),
-            onReady: () => setGenerationStatus("ready"),
+            onReady: (state: PersistentSessionState) => {
+                generatedStateRef.current = state;
+                setGenerationStatus("ready");
+            },
         });
 
         generationCleanupRef.current = cleanup;
     }, [setup]);
 
     const completeGeneration = useCallback(() => {
-        router.push("/play");
+        // Navigate to gameplay page — session state will be available
+        // via session context (future: Zustand store or URL-based handoff)
+        router.push("/gameplay");
     }, [router]);
 
     // Cleanup generation on unmount

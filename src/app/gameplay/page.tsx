@@ -9,7 +9,7 @@ import { ScreenContainer } from "@/components/ui/layout/screen-container";
 import { Headline, Body, Label, Muted } from "@/components/ui/typography";
 import type { JourneyPath, PlayerJourneyState } from "@/types/path";
 import { getCompletedPathCount } from "@/types/path";
-import { MOCK_PLAYERS, MOCK_JOURNEYS } from "@/content/mock-session";
+import { sessionStore } from "@/lib/session-runtime/session-store";
 
 /* ─── Animation variants ─── */
 const containerVariants: Variants = {
@@ -40,9 +40,6 @@ const pathCardHover = {
     rest: { scale: 1 },
     hover: { scale: 1.02, transition: { duration: 0.2, ease: "easeOut" as const } },
 };
-
-/* ─── Mock journey data (replace with real session context) ─── */
-const MOCK_JOURNEY = MOCK_JOURNEYS[0]; // Current player's journey
 
 /* ─── Path Card Component ─── */
 function PathCard({
@@ -135,9 +132,15 @@ function PathCard({
 export default function GameplayScreen() {
     const router = useRouter();
 
-    // TODO: Replace with session context
-    const currentPlayer = MOCK_PLAYERS[0];
-    const journey = MOCK_JOURNEY;
+    // REAL session only — redirect if none exists
+    const storedSession = sessionStore.getHydrated();
+    if (!storedSession || storedSession.players.length === 0) {
+        // No session — redirect to setup
+        router.replace("/session/setup");
+        return null;
+    }
+    const currentPlayer = storedSession.players[0];
+    const journey = storedSession.journeys[0];
     const playerName = currentPlayer.name;
     const playerStars = currentPlayer.stars;
     const playerTreasures = currentPlayer.treasures;

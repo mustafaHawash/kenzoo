@@ -890,6 +890,129 @@ Components should:
 
 ---
 
+# Runtime Architecture
+
+## Session Flow
+
+```
+landing → session/setup → createSession() → gameplay → play → ending
+```
+
+## createSession() — THE SINGLE RUNTIME ENTRY POINT
+
+- Input: `CreateSessionInput` (players, sessionLength, themeId, sessionSeed?)
+- Output: `PersistentSessionState` ONLY (no runtime fields)
+- To get full runtime state: `hydrateSessionState(createSession(input))`
+- Validation: `validateSessionInput(input)` — called before creation
+
+## State Boundaries
+
+### PersistentSessionState (Gameplay Truth)
+
+Serializable, deterministic, future-Zustand-ready.
+Survives: page navigation, tab switches, persistence, session restore.
+
+Fields: players, journeys, currentPlayerIndex, sessionLength, stationsPerPath, globalTurnIndex, isComplete, claimedLegendaryIds
+
+### RuntimeSessionState (Current Interaction Context)
+
+Ephemeral, never persisted, never serialized.
+Resets on: navigation, reload, turn end.
+
+Fields: activePath, activeTreasure
+
+### Hook-Local State (useGameSession only)
+
+gameplayPhase, lastResult, awardedTitle
+
+### Component-Local State (never leaves component)
+
+selectedChoice, textInput, canSubmit
+
+## Session Lifecycle
+
+```
+idle → generating → active → ending → completed
+```
+
+This is NOT UI phase state. It tracks session-level lifecycle ownership.
+
+## Session Store (Immutable-Safe)
+
+No consumer ever receives a direct mutable reference.
+All get() calls return deep clones.
+All set() calls deep clone before storage.
+
+## Hydration Flow
+
+```
+createSession() → PersistentSessionState
+                        ↓
+            hydrateSessionState() → SessionState (runtime defaults)
+                        ↓
+            selectPath() → SessionState (activePath set)
+                        ↓
+            useGameSession hook → Full runtime state
+```
+
+## Validation
+
+`validateSessionInput()` checks: player count, empty/duplicate names, session length, theme, content pool sufficiency.
+
+## Gameplay Flow Authority
+
+**session-engine OWNS gameplay decisions.**
+**useGameSession OWNS React state sync only.**
+
+session-engine provides `resolveX()` functions that return `GameplayFlowDecision`:
+- `resolveContinueFromResult()` — what happens after seeing answer result
+- `resolveDismissTreasure()` — what happens after closing treasure overlay
+- `resolveTransition()` — what happens when moving to next turn
+
+useGameSession is a thin React adapter:
+1. Calls session-engine resolveX() functions
+2. Syncs decision.nextPhase → setGameplayPhase()
+3. Syncs decision.updatedState → setSessionState()
+4. Syncs decision.ceremony → setCeremony()
+5. Coordinates timers (reveal delay only)
+6. Handles navigation (router.push)
+
+useGameSession does NOT:
+- Decide gameplay progression
+- Own treasure progression rules
+- Own ending decisions
+- Contain gameplay business logic
+
+## Runtime Ownership
+
+| Decision | Owner |
+|----------|-------|
+| Session creation | `createSession()` |
+| Session validation | `validateSessionInput()` |
+| Session lifecycle | `sessionStore` + `generation-orchestration` |
+| Gameplay flow decisions | `session-engine` (resolveX functions) |
+| Phase sync | `useGameSession` (adapter only) |
+| Reveal timing | `useGameSession` (cinematic delay only) |
+| Progression commit | `session-engine` (pure functions) |
+| Treasure flow | `session-engine` (flow decision) |
+| Path advancement | `session-engine` (pure functions) |
+| UI rendering | Components (pure renderers) |
+
+## Dev Preview Policy
+
+`mock-session.ts` provides `createDevSession()` for quick dev testing.
+It is NOT part of the production runtime flow.
+Real sessions always go through: session/setup → createSession() → gameplay.
+Runtime pages redirect to /session/setup when no session exists.
+
+## Themes Are Content-Only
+
+Theme files (quiz.ts, riddles.ts, etc.) are pure content sources.
+Runtime NEVER mutates content pools directly.
+Composition layer (compose-journey.ts) deep-clones all stations.
+
+---
+
 # Rendering Philosophy
 
 Gameplay rendering must use:

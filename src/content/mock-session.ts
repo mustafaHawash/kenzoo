@@ -1,85 +1,48 @@
 // src/content/mock-session.ts
 /**
- * Mock session data for development.
+ * Development-only session preview utility.
  *
- * ARCHITECTURE:
- *   This module provides ONLY:
- *     - Mock player data (names, ages, starting stats)
- *     - Journey composition via the theme runtime composition layer
+ * ⚠️ NOT for production runtime.
+ * ⚠️ The real runtime flow uses createSession() from session-runtime.
+ * ⚠️ This module exists ONLY for quick dev testing without setup.
  *
- *   It does NOT invent gameplay content.
- *   All stations come from the REAL theme content files.
+ * REAL RUNTIME FLOW:
+ *   landing → session/setup → createSession() → gameplay → play → ending
  *
- * COMPOSITION FLOW:
- *   theme content (quiz.ts, riddles.ts)
- *       ↓
- *   compose-journey.ts (path distribution, deep clone)
- *       ↓
- *   mock-session.ts (player data + journey composition)
- *       ↓
- *   session-engine.ts (runtime initialization)
+ * DEV PREVIEW FLOW (this module):
+ *   createDevSession() → PersistentSessionState → sessionStore
  *
- * DEEP CLONE GUARANTEE:
- *   composeAllJourneys() returns fully isolated journeys.
- *   No shared mutable references between players.
+ * Content comes from REAL theme files (quiz.ts, riddles.ts, etc.)
+ * Only the player definitions are synthetic.
  */
 
-import type { Player } from "@/types/player";
-import type { PlayerJourneyState } from "@/types/path";
+import type { CreateSessionInput } from "@/lib/session-runtime/create-session";
+import { createSession } from "@/lib/session-runtime/create-session";
+import type { PersistentSessionState } from "@/lib/session-runtime/session-engine";
 
-import { composeAllJourneys } from "@/content/themes/eid-el-adha/compose-journey";
+/* ─── Dev Preview Players ─── */
 
-/* ─── Mock Players ─── */
-
-export const MOCK_PLAYERS: Player[] = [
-    {
-        id: "player-1",
-        name: "مصطفى",
-        gender: "male",
-        age: 25,
-        ageGroup: "adult",
-        stars: 50,
-        treasures: 2,
-        completedMissions: 0,
-        titles: [],
-        openedTreasures: [],
-    },
-    {
-        id: "player-2",
-        name: "أحمد",
-        gender: "male",
-        age: 22,
-        ageGroup: "adult",
-        stars: 30,
-        treasures: 1,
-        completedMissions: 0,
-        titles: [],
-        openedTreasures: [],
-    },
-    {
-        id: "player-3",
-        name: "سارة",
-        gender: "female",
-        age: 20,
-        ageGroup: "teen",
-        stars: 2,
-        treasures: 1,
-        completedMissions: 0,
-        titles: [],
-        openedTreasures: [],
-    },
+const DEV_PLAYERS: CreateSessionInput["players"] = [
+    { name: "مصطفى", avatar: "🧭", ageGroup: "adult" },
+    { name: "أحمد", avatar: "🔮", ageGroup: "adult" },
+    { name: "سارة", avatar: "🌙", ageGroup: "kid" },
 ];
 
-/* ─── Journey Composition ─── */
-
 /**
- * Composes journeys for all mock players using REAL theme content.
+ * Creates a development preview session.
  *
- * Each player gets 4 fully isolated paths with deep-cloned stations.
- * Stations are selected from the Eid Al-Adha theme pool,
- * distributed by difficulty tier (1=easy, 2=medium, 3=hard, 4=legendary).
+ * Uses REAL theme content via createSession().
+ * Useful for testing gameplay without going through setup.
+ *
+ * DO NOT use this in production runtime.
+ * The real flow always goes through session/setup → createSession().
  */
-export const MOCK_JOURNEYS: PlayerJourneyState[] = composeAllJourneys(
-    MOCK_PLAYERS.map((p) => p.id),
-    4, // stations per path
-);
+export function createDevSession(
+    sessionLength: "short" | "normal" | "long" = "normal",
+): PersistentSessionState {
+    return createSession({
+        players: DEV_PLAYERS,
+        sessionLength,
+        themeId: "eid-el-adha",
+    });
+}
