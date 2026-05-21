@@ -195,7 +195,7 @@ export default function GameplayScreen() {
         // This guarantees the handoff is deterministic and stable.
         // play/page will find activePath already set — no race condition.
         const { initSession, persistentState, runtimeState } = useGameSessionStore.getState();
-        if (persistentState && !runtimeState.activePath) {
+        if (persistentState && !runtimeState.activePathId) {
             initSession(persistentState, pathId);
         }
         router.push(`/play?pathId=${pathId}`);

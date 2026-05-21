@@ -86,14 +86,23 @@ export function useGameSession(pathId: string | null) {
             return;
         }
 
-        // PATH HANDOFF: If we have a persistent state but no activePath and pathId is set,
+        // PATH HANDOFF: If we have a persistent state but no activePathId and pathId is set,
         // we need to select the path. This covers the case where gameplay/page
         // navigated via URL but the store hasn't been updated yet.
         // Also covers page refresh where runtimeState is lost.
-        if (pathId && !runtimeState.activePath && persistentState) {
+        //
+        // CRITICAL GUARD: Do NOT re-initialize during transition or ending phases.
+        // When a path ends (wrong answer or path completed), activePathId becomes null
+        // but the phase is "transition" or "ending" — re-initializing here would
+        // reset the path and show the same question again (duplicate question bug).
+        //
+        // DETERMINISTIC: We check activePathId (not activePath) because activePathId
+        // is the authoritative runtime reference. activePath object may be stale.
+        const phase = useGameSessionStore.getState().gameplayPhase;
+        if (pathId && !runtimeState.activePathId && persistentState && phase === "path-selection") {
             initSession(persistentState, pathId);
         }
-    }, [lifecycle, persistentState, pathId, runtimeState.activePath, initSession, router]);
+    }, [lifecycle, persistentState, pathId, runtimeState.activePathId, initSession, router]);
 
     /* ─── Session guard ─── */
     useEffect(() => {

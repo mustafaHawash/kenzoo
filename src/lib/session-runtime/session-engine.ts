@@ -29,6 +29,7 @@
 
 import type { Player } from "@/types/player";
 import type { Treasure } from "@/types/treasure";
+import type { Station } from "@/types/station";
 import type { PlayerJourneyState, JourneyPath, ActivePathSession } from "@/types/path";
 import { advancePathProgression, hasCompletedAllPaths, getNextStation } from "@/types/path";
 import { HIDDEN_POINTS_BY_RARITY } from "@/types/treasure";
@@ -169,9 +170,17 @@ export type PersistentSessionState = {
  *   then it belongs here, NOT in PersistentSessionState.
  */
 export type RuntimeSessionState = {
+    /** Lightweight reference to which path is active — lookup key into journeys[].
+     *  RUNTIME-ONLY: used to deterministically derive the current station
+     *  from PersistentSessionState, avoiding stale activePath.currentStation.
+     *  When null, no path is being played (path-selection screen). */
+    activePathId: string | null;
+
     /** Currently active path session, or null on path-selection screen.
      *  RUNTIME-ONLY: which path is being played RIGHT NOW.
-     *  Does not affect final scores or progression if lost. */
+     *  Does not affect final scores or progression if lost.
+     *  IMPORTANT: Prefer deriving station from persistentState + activePathId
+     *  rather than reading activePath.currentStation (can be stale). */
     activePath: ActivePathSession | null;
 
     /** Pending treasure opportunity — UI NEVER holds this directly.
@@ -519,6 +528,7 @@ export function selectPath(
 
     return {
         ...state,
+        activePathId: activePath.pathId,
         activePath,
     };
 }
@@ -578,6 +588,7 @@ export function advanceActivePath(
     return {
         ...state,
         journeys: updatedJourneys,
+        activePathId: updatedActivePath?.pathId ?? null,
         activePath: updatedActivePath,
         isComplete,
     };
@@ -608,6 +619,7 @@ export function advanceTurn(
         players: updatedPlayers,
         currentPlayerIndex: nextPlayerIndex,
         globalTurnIndex: state.globalTurnIndex + 1,
+        activePathId: null,
         activePath: null,
         activeTreasure: null,
     };
@@ -758,6 +770,95 @@ export function advanceCeremonyPhase(
     };
 }
 
+/* ─── Deterministic Selectors ────────────────────────────── */
+
+/**
+ * Gets a journey by player index from persistent state.
+ * Returns null if index is out of bounds.
+ */
+export function getJourneyByPlayer(
+    state: PersistentSessionState,
+    playerIndex: number,
+): PlayerJourneyState | null {
+    return state.journeys[playerIndex] ?? null;
+}
+
+/**
+ * Gets a specific path by ID from a player's journey.
+ * Returns null if not found.
+ */
+export function getPathById(
+    state: PersistentSessionState,
+    pathId: string,
+): JourneyPath | null {
+    const journey = state.journeys[state.currentPlayerIndex];
+    if (!journey) return null;
+    return journey.paths.find((p) => p.id === pathId) ?? null;
+}
+
+/**
+ * Gets the current station from persistent state ONLY.
+ *
+ * This is the DETERMINISTIC way to derive the current station.
+ * It NEVER reads from activePath.currentStation (which can be stale).
+ * It ALWAYS reconstructs the station fresh from journey progression.
+ *
+ * Returns null if:
+ *   - No journey exists for the current player
+ *   - No path matches the given pathId
+ *   - The path is already completed
+ *   - The station index is out of bounds
+ */
+export function getCurrentStationFromPersistentState(
+    state: PersistentSessionState,
+    pathId: string | null,
+): Station | null {
+    if (!pathId) return null;
+
+    const journey = state.journeys[state.currentPlayerIndex];
+    if (!journey) return null;
+
+    const path = journey.paths.find((p) => p.id === pathId);
+    if (!path || path.completed) return null;
+
+    if (path.currentStationIndex >= path.stations.length) return null;
+
+    return path.stations[path.currentStationIndex].station;
+}
+
+/**
+ * Derives an ActivePathSession from persistent state ONLY.
+ *
+ * This is the DETERMINISTIC way to reconstruct the active path context.
+ * It NEVER reuses a cached activePath — always fresh from journey state.
+ *
+ * Returns null if the path is completed or not found.
+ */
+export function deriveActivePathFromPersistentState(
+    state: PersistentSessionState,
+    pathId: string,
+): ActivePathSession | null {
+    const journey = state.journeys[state.currentPlayerIndex];
+    if (!journey) return null;
+
+    const path = journey.paths.find((p) => p.id === pathId);
+    if (!path || path.completed) return null;
+
+    const station = getNextStation(path);
+    if (!station) return null;
+
+    return {
+        pathId: path.id,
+        playerId: journey.playerId,
+        currentStation: station,
+        currentStationIndex: path.currentStationIndex,
+        totalStations: path.stations.length,
+        stationsClearedThisTurn: 0,
+        starsEarnedThisTurn: 0,
+        treasureProbabilityMultiplier: path.treasureProbabilityMultiplier,
+    };
+}
+
 /* ─── Utility ────────────────────────────────────────────── */
 
 /**
@@ -825,6 +926,7 @@ export function extractPersistentState(state: SessionState): PersistentSessionSt
 export function hydrateSessionState(persistent: PersistentSessionState): SessionState {
     return {
         ...persistent,
+        activePathId: null,
         activePath: null,
         activeTreasure: null,
     };

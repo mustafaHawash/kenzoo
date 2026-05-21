@@ -405,12 +405,12 @@ function PlayPageContent() {
                         className="flex flex-col items-center gap-4 text-center"
                     >
                         <Headline className="text-secondary text-lg">
-                            {sessionState.activePath === null
+                            {lastResult?.isCorrect
                                 ? "أحسنت! المسار اكتمل 🌟"
                                 : "الجولة خلصت"}
                         </Headline>
                         <Muted className="text-sm">
-                            {sessionState.activePath === null
+                            {lastResult?.isCorrect
                                 ? "اختار مسار جديد"
                                 : "تقدمك محفوظ، كمّل بعدين 💪"}
                         </Muted>

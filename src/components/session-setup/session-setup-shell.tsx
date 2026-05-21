@@ -54,7 +54,7 @@ export function SessionSetupShell() {
     const [stepIndex, setStepIndex] = useState(0);
     const [generationStatus, setGenerationStatus] = useState<GenerationTransitionStatus>("idle");
     const generationCleanupRef = useRef<(() => void) | null>(null);
-    const generatedStateRef = useRef<SessionState | null>(null);
+    const generatedStateRef = useRef<PersistentSessionState | null>(null);
 
     /* ─── Data-driven step resolution ─── */
     const activeStepDef = sortedSteps[stepIndex];

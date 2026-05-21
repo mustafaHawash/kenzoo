@@ -1,37 +1,40 @@
+
 /**
  * game-session-store.ts
  *
  * THE SINGLE RUNTIME SOURCE OF TRUTH.
  *
  * This Zustand store owns ALL runtime state:
- *   - PersistentSessionState (gameplay truth)
- *   - RuntimeSessionState (activePath, activeTreasure)
- *   - GameplayPhase (current flow phase)
- *   - EndingCeremonyState (ceremony progression)
- *   - SessionLifecycleState (session lifecycle)
- *   - Last round result (for rendering)
- *   - Awarded title (treasure UI)
+ *   - PersistentSessionState (gameplay truth) — persisted to localStorage
+ *   - RuntimeSessionState (activePath, activeTreasure) — NEVER persisted
+ *   - GameplayPhase (current flow phase) — NEVER persisted
+ *   - EndingCeremonyState (ceremony progression) — NEVER persisted
+ *   - SessionLifecycleState (session lifecycle) — NEVER persisted
+ *   - Last round result (for rendering) — NEVER persisted
+ *   - Awarded title (treasure UI) — NEVER persisted
+ *   - isGenerating (generation guard) — NEVER persisted
+ *
+ * PERSISTENCE ARCHITECTURE:
+ *   - Zustand persist middleware saves ONLY PersistentSessionState to localStorage
+ *   - Runtime-only state is reconstructed from persistent state on hydration
+ *   - Hydration guards prevent stale/invalid state from reaching the UI
+ *   - On page refresh: lifecycle → "active", gameplayPhase → "path-selection"
+ *   - Player must re-select a path after refresh (activePath is runtime-only)
  *
  * ARCHITECTURE:
  *   Zustand store  → single source of truth
  *   session-engine → gameplay authority (pure functions)
  *   useGameSession → React adapter (timers, navigation, UI sync)
- *
- * FUTURE EXPANSION BOUNDARIES (do NOT implement yet):
- *   - Backend sync: add subscribeWithSelector middleware
- *   - Save/load: serialize persistentState via extractPersistentState()
- *   - Seeded RNG: add sessionSeed to state, use in selectors
- *   - Analytics: add middleware that logs state transitions
- *   - AI generation: replace initSession with async version
- *   - Multiplayer: add optimistic updates + conflict resolution
  */
 
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type {
     PersistentSessionState,
     SessionState,
     EndingCeremonyState,
     GameplayPhase,
+    SessionLifecycleState,
 } from "@/lib/session-runtime/session-engine";
 import {
     hydrateSessionState,
@@ -43,28 +46,15 @@ import {
     resolveTransition,
     getSessionProgressLabel,
     advanceCeremonyPhase,
+    getCurrentStationFromPersistentState,
+    deriveActivePathFromPersistentState,
 } from "@/lib/session-runtime/session-engine";
 import type { RoundResult } from "@/types/session";
 import type { Player } from "@/types/player";
 import type { Station } from "@/types/station";
-import type { SessionLifecycleState } from "@/lib/session-runtime/session-engine";
 
 /* ─── Valid Phase Transitions ───────────────────────────── */
 
-/**
- * Defines the valid gameplay phase transitions.
- *
- * This map enforces calm, smooth, predictable, cinematic flow.
- * Invalid transitions are silently rejected — no crashes, no broken states.
- *
- * Flow:
- *   path-selection → question → reveal → result → (treasure | transition)
- *   treasure → (question | transition | ending)
- *   transition → path-selection
- *   ending → ending (ceremony phases)
- *
- * Any phase can always transition to "ending" (session completion).
- */
 const VALID_TRANSITIONS: Record<GameplayPhase, GameplayPhase[]> = {
     "path-selection": ["question", "ending"],
     "question": ["reveal", "ending"],
@@ -72,34 +62,31 @@ const VALID_TRANSITIONS: Record<GameplayPhase, GameplayPhase[]> = {
     "result": ["treasure", "transition", "question", "ending"],
     "treasure": ["question", "transition", "ending"],
     "transition": ["path-selection", "ending"],
-    "ending": ["ending"], // ceremony phases stay in "ending"
+    "ending": ["ending"],
 };
 
-/**
- * Checks whether a phase transition is valid.
- * "ending" is always allowed from any phase (session completion can happen anytime).
- */
 function isValidTransition(from: GameplayPhase, to: GameplayPhase): boolean {
-    if (to === "ending") return true; // session completion always allowed
+    if (to === "ending") return true;
     const allowed = VALID_TRANSITIONS[from];
     return allowed ? allowed.includes(to) : false;
 }
 
 /* ─── Helpers ──────────────────────────────────────────── */
 
-/**
- * Splits a SessionState into persistent + runtime parts.
- * Used after session-engine pure functions return full SessionState.
- */
 function splitState(state: SessionState) {
     const {
+        activePathId,
         activePath,
         activeTreasure,
         ...persistent
     } = state;
     return {
         persistent: persistent as PersistentSessionState,
-        runtime: { activePath, activeTreasure },
+        runtime: {
+            activePathId: activePathId ?? activePath?.pathId ?? null,
+            activePath,
+            activeTreasure,
+        },
     };
 }
 
@@ -114,6 +101,13 @@ export type GameSessionState = {
 
     /* ─── Runtime-only state ─── */
     runtimeState: {
+        /** Lightweight reference to which path is active — used as lookup key.
+         *  The FULL activePath object is derived deterministically from persistentState + this ID.
+         *  This ID is the ONLY runtime path reference that matters. */
+        activePathId: string | null;
+        /** Full active path session — derived from persistentState + activePathId.
+         *  Can be null even when activePathId is set (during transition).
+         *  ALWAYS prefer deriving station from persistentState + activePathId. */
         activePath: SessionState["activePath"];
         activeTreasure: SessionState["activeTreasure"];
     };
@@ -129,6 +123,9 @@ export type GameSessionState = {
 
     /* ─── Treasure UI ─── */
     awardedTitle: string | null;
+
+    /* ─── Generation guard ─── */
+    isGenerating: boolean;
 };
 
 /* ─── Store Actions ────────────────────────────────────── */
@@ -156,6 +153,9 @@ export type GameSessionActions = {
     /* ─── Ceremony ─── */
     advanceCeremony: () => void;
 
+    /* ─── Generation guard ─── */
+    setGenerating: (generating: boolean) => void;
+
     /* ─── Selectors (derived, not stored) ─── */
     getHydratedState: () => SessionState | null;
     getProgressLabel: () => string;
@@ -163,10 +163,22 @@ export type GameSessionActions = {
     getStation: () => Station | null;
 };
 
+/* ─── Persisted Shape ──────────────────────────────────── */
+
+/**
+ * The shape of what gets persisted to localStorage.
+ * ONLY PersistentSessionState is stored — no runtime state,
+ * no UI flags, no timers, no animation state.
+ */
+type PersistedGameSessionState = {
+    persistentState: PersistentSessionState | null;
+};
+
 /* ─── Store ────────────────────────────────────────────── */
 
 export const useGameSessionStore = create<GameSessionState & GameSessionActions>()(
-    (set, get) => ({
+    persist(
+        (set, get) => ({
 
         /* ═══════════════════════════════════════════════════════════
            STATE
@@ -174,11 +186,12 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
 
         lifecycle: "idle",
         persistentState: null,
-        runtimeState: { activePath: null, activeTreasure: null },
+        runtimeState: { activePathId: null, activePath: null, activeTreasure: null },
         gameplayPhase: "path-selection",
         ceremony: null,
         lastResult: null,
         awardedTitle: null,
+        isGenerating: false,
 
         /* ═══════════════════════════════════════════════════════════
            SESSION LIFECYCLE
@@ -187,16 +200,17 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
         initSession: (persistent, pathId) => {
             const hydrated = hydrateSessionState(persistent);
             const withPath = pathId ? selectPath(hydrated, pathId) : hydrated;
-            const { runtime } = splitState(withPath);
+            const { persistent: updatedPersistent, runtime } = splitState(withPath);
 
             set({
                 lifecycle: "active",
-                persistentState: persistent,
+                persistentState: updatedPersistent,
                 runtimeState: runtime,
                 gameplayPhase: pathId ? "question" : "path-selection",
                 ceremony: null,
                 lastResult: null,
                 awardedTitle: null,
+                isGenerating: false,
             });
         },
 
@@ -204,16 +218,21 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
             set({
                 lifecycle: "idle",
                 persistentState: null,
-                runtimeState: { activePath: null, activeTreasure: null },
+                runtimeState: { activePathId: null, activePath: null, activeTreasure: null },
                 gameplayPhase: "path-selection",
                 ceremony: null,
                 lastResult: null,
                 awardedTitle: null,
+                isGenerating: false,
             });
         },
 
         setLifecycle: (lifecycle) => {
             set({ lifecycle });
+        },
+
+        setGenerating: (generating) => {
+            set({ isGenerating: generating });
         },
 
         /* ═══════════════════════════════════════════════════════════
@@ -387,8 +406,47 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
 
         getStation: () => {
             const state = get();
-            return state.runtimeState.activePath?.currentStation ?? null;
+            // DETERMINISTIC: Always derive station from persistentState + activePathId.
+            // NEVER read from activePath.currentStation (can be stale).
+            if (!state.persistentState) return null;
+            return getCurrentStationFromPersistentState(
+                state.persistentState,
+                state.runtimeState.activePathId,
+            );
         },
     }),
+
+    {
+        name: "kenzoo-game-session",
+
+        /**
+         * Persist ONLY PersistentSessionState to localStorage.
+         * All runtime-only state (activePath, activeTreasure, gameplayPhase,
+         * ceremony, lastResult, awardedTitle, lifecycle, isGenerating)
+         * is NEVER persisted — it resets on page refresh.
+         */
+        partialize: (state): PersistedGameSessionState => ({
+            persistentState: state.persistentState,
+        }),
+
+        /**
+         * After rehydration from localStorage:
+         *   - If persistentState exists → set lifecycle to "active"
+         *   - Runtime state stays at defaults (path-selection, no active path)
+         *   - Player must re-select a path after refresh
+         */
+        onRehydrateStorage: () => (state) => {
+            if (state?.persistentState) {
+                state.lifecycle = "active";
+                state.gameplayPhase = "path-selection";
+                state.runtimeState = { activePathId: null, activePath: null, activeTreasure: null };
+                state.ceremony = null;
+                state.lastResult = null;
+                state.awardedTitle = null;
+                state.isGenerating = false;
+            }
+        },
+    }
+),
 );
 
