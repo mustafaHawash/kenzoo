@@ -33,7 +33,7 @@ import type { PlayerJourneyState, JourneyPath, ActivePathSession } from "@/types
 import { advancePathProgression, hasCompletedAllPaths, getNextStation } from "@/types/path";
 import { HIDDEN_POINTS_BY_RARITY } from "@/types/treasure";
 import { resolveTreasureOpen, resolveTurnEnd } from "./turn-engine";
-import type { RoundResult } from "@/types/session";
+import type { RoundResult, StationResult } from "@/types/session";
 
 /* ─── Session Configuration ──────────────────────────────── */
 
