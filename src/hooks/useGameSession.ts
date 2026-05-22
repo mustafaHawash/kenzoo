@@ -21,7 +21,7 @@
  *   - Progression logic (session-engine owns this)
  */
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 import { useGameSessionStore } from "@/store/game-session-store";
@@ -59,9 +59,12 @@ export function useGameSession() {
     const router = useRouter();
 
     /* ─── Store reads ─── */
+    // Primitive selectors – each returns a stable primitive/value reference.
     const lifecycle = useGameSessionStore((s) => s.lifecycle);
     const persistentState = useGameSessionStore((s) => s.persistentState);
-    const runtimeState = useGameSessionStore((s) => s.runtimeState);
+    const hasHydrated = useGameSessionStore((s) => s.hasHydrated);
+    // Avoid subscribing to the whole runtimeState object (causes unnecessary rerenders).
+    // Individual runtime fields are selected below where needed.
     const gameplayPhase = useGameSessionStore((s) => s.gameplayPhase);
     const ceremony = useGameSessionStore((s) => s.ceremony);
     const lastResult = useGameSessionStore((s) => s.lastResult);
@@ -80,13 +83,16 @@ export function useGameSession() {
     const setAwardedTitle = useGameSessionStore((s) => s.setAwardedTitle);
     const advanceCeremony = useGameSessionStore((s) => s.advanceCeremony);
     const getHydratedState = useGameSessionStore((s) => s.getHydratedState);
-    // Derive gameplay objects via selectors – store no longer provides wrappers.
-    // Reactive selectors replace previous imperative getState calls.
-    const currentPlayer = useGameSessionStore((s) =>
-        selectorGetCurrentPlayer(s.persistentState)
+    // Primitive runtime selectors – avoid returning whole objects.
+    const activePathId = useGameSessionStore((s) => s.runtimeState.activePathId);
+
+    const currentPlayer = useMemo(
+        () => selectorGetCurrentPlayer(persistentState),
+        [persistentState],
     );
-    const station = useGameSessionStore((s) =>
-        selectorGetCurrentStation(s.persistentState, s.runtimeState.activePathId)
+    const station = useMemo(
+        () => selectorGetCurrentStation(persistentState, activePathId),
+        [persistentState, activePathId],
     );
 
     /* ─── Session initialization ─── */
@@ -98,7 +104,8 @@ export function useGameSession() {
         }
 
         // No path handoff here – path selection is performed via the store's selectPath action.
-    }, [lifecycle, persistentState, runtimeState.activePathId, initSession, router]);
+    // Depend only on primitive selectors; avoid referencing the whole runtimeState object.
+    }, [lifecycle, persistentState, activePathId, initSession, router, hasHydrated]);
 
     /* ─── Session guard ─── */
     useEffect(() => {
@@ -108,23 +115,24 @@ export function useGameSession() {
     }, [lifecycle, persistentState, router]);
 
     /* ─── Derived values ─── */
-    const hydratedState = getHydratedState();
     // Derive the active path deterministically from persistent state + activePathId.
-    const activePath = runtimeState.activePathId
-        ? getCurrentPath(persistentState, runtimeState.activePathId)
-        : null;
+    const activePath = useMemo(
+        () =>
+            activePathId
+                ? getCurrentPath(persistentState, activePathId)
+                : null,
+        [persistentState, activePathId],
+    );
 
     // Derive the active treasure view from the stored treasure ID when needed.
     // The full treasure object is obtained via selectors elsewhere; here we keep only the ID.
     // Derive active treasure ID reactively. Full treasure object is derived elsewhere via a selector when needed.
     const activeTreasureId = useGameSessionStore((s) => s.runtimeState.activeTreasureId ?? null);
-    // Derive the full active treasure object reactively from the ID.
-    const activeTreasure = useGameSessionStore((s) => {
-        if (!s.runtimeState.activeTreasureId) return null;
-        // Search the theme's treasure pool for the matching ID.
-        const found = eidTreasures.find((t) => t.id === s.runtimeState.activeTreasureId);
+    const activeTreasure = useMemo(() => {
+        if (!activeTreasureId) return null;
+        const found = eidTreasures.find((t) => t.id === activeTreasureId);
         return found ? toGameplayTreasureView(found) : null;
-    });
+    }, [activeTreasureId]);
 
     const progressLabel = useGameSessionStore((s) =>
         s.persistentState ? getSessionProgressLabel(s.persistentState) : ""
@@ -164,10 +172,9 @@ export function useGameSession() {
             // Guard: only submit from question phase
             if (gameplayPhase !== "question") return;
 
-            const hydrated = getHydratedState();
-            if (!hydrated) return;
-
             isSubmittingRef.current = true;
+
+            if (!persistentState) return; // Guard for persistentState
 
             const treasureMultiplier = activePath?.treasureProbabilityMultiplier ?? 1;
 
@@ -177,7 +184,7 @@ export function useGameSession() {
                 station,
                 answer,
                 eidTreasures,
-                hydrated.claimedLegendaryIds,
+                persistentState.claimedLegendaryIds,
                 treasureMultiplier,
             );
 
@@ -198,7 +205,7 @@ export function useGameSession() {
                 isSubmittingRef.current = false;
             }, REVEAL_DELAY_MS);
         },
-        [station, currentPlayer, activePath, gameplayPhase, getHydratedState, commitTurnOutcome, setLastResult, setGameplayPhase],
+        [station, currentPlayer, activePath, gameplayPhase, persistentState, commitTurnOutcome, setLastResult, setGameplayPhase],
     );
 
     /* ═══════════════════════════════════════════════════════════
@@ -250,14 +257,52 @@ export function useGameSession() {
         advanceCeremony();
     }, [advanceCeremony]);
 
-    return {
-        sessionState: hydratedState,
+    // Consolidate return object in a single useMemo to keep hook order stable.
+    const exported = useMemo(() => {
+        if (!hasHydrated) {
+            return {
+                ceremony,
+                gameplayPhase,
+                currentPlayer: null,
+                station: null,
+                activePath: null,
+                activeTreasureId: null,
+                activeTreasure: null,
+                awardedTitle,
+                lastResult: null,
+                handleSubmit: () => {},
+                handleContinueFromResult,
+                handleOpenTreasure: () => {},
+                handleDismissTreasure: () => {},
+                handleTransition: () => {},
+                handleAdvanceCeremony,
+                progressLabel,
+            } as const;
+        }
+        return {
+            ceremony,
+            gameplayPhase,
+            currentPlayer,
+            station,
+            activePath,
+            activeTreasureId,
+            activeTreasure,
+            awardedTitle,
+            lastResult,
+            handleSubmit,
+            handleContinueFromResult,
+            handleOpenTreasure,
+            handleDismissTreasure,
+            handleTransition,
+            handleAdvanceCeremony,
+            progressLabel,
+        } as const;
+    }, [
         ceremony,
         gameplayPhase,
         currentPlayer,
         station,
         activePath,
-        // UI components can use either the ID or the full object derived here.
         activeTreasureId,
         activeTreasure,
         awardedTitle,
@@ -269,5 +314,8 @@ export function useGameSession() {
         handleTransition,
         handleAdvanceCeremony,
         progressLabel,
-    };
+        hasHydrated,
+    ]);
+
+    return exported;
 }

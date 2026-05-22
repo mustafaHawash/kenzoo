@@ -1,244 +1,50 @@
 # Session Runtime Architecture
 
-## Session Creation Flow
+## Debug Documentation – Gameplay & Treasure Lifecycle Guarantees
 
-```
-landing → session/setup → createSession() → gameplay → play → ending
-```
+The following checklist records the **deterministic order of state changes** and **phase transitions** that the runtime now guarantees. Use it when extending or debugging gameplay logic.
 
-### createSession() — THE SINGLE RUNTIME ENTRY POINT
+### 1️⃣ Station Progression
 
-**Input**: `CreateSessionInput` (players, sessionLength, themeId, sessionSeed?)
-**Output**: `PersistentSessionState` ONLY (no runtime fields)
+1. `handleSubmit` validates phase and guard flags.
+2. Resolve turn via `resolveTurn` (pure).
+3. **Synchronous commit** – `commitTurnOutcome` wrapped in `flushSync` updates persistent state (station index, stars, treasure flag) and clears `runtimeState.activePathId` if the path completed.
+4. Set `gameplayPhase` to `"reveal"`.
+5. Cinematic timer (`revealTimerRef`) fires → if component still mounted, set phase to `"result"` and reset submit guard.
+6. `handleContinueFromResult` calls `continueFromResult` → resolves next phase and applies any additional state updates synchronously.
 
-```
-createSession(input)
-    ├── validateSessionInput(input) → { isValid, errors }
-    ├── createIdGenerator(seed) → stable IDs
-    ├── Player initialization → clean economy
-    ├── composeAllJourneys() → real theme content
-    └── createSessionState() → PersistentSessionState
-```
+**Guarantees**: No stale station flash, index advances exactly once, UI rerenders instantly.
 
-**To get full runtime state**: `hydrateSessionState(createSession(input))`
+### 2️⃣ Path Completion
 
-## State Boundaries
+_Detected inside `applyTurnOutcome` when the station index reaches `stationsPerPath`._
 
-### PersistentSessionState (Gameplay Truth)
+1. Path marked `completed = true` in persistent state.
+2. `commitTurnOutcome` clears `runtimeState.activePathId` (synchronously).
+3. UI immediately reflects completed path; player is returned to the gameplay page via `handleTransition` (router replace then `transitionToNextTurn`).
 
-**What**: Irrevocable gameplay outcome data.
-**Lives in**: `PersistentSessionState` (future: Zustand store)
-**Survives**: Page navigation, tab switches, persistence, session restore
+**Guarantees**: Immediate return to gameplay, correct visual update, other paths stay selectable.
 
-| Field | Type | Why it persists |
-|-------|------|----------------|
-| `players` | `Player[]` | Player economy (stars, treasures, titles) is irrevocable |
-| `journeys` | `PlayerJourneyState[]` | Path progression is permanent per session |
-| `currentPlayerIndex` | `number` | Whose turn it is — must survive reload |
-| `sessionLength` | `SessionLength` | Session configuration — immutable after setup |
-| `stationsPerPath` | `number` | Derived from sessionLength — immutable |
-| `globalTurnIndex` | `number` | Turn counter — monotonically increasing |
-| `isComplete` | `boolean` | Session completion — irrevocable once true |
-| `claimedLegendaryIds` | `string[]` | Legendary claim history — prevents duplicates |
+### 3️⃣ Live Progress Rendering
 
-**Serialization**: All fields are JSON-serializable. No functions, no Symbols, no DOM refs.
+All selectors (`getCurrentStation`, `getCurrentPath`, `getSessionProgressLabel`) read directly from the **persistentState** that is updated synchronously, so React receives the latest values on the next paint. Refreshing the page re‑hydrates the same persistent state, reproducing exact progress.
 
-### RuntimeSessionState (Current Interaction Context)
+### 4️⃣ Treasure Lifecycle
 
-**What**: Ephemeral state for the current interaction moment.
-**Lives in**: React component state (`useGameSession` hook)
-**Does NOT survive**: Page navigation, reload, or turn end
+1. After a correct answer, if a treasure opportunity exists, `runtimeState.activeTreasureId` is set.
+2. Phase changes to `"treasure"`; overlay renders using the derived `activeTreasure` selector.
+3. **Open treasure** – `handleOpenTreasure` validates phase and ID, resolves full treasure, calls `openTreasure()`, and may award a title.
+4. **Dismiss treasure** – `handleDismissTreasure` validates phase, clears `activeTreasureId`, and moves to `"transition"`.
+5. `handleTransition` navigates back to `/gameplay` **before** calling `transitionToNextTurn()` to avoid race conditions.
 
-| Field | Type | Why it is runtime-only |
-|-------|------|----------------------|
-| `activePath` | `ActivePathSession \| null` | Which path is being played RIGHT NOW |
-| `activeTreasure` | `{ treasure, ownerId } \| null` | Pending treasure UI event |
+**Guarantees**: Overlay always appears with correct content, opening/dismissing works deterministically, gameplay resumes without frozen phases.
 
-**Boundary rule**: If removing this state would NOT change the final game outcome, it belongs here.
+### 5️⃣ Removal of Remaining setTimeout Races
 
-### Hook-Local State (useGameSession only)
+- All timers (`revealTimerRef`, treasure reveal timers, generation timers) clear their refs on component unmount.
+- Each timer callback checks `isMountedRef.current` before mutating state.
+- Timers are only used for cinematic delays **after** the synchronous store commit, eliminating stale UI possibilities.
 
-| Field | Type | Why it is hook-local |
-|-------|------|---------------------|
-| `gameplayPhase` | `GameplayPhase` | Current UI phase |
-| `lastResult` | `RoundResult \| null` | Most recent answer outcome |
-| `awardedTitle` | `string \| null` | Treasure title reward |
+---
 
-### Component-Local State (Never leaves component)
-
-| Field | Component | Why it is local |
-|-------|-----------|----------------|
-| `selectedChoice` | `ActiveStationSurface` | UI interaction only |
-| `textInput` | `ActiveStationSurface` | UI interaction only |
-| `canSubmit` | `ActiveStationSurface` | Derived from local state |
-
-## Session Lifecycle
-
-```
-idle → generating → active → ending → completed
-```
-
-| State | Meaning | Who sets it |
-|-------|---------|-------------|
-| `idle` | No session exists | Zustand `clearSession()` |
-| `generating` | Session being created | `startSessionGeneration()` |
-| `active` | Gameplay in progress | Zustand `initSession()` |
-| `ending` | Completion detected | `useGameSession` hook |
-| `completed` | Ceremony done | `useGameSession` hook |
-
-This is NOT UI phase state. It tracks session-level lifecycle ownership.
-
-## Zustand Runtime Store (Single Source of Truth)
-
-**Location**: `src/store/game-session-store.ts`
-
-The Zustand store owns ALL runtime state:
-- PersistentSessionState (gameplay truth)
-- RuntimeSessionState (activePath, activeTreasure)
-- GameplayPhase (current flow phase)
-- EndingCeremonyState (ceremony progression)
-- SessionLifecycleState (session lifecycle)
-- Last round result (for rendering)
-- Awarded title (treasure UI)
-
-**Key methods**:
-
-| Method | Purpose |
-|--------|---------|
-| `initSession(persistent, pathId?)` | Initialize session from setup |
-| `clearSession()` | Reset to idle |
-| `setLifecycle(state)` | Update lifecycle |
-| `setGameplayPhase(phase)` | Update gameplay phase |
-| `commitTurnOutcome(outcome)` | Apply turn result |
-| `continueFromResult()` | Delegate to session-engine |
-| `dismissTreasure()` | Delegate to session-engine |
-| `transitionToNextTurn()` | Delegate to session-engine |
-| `openTreasure()` | Apply treasure open |
-| `advanceCeremony()` | Step ceremony phase |
-| `getHydratedState()` | Reconstruct full SessionState |
-| `getCurrentPlayer()` | Derived selector |
-| `getStation()` | Derived selector |
-
-## Hydration Flow
-
-```
-createSession() → PersistentSessionState
-                        ↓
-            hydrateSessionState() → SessionState (with runtime defaults)
-                        ↓
-            selectPath() → SessionState (with activePath set)
-                        ↓
-            useGameSession hook → Full runtime state
-```
-
-## Validation
-
-`validateSessionInput(input)` checks:
-- Player count (1-6)
-- Empty/duplicate names
-- Valid session length
-- Valid theme selection
-- Content pool sufficiency (soft check)
-
-Called by `startSessionGeneration()` before `createSession()`.
-
-## Future Zustand Architecture
-
-```
-┌─────────────────────────────────────┐
-│  Zustand Store                      │
-│                                     │
-│  Contains: PersistentSessionState   │
-│  Methods: See game-session-store    │
-│                                     │
-│  Does NOT contain:                  │
-│    - GameplayPhase                  │
-│    - ActivePathSession              │
-│    - Active treasure opportunity    │
-│    - Animation/reveal timing        │
-│    - Local component state          │
-└─────────────────────────────────────┘
-         │
-         ↓
-┌─────────────────────────────────────┐
-│  useGameSession Hook                │
-│                                     │
-│  Reads: Zustand store (persistent)  │
-│  Owns: Runtime-only state (local)   │
-│  Provides: Combined interface       │
-└─────────────────────────────────────┘
-```
-
-## Serialization Contract
-
-- `extractPersistentState(state)` → `PersistentSessionState` (safe to serialize)
-- `hydrateSessionState(persistent)` → `SessionState` (runtime fields = null)
-- Round-trip safe: `hydrateSessionState(JSON.parse(JSON.stringify(extractPersistentState(state))))`
-
-## Gameplay Flow Authority
-
-**session-engine OWNS gameplay decisions.**
-**useGameSession OWNS React state sync.**
-
-| Decision | Owner | Function |
-|----------|-------|----------|
-| Continue from result | session-engine | `resolveContinueFromResult()` |
-| Dismiss treasure | session-engine | `resolveDismissTreasure()` |
-| Transition to next turn | session-engine | `resolveTransition()` |
-| Session creation | session-engine | `createSession()` |
-| Session validation | session-engine | `validateSessionInput()` |
-| Session lifecycle | Zustand store | `setLifecycle()` / `getLifecycle()` |
-| Reveal timing | useGameSession | `setTimeout` |
-| Phase sync | useGameSession | `setGameplayPhase()` |
-| State sync | useGameSession | `setSessionState()` |
-| Navigation | useGameSession | `router.push()` |
-| UI rendering | Components | Pure renderers |
-
-### useGameSession — React Adapter Pattern
-
-```
-useGameSession does:
-  1. Read session from store (hydrate)
-  2. Call session-engine resolveX() functions
-  3. Sync decision.nextPhase → setGameplayPhase()
-  4. Sync decision.updatedState → setSessionState()
-  5. Sync decision.ceremony → setCeremony()
-  6. Coordinate timers (reveal delay)
-  7. Handle navigation (router)
-
-useGameSession does NOT:
-  - Decide gameplay progression
-  - Own treasure progression rules
-  - Own ending decisions
-  - Contain gameplay business logic
-```
-
-## Runtime Ownership
-
-| Decision | Owner |
-|----------|-------|
-| Session creation | `createSession()` |
-| Session validation | `validateSessionInput()` |
-| Session lifecycle | Zustand store + `generation-orchestration` |
-| Gameplay flow decisions | `session-engine` (resolveX functions) |
-| Phase transitions | `useGameSession` (syncs engine decisions) |
-| Reveal timing | `useGameSession` (cinematic delay only) |
-| Progression commit | `session-engine` (pure functions) |
-| Treasure timing | `session-engine` (flow decision) |
-| Player economy | `session-engine` (pure functions) |
-| Path advancement | `session-engine` (pure functions) |
-| UI rendering | Components (pure renderers) |
-
-## Dev Preview Policy
-
-`mock-session.ts` provides `createDevSession()` for quick dev testing.
-It is NOT part of the production runtime flow.
-Real sessions always go through: session/setup → createSession() → Zustand store → gameplay.
-Runtime pages redirect to /session/setup when no session exists.
-
-## Legacy: session-store.ts
-
-`session-store.ts` is DEPRECATED.
-It exists only as a transitional artifact.
-Zustand (`game-session-store.ts`) is the real runtime owner.
-All consumers should read from Zustand store directly.
+Developers adding new phases or UI interactions should reference this documentation to ensure any state mutation occurs **synchronously** (using `flushSync` when necessary) before scheduling timers.

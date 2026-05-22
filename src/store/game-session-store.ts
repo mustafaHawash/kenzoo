@@ -28,6 +28,9 @@
  */
 
 import { create } from "zustand";
+// flushSync forces React state updates to be applied synchronously, eliminating UI
+// races between store mutations and timer callbacks.
+import { flushSync } from "react-dom";
 import { persist } from "zustand/middleware";
 import type {
     PersistentSessionState,
@@ -256,13 +259,32 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
         },
 
         commitTurnOutcome: (outcome) => {
-            const hydrated = get().getHydratedState();
-            if (!hydrated) return;
+            // Apply the turn outcome synchronously to guarantee UI selectors see the
+            // updated station index and path completion before any timers fire.
+            // This removes the race where a stale station could flash.
+            flushSync(() => {
+                const hydrated = get().getHydratedState();
+                if (!hydrated) return;
 
-            const updated = applyTurnOutcome(hydrated, outcome);
-            const { persistent, runtime } = splitState(updated);
+                const updated = applyTurnOutcome(hydrated, outcome);
+                const { persistent, runtime } = splitState(updated);
 
-            set({ persistentState: persistent, runtimeState: runtime });
+                // If a path was active and the outcome resulted in its completion,
+                // clear the activePathId so selectors no longer return a stale path.
+                if (runtime.activePathId) {
+                    const journey = persistent.journeys.find((j) =>
+                        j.paths.some((p) => p.id === runtime.activePathId)
+                    );
+                    if (journey) {
+                        const path = journey.paths.find((p) => p.id === runtime.activePathId);
+                        if (path?.completed) {
+                            runtime.activePathId = null;
+                        }
+                    }
+                }
+
+                set({ persistentState: persistent, runtimeState: runtime });
+            });
         },
 
         setLastResult: (result) => {
