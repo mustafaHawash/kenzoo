@@ -74,20 +74,20 @@ function isValidTransition(from: GameplayPhase, to: GameplayPhase): boolean {
 /* ─── Helpers ──────────────────────────────────────────── */
 
 function splitState(state: SessionState) {
-    const {
-        activePathId,
-        activePath,
-        activeTreasure,
-        ...persistent
-    } = state;
-    return {
-        persistent: persistent as PersistentSessionState,
-        runtime: {
-            activePathId: activePathId ?? activePath?.pathId ?? null,
-            activePath,
-            activeTreasure,
-        },
-    };
+         const {
+         activePathId,
+         activeTreasure,
+         ...persistent
+     } = state;
+     return {
+         persistent: persistent as PersistentSessionState,
+         runtime: {
+             // activePathId is the sole runtime reference to the current path.
+             // It may be null when no path is selected (e.g., after a transition).
+             activePathId: activePathId ?? null,
+             activeTreasure,
+         },
+     };
 }
 
 /* ─── Store State ──────────────────────────────────────── */
@@ -108,7 +108,7 @@ export type GameSessionState = {
         /** Full active path session — derived from persistentState + activePathId.
          *  Can be null even when activePathId is set (during transition).
          *  ALWAYS prefer deriving station from persistentState + activePathId. */
-        activePath: SessionState["activePath"];
+    
         activeTreasure: SessionState["activeTreasure"];
     };
 
@@ -186,7 +186,9 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
 
         lifecycle: "idle",
         persistentState: null,
-        runtimeState: { activePathId: null, activePath: null, activeTreasure: null },
+    // Runtime state only stores lightweight references. Full activePath is derived
+    // from persistentState + activePathId via selectors / helper functions.
+    runtimeState: { activePathId: null, activeTreasure: null },
         gameplayPhase: "path-selection",
         ceremony: null,
         lastResult: null,
@@ -218,7 +220,7 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
             set({
                 lifecycle: "idle",
                 persistentState: null,
-                runtimeState: { activePathId: null, activePath: null, activeTreasure: null },
+                runtimeState: { activePathId: null, activeTreasure: null },
                 gameplayPhase: "path-selection",
                 ceremony: null,
                 lastResult: null,
@@ -386,10 +388,17 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
         getHydratedState: () => {
             const state = get();
             if (!state.persistentState) return null;
+            const { activePathId, activeTreasure } = state.runtimeState;
+            const activePath = activePathId
+                ? deriveActivePathFromPersistentState(state.persistentState, activePathId)
+                : null;
+            // Construct a full SessionState object. The type matches the exported SessionState.
             return {
                 ...state.persistentState,
-                ...state.runtimeState,
-            };
+                activePathId,
+                activePath,
+                activeTreasure,
+            } as SessionState;
         },
 
         getProgressLabel: () => {
@@ -439,7 +448,8 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
             if (state?.persistentState) {
                 state.lifecycle = "active";
                 state.gameplayPhase = "path-selection";
-                state.runtimeState = { activePathId: null, activePath: null, activeTreasure: null };
+                 // Only lightweight references are kept. Full activePath is derived via selectors.
+                 state.runtimeState = { activePathId: null, activeTreasure: null };
                 state.ceremony = null;
                 state.lastResult = null;
                 state.awardedTitle = null;

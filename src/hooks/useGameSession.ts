@@ -35,6 +35,7 @@ import type { SessionState } from "@/lib/session-runtime/session-engine";
 import { eidTreasures } from "@/content/themes/eid-el-adha/treasures";
 import { pickRandomTitle } from "@/content/themes/eid-el-adha/titles";
 import { toGameplayTreasureView } from "@/types/treasure";
+import { getCurrentPath } from "@/lib/session-runtime/selectors/get-current-path";
 
 /**
  * Reveal delay in ms.
@@ -115,7 +116,10 @@ export function useGameSession(pathId: string | null) {
     const hydratedState = getHydratedState();
     const currentPlayer = getCurrentPlayer();
     const station = getStation();
-    const activePath = runtimeState.activePath;
+    // Derive the active path deterministically from persistent state + activePathId.
+    const activePath = runtimeState.activePathId
+        ? getCurrentPath(persistentState, runtimeState.activePathId)
+        : null;
 
     const activeTreasure = runtimeState.activeTreasure
         ? toGameplayTreasureView(runtimeState.activeTreasure.treasure)
