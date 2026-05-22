@@ -75,22 +75,20 @@ function isValidTransition(from: GameplayPhase, to: GameplayPhase): boolean {
 /* ─── Helpers ──────────────────────────────────────────── */
 
 function splitState(state: SessionState) {
-  const {
-          activePathId,
-          activeTreasure,
-          ...persistent
-      } = state;
-      // Store only the treasure id (if any) to avoid keeping full gameplay objects in runtime state.
-      const activeTreasureId = activeTreasure ? activeTreasure.treasure.id : null;
-      return {
-          persistent: persistent as PersistentSessionState,
-          runtime: {
-              // activePathId is the sole runtime reference to the current path.
-              // It may be null when no path is selected (e.g., after a transition).
-              activePathId: activePathId ?? null,
-              activeTreasureId,
-          },
-      };
+   const {
+           activePathId,
+           activeTreasureId,
+           ...persistent
+       } = state;
+       return {
+           persistent: persistent as PersistentSessionState,
+           runtime: {
+               // activePathId is the sole runtime reference to the current path.
+               // It may be null when no path is selected (e.g., after a transition).
+               activePathId: activePathId ?? null,
+               activeTreasureId,
+           },
+       };
 }
 
 /* ─── Store State ──────────────────────────────────────── */

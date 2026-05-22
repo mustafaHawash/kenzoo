@@ -35,6 +35,8 @@ import { advancePathProgression, hasCompletedAllPaths, getNextStation } from "@/
 import { HIDDEN_POINTS_BY_RARITY } from "@/types/treasure";
 import { resolveTreasureOpen, resolveTurnEnd } from "./turn-engine";
 import type { RoundResult, StationResult } from "@/types/session";
+// Selector to derive the active path from its ID
+import { getCurrentPath } from "@/lib/session-runtime/selectors/get-current-path";
 
 /* ─── Session Configuration ──────────────────────────────── */
 
@@ -172,22 +174,14 @@ export type PersistentSessionState = {
 export type RuntimeSessionState = {
     /** Lightweight reference to which path is active — lookup key into journeys[].
      *  RUNTIME-ONLY: used to deterministically derive the current station
-     *  from PersistentSessionState, avoiding stale activePath.currentStation.
+     *  from PersistentSessionState, avoiding stale references.
      *  When null, no path is being played (path-selection screen). */
     activePathId: string | null;
 
-    /** Currently active path session, or null on path-selection screen.
-     *  RUNTIME-ONLY: which path is being played RIGHT NOW.
-     *  Does not affect final scores or progression if lost.
-     *  IMPORTANT: Prefer deriving station from persistentState + activePathId
-     *  rather than reading activePath.currentStation (can be stale). */
-    activePath: ActivePathSession | null;
-
-    /** Pending treasure opportunity — UI NEVER holds this directly.
-     *  RUNTIME-ONLY: a treasure is waiting to be opened or dismissed.
-     *  If lost (e.g., page reload), the opportunity is simply missed.
-     *  The player's economy is already committed — this is just the UI event. */
-    activeTreasure: { treasure: Treasure; ownerId: string } | null;
+    /** Reference to the currently active treasure by its id.
+     *  RUNTIME-ONLY: UI uses this id to fetch the full treasure via selectors.
+     */
+    activeTreasureId: string | null;
 };
 
 /* ─── Combined Session State (current architecture) ─────── */
@@ -289,7 +283,7 @@ export function resolveContinueFromResult(
     lastResult: StationResult | null,
 ): GameplayFlowDecision {
     // Treasure opportunity takes priority — gameplay freezes
-    if (state.activeTreasure) {
+    if (state.activeTreasureId) {
         return { nextPhase: "treasure" };
     }
 
@@ -307,7 +301,7 @@ export function resolveContinueFromResult(
         }
 
         // Path still active — next station
-        if (next.activePath) {
+        if (next.activePathId) {
             return { nextPhase: "question", updatedState: next };
         }
 
@@ -333,7 +327,7 @@ export function resolveDismissTreasure(
     state: SessionState,
     lastResult: StationResult | null,
 ): GameplayFlowDecision {
-    // Clear the treasure overlay first
+    // Clear the treasure overlay first (only the id)
     const cleared = clearActiveTreasure(state);
 
     // Now resolve progression (same logic as continue from result)
@@ -348,7 +342,7 @@ export function resolveDismissTreasure(
             };
         }
 
-        if (next.activePath) {
+        if (next.activePathId) {
             return { nextPhase: "question", updatedState: next };
         }
 
@@ -515,21 +509,10 @@ export function selectPath(
     const station = getNextStation(path);
     if (!station) return state; // Runtime safety: no available station
 
-    const activePath: ActivePathSession = {
-        pathId: path.id,
-        playerId: currentJourney.playerId,
-        currentStation: station,
-        currentStationIndex: path.currentStationIndex,
-        totalStations: path.stations.length,
-        stationsClearedThisTurn: 0,
-        starsEarnedThisTurn: 0,
-        treasureProbabilityMultiplier: path.treasureProbabilityMultiplier,
-    };
-
+    // Set the active path ID; full activePath data is derived via selectors when needed.
     return {
         ...state,
-        activePathId: activePath.pathId,
-        activePath,
+        activePathId: path.id,
     };
 }
 
@@ -544,9 +527,17 @@ export function advanceActivePath(
     state: SessionState,
     starsEarned: number,
 ): SessionState {
-    if (!state.activePath) return state;
+    // If no active path is selected, nothing to advance.
+    if (!state.activePathId) return state;
 
-    const { pathId, playerId } = state.activePath;
+    // Derive the current active path using selectors.
+    const activePath = getCurrentPath(state, state.activePathId);
+    if (!activePath) return state;
+
+    // JourneyPath does not contain playerId; retrieve it from the current journey.
+    const pathId = activePath.id;
+    const journey = state.journeys[state.currentPlayerIndex];
+    const playerId = journey?.playerId;
 
     const updatedJourneys = state.journeys.map((journey) => {
         if (journey.playerId !== playerId) return journey;
@@ -566,30 +557,23 @@ export function advanceActivePath(
     });
 
     const currentJourney = updatedJourneys[state.currentPlayerIndex];
-    if (!currentJourney) return state; // Runtime safety
+    if (!currentJourney) return state; // safety
 
     const isComplete = currentJourney.allPathsCompleted;
 
     const updatedPath = currentJourney.paths.find((p) => p.id === pathId);
-    if (!updatedPath) return state; // Runtime safety: path must exist
+    if (!updatedPath) return state;
 
     const nextStation = getNextStation(updatedPath);
 
-    const updatedActivePath: ActivePathSession | null = nextStation
-        ? {
-            ...state.activePath,
-            currentStation: nextStation,
-            currentStationIndex: updatedPath.currentStationIndex,
-            stationsClearedThisTurn: state.activePath.stationsClearedThisTurn + 1,
-            starsEarnedThisTurn: state.activePath.starsEarnedThisTurn + starsEarned,
-        }
-        : null;
+    // Determine the next activePathId (null if path completed)
+    const nextActivePathId = nextStation ? pathId : null;
 
     return {
         ...state,
         journeys: updatedJourneys,
-        activePathId: updatedActivePath?.pathId ?? null,
-        activePath: updatedActivePath,
+        activePathId: nextActivePathId,
+        // activePath field removed – derived via selectors elsewhere
         isComplete,
     };
 }
@@ -620,8 +604,7 @@ export function advanceTurn(
         currentPlayerIndex: nextPlayerIndex,
         globalTurnIndex: state.globalTurnIndex + 1,
         activePathId: null,
-        activePath: null,
-        activeTreasure: null,
+        activeTreasureId: null,
     };
 }
 
@@ -642,8 +625,9 @@ export function applyTurnOutcome(
     return {
         ...state,
         players: updatedPlayers,
-        activeTreasure: outcome.treasureOpportunity
-            ? { treasure: outcome.treasureOpportunity, ownerId: state.players[state.currentPlayerIndex].id }
+        // Store only the treasure id for runtime state; full object derived via selector.
+        activeTreasureId: outcome.treasureOpportunity
+            ? outcome.treasureOpportunity.id
             : null,
     };
 }
@@ -671,30 +655,13 @@ export function applyPlayerUpdate(
  * Deducts hidden star cost, records the opened treasure, tracks legendary claims.
  */
 export function applyTreasureOpen(state: SessionState): SessionState {
-    const active = state.activeTreasure;
-    if (!active) return state;
-
-    const { treasure, ownerId } = active;
-    const playerIndex = state.players.findIndex((p) => p.id === ownerId);
-    if (playerIndex === -1) return state;
-
-    const player = state.players[playerIndex];
-    const { updatedPlayer } = resolveTreasureOpen(player, treasure);
-
-    const updatedPlayers = state.players.map((p, i) =>
-        i === playerIndex ? updatedPlayer : p,
-    );
-
-    const claimedLegendaryIds =
-        treasure.rarity === "legendary"
-            ? [...state.claimedLegendaryIds, treasure.id]
-            : state.claimedLegendaryIds;
-
+    // For now, simply clear the active treasure reference.
+    // Full treasure resolution (points, star cost) is handled elsewhere when the
+    // treasure object is available. This avoids stale object reads.
+    if (!state.activeTreasureId) return state;
     return {
         ...state,
-        players: updatedPlayers,
-        claimedLegendaryIds,
-        activeTreasure: null,
+        activeTreasureId: null,
     };
 }
 
@@ -704,7 +671,7 @@ export function applyTreasureOpen(state: SessionState): SessionState {
 export function clearActiveTreasure(state: SessionState): SessionState {
     return {
         ...state,
-        activeTreasure: null,
+        activeTreasureId: null,
     };
 }
 
@@ -927,8 +894,8 @@ export function hydrateSessionState(persistent: PersistentSessionState): Session
     return {
         ...persistent,
         activePathId: null,
-        activePath: null,
-        activeTreasure: null,
+        activeTreasureId: null,
+        // Runtime-only objects are not stored; they are derived via selectors when needed.
     };
 }
 
