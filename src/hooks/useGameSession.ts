@@ -82,7 +82,6 @@ export function useGameSession() {
     const openTreasure = useGameSessionStore((s) => s.openTreasure);
     const setAwardedTitle = useGameSessionStore((s) => s.setAwardedTitle);
     const advanceCeremony = useGameSessionStore((s) => s.advanceCeremony);
-    const getHydratedState = useGameSessionStore((s) => s.getHydratedState);
     // Primitive runtime selectors – avoid returning whole objects.
     const activePathId = useGameSessionStore((s) => s.runtimeState.activePathId);
 
@@ -97,15 +96,14 @@ export function useGameSession() {
 
     /* ─── Session initialization ─── */
     useEffect(() => {
+        // Guard: only attempt redirect after hydration is complete.
+        if (!hasHydrated) return;
         if (lifecycle === "idle" || !persistentState) {
             // No session in Zustand — redirect to setup
             router.replace("/session/setup");
-            return;
         }
-
         // No path handoff here – path selection is performed via the store's selectPath action.
-    // Depend only on primitive selectors; avoid referencing the whole runtimeState object.
-    }, [lifecycle, persistentState, activePathId, initSession, router, hasHydrated]);
+    }, [lifecycle, persistentState, hasHydrated, router]);
 
     /* ─── Session guard ─── */
     useEffect(() => {
@@ -134,9 +132,11 @@ export function useGameSession() {
         return found ? toGameplayTreasureView(found) : null;
     }, [activeTreasureId]);
 
-    const progressLabel = useGameSessionStore((s) =>
-        s.persistentState ? getSessionProgressLabel(s.persistentState) : ""
-    );
+    // Primitive subscription – only watch persistentState reference.
+    const persistent = useGameSessionStore((s) => s.persistentState);
+    const progressLabel = useMemo(() => {
+        return persistent ? getSessionProgressLabel(persistent) : "";
+    }, [persistent]);
 
     /* ─── Refs for timer cleanup and submit guard ─── */
     const revealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -233,7 +233,7 @@ export function useGameSession() {
             const title = pickRandomTitle(currentPlayer.titles);
             setAwardedTitle(title);
         }
-    }, [getHydratedState, openTreasure, currentPlayer, setAwardedTitle, gameplayPhase]);
+    }, [openTreasure, currentPlayer, setAwardedTitle, gameplayPhase, activeTreasureId]);
 
     /* ═══════════════════════════════════════════════════════════
         DISMISS TREASURE — Delegates to store

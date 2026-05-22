@@ -1,7 +1,7 @@
 // src/app/gameplay/page.tsx
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { motion, type Variants } from "framer-motion";
 import Image from "next/image";
@@ -11,6 +11,8 @@ import { Headline, Body, Label, Muted } from "@/components/ui/typography";
 import type { JourneyPath, PlayerJourneyState } from "@/types/path";
 import { getCompletedPathCount } from "@/types/path";
 import { useGameSessionStore } from "@/store/game-session-store";
+import { getCurrentPlayer } from "@/lib/session-runtime/selectors/get-current-player";
+import { getCurrentJourney } from "@/lib/session-runtime/selectors/get-current-journey";
 
 /* ─── Animation variants ─── */
 const containerVariants: Variants = {
@@ -135,7 +137,21 @@ export default function GameplayScreen() {
 
     // REAL session only — read from Zustand store
     const persistentState = useGameSessionStore((s) => s.persistentState);
-    const getHydratedState = useGameSessionStore((s) => s.getHydratedState);
+    // Primitive selectors – keep hook order stable.
+    const activePathId = useGameSessionStore((s) => s.runtimeState.activePathId);
+    const currentPlayerIndex = useGameSessionStore((s) => s.persistentState?.currentPlayerIndex ?? 0);
+    const hasHydrated = useGameSessionStore((s) => s.hasHydrated);
+
+    // Derived selectors – memoized to avoid recomputation on each render.
+    const currentPlayer = useMemo(() => {
+        if (!persistentState) return null;
+        return getCurrentPlayer(persistentState);
+    }, [persistentState]);
+
+    const journey = useMemo(() => {
+        if (!persistentState) return null;
+        return getCurrentJourney(persistentState, currentPlayerIndex);
+    }, [persistentState, currentPlayerIndex]);
 
     // Redirect to setup if no session — MUST be in useEffect, not during render
     useEffect(() => {
@@ -153,17 +169,14 @@ export default function GameplayScreen() {
         );
     }
 
-    const hydrated = getHydratedState();
-    if (!hydrated) {
+    // Guard against missing hydration – the store indicates readiness via hasHydrated.
+    if (!hasHydrated || !currentPlayer || !journey) {
         return (
             <ScreenContainer className="justify-center items-center">
                 <Muted>جاري التحميل...</Muted>
             </ScreenContainer>
         );
     }
-
-    const currentPlayer = hydrated.players[hydrated.currentPlayerIndex];
-    const journey = hydrated.journeys[hydrated.currentPlayerIndex];
 
     // Safety: invalid player index — redirect to setup
     if (!currentPlayer || !journey) {
