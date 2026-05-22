@@ -28,9 +28,6 @@
  */
 
 import { create } from "zustand";
-// flushSync forces React state updates to be applied synchronously, eliminating UI
-// races between store mutations and timer callbacks.
-import { flushSync } from "react-dom";
 import { persist } from "zustand/middleware";
 import type {
     PersistentSessionState,
@@ -41,7 +38,8 @@ import type {
 } from "@/lib/session-runtime/session-engine";
 import {
     hydrateSessionState,
-    selectPath,
+    // Alias to avoid name clash with store action
+    selectPath as engineSelectPath,
     applyTurnOutcome,
     applyTreasureOpen,
     resolveContinueFromResult,
@@ -141,6 +139,8 @@ export type GameSessionActions = {
     initSession: (persistent: PersistentSessionState, pathId?: string | null) => void;
     clearSession: () => void;
     setLifecycle: (lifecycle: SessionLifecycleState) => void;
+    // New action to select a path from the UI
+    selectPath: (pathId: string) => void;
 
     /* ─── Gameplay flow ─── */
     setGameplayPhase: (phase: GameplayPhase) => void;
@@ -206,7 +206,7 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
 
      initSession: (persistent, pathId) => {
             const hydrated = hydrateSessionState(persistent);
-            const withPath = pathId ? selectPath(hydrated, pathId) : hydrated;
+    const withPath = pathId ? engineSelectPath(hydrated, pathId) : hydrated;
             const { persistent: updatedPersistent, runtime } = splitState(withPath);
 
          set({
@@ -258,34 +258,48 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
             set({ gameplayPhase: phase });
         },
 
-        commitTurnOutcome: (outcome) => {
-            // Apply the turn outcome synchronously to guarantee UI selectors see the
-            // updated station index and path completion before any timers fire.
-            // This removes the race where a stale station could flash.
-            flushSync(() => {
-                const hydrated = get().getHydratedState();
-                if (!hydrated) return;
+         // Apply turn outcome without flushSync – Zustand already batches updates and
+         // React subscriptions are synchronized. Removing flushSync prevents nested
+         // render scheduling that could cause deadlocks.
+         // Action to select a path – used by UI when player chooses a path.
+         // UI invokes this when a player selects a path. It updates the activePathId
+         // and moves the phase to "question".
+         selectPath: (pathId: string) => {
+             console.log("[DEBUG] selectPath called", { pathId });
+             const hydrated = get().getHydratedState();
+             if (!hydrated) return;
+             const withPath = engineSelectPath(hydrated, pathId);
+             const { persistent, runtime } = splitState(withPath);
+             console.log("[DEBUG] selectPath result", { gameplayPhase: "question", activePathId: runtime.activePathId });
+             set({
+                 persistentState: persistent,
+                 runtimeState: runtime,
+                 gameplayPhase: "question",
+             });
+         },
+         commitTurnOutcome: (outcome) => {
+             const hydrated = get().getHydratedState();
+             if (!hydrated) return;
 
-                const updated = applyTurnOutcome(hydrated, outcome);
-                const { persistent, runtime } = splitState(updated);
+             const updated = applyTurnOutcome(hydrated, outcome);
+             const { persistent, runtime } = splitState(updated);
 
-                // If a path was active and the outcome resulted in its completion,
-                // clear the activePathId so selectors no longer return a stale path.
-                if (runtime.activePathId) {
-                    const journey = persistent.journeys.find((j) =>
-                        j.paths.some((p) => p.id === runtime.activePathId)
-                    );
-                    if (journey) {
-                        const path = journey.paths.find((p) => p.id === runtime.activePathId);
-                        if (path?.completed) {
-                            runtime.activePathId = null;
-                        }
-                    }
-                }
+             // If a path was active and the outcome resulted in its completion,
+             // clear the activePathId so selectors no longer return a stale path.
+             if (runtime.activePathId) {
+                 const journey = persistent.journeys.find((j) =>
+                     j.paths.some((p) => p.id === runtime.activePathId)
+                 );
+                 if (journey) {
+                     const path = journey.paths.find((p) => p.id === runtime.activePathId);
+                     if (path?.completed) {
+                         runtime.activePathId = null;
+                     }
+                 }
+             }
 
-                set({ persistentState: persistent, runtimeState: runtime });
-            });
-        },
+             set({ persistentState: persistent, runtimeState: runtime });
+         },
 
         setLastResult: (result) => {
             set({ lastResult: result });

@@ -194,9 +194,10 @@ export default function GameplayScreen() {
         // Commit the selected path to Zustand BEFORE navigating.
         // This guarantees the handoff is deterministic and stable.
         // play/page will find activePath already set — no race condition.
-        const { initSession, persistentState, runtimeState } = useGameSessionStore.getState();
+        const { selectPath, persistentState, runtimeState } = useGameSessionStore.getState();
         if (persistentState && !runtimeState.activePathId) {
-            initSession(persistentState, pathId);
+            // Use the new selectPath action to set activePathId and move to question phase.
+            selectPath(pathId);
         }
         router.push(`/play?pathId=${pathId}`);
     };
