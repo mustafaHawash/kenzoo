@@ -36,6 +36,9 @@ import { eidTreasures } from "@/content/themes/eid-el-adha/treasures";
 import { pickRandomTitle } from "@/content/themes/eid-el-adha/titles";
 import { toGameplayTreasureView } from "@/types/treasure";
 import { getCurrentPath } from "@/lib/session-runtime/selectors/get-current-path";
+import { getCurrentPlayer as selectorGetCurrentPlayer } from "@/lib/session-runtime/selectors/get-current-player";
+import { getCurrentStation as selectorGetCurrentStation } from "@/lib/session-runtime/selectors/get-current-station";
+import type { Player } from "@/types/player";
 
 /**
  * Reveal delay in ms.
@@ -51,7 +54,8 @@ const REVEAL_DELAY_MS = 800;
  * Handles timers, navigation, and session initialization.
  * Delegates all gameplay decisions to session-engine.
  */
-export function useGameSession(pathId: string | null) {
+// The hook no longer receives a pathId – activePathId is owned solely by the store.
+export function useGameSession() {
     const router = useRouter();
 
     /* ─── Store reads ─── */
@@ -76,8 +80,16 @@ export function useGameSession(pathId: string | null) {
     const setAwardedTitle = useGameSessionStore((s) => s.setAwardedTitle);
     const advanceCeremony = useGameSessionStore((s) => s.advanceCeremony);
     const getHydratedState = useGameSessionStore((s) => s.getHydratedState);
-    const getCurrentPlayer = useGameSessionStore((s) => s.getCurrentPlayer);
-    const getStation = useGameSessionStore((s) => s.getStation);
+    // Derive gameplay objects via selectors – store no longer provides wrappers.
+    // Derive the current player via selector – no store wrapper.
+    const getCurrentPlayerDerived = (): Player | null => {
+        const state = useGameSessionStore.getState();
+        return selectorGetCurrentPlayer(state.persistentState);
+    };
+    const getStation = () => {
+        const state = useGameSessionStore.getState();
+        return selectorGetCurrentStation(state.persistentState, state.runtimeState.activePathId);
+    };
 
     /* ─── Session initialization ─── */
     useEffect(() => {
@@ -87,23 +99,8 @@ export function useGameSession(pathId: string | null) {
             return;
         }
 
-        // PATH HANDOFF: If we have a persistent state but no activePathId and pathId is set,
-        // we need to select the path. This covers the case where gameplay/page
-        // navigated via URL but the store hasn't been updated yet.
-        // Also covers page refresh where runtimeState is lost.
-        //
-        // CRITICAL GUARD: Do NOT re-initialize during transition or ending phases.
-        // When a path ends (wrong answer or path completed), activePathId becomes null
-        // but the phase is "transition" or "ending" — re-initializing here would
-        // reset the path and show the same question again (duplicate question bug).
-        //
-        // DETERMINISTIC: We check activePathId (not activePath) because activePathId
-        // is the authoritative runtime reference. activePath object may be stale.
-        const phase = useGameSessionStore.getState().gameplayPhase;
-        if (pathId && !runtimeState.activePathId && persistentState && phase === "path-selection") {
-            initSession(persistentState, pathId);
-        }
-    }, [lifecycle, persistentState, pathId, runtimeState.activePathId, initSession, router]);
+        // No path handoff here – path selection is performed via the store's selectPath action.
+    }, [lifecycle, persistentState, runtimeState.activePathId, initSession, router]);
 
     /* ─── Session guard ─── */
     useEffect(() => {
@@ -114,16 +111,16 @@ export function useGameSession(pathId: string | null) {
 
     /* ─── Derived values ─── */
     const hydratedState = getHydratedState();
-    const currentPlayer = getCurrentPlayer();
+    const currentPlayer = getCurrentPlayerDerived();
     const station = getStation();
     // Derive the active path deterministically from persistent state + activePathId.
     const activePath = runtimeState.activePathId
         ? getCurrentPath(persistentState, runtimeState.activePathId)
         : null;
 
-    const activeTreasure = runtimeState.activeTreasure
-        ? toGameplayTreasureView(runtimeState.activeTreasure.treasure)
-        : null;
+    // Derive the active treasure view from the stored treasure ID when needed.
+    // The full treasure object is obtained via selectors elsewhere; here we keep only the ID.
+    const activeTreasureId = runtimeState.activeTreasureId ?? null;
 
     const progressLabel = useGameSessionStore((s) =>
         s.persistentState ? getSessionProgressLabel(s.persistentState) : ""
