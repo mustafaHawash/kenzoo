@@ -81,15 +81,13 @@ export function useGameSession() {
     const advanceCeremony = useGameSessionStore((s) => s.advanceCeremony);
     const getHydratedState = useGameSessionStore((s) => s.getHydratedState);
     // Derive gameplay objects via selectors – store no longer provides wrappers.
-    // Derive the current player via selector – no store wrapper.
-    const getCurrentPlayerDerived = (): Player | null => {
-        const state = useGameSessionStore.getState();
-        return selectorGetCurrentPlayer(state.persistentState);
-    };
-    const getStation = () => {
-        const state = useGameSessionStore.getState();
-        return selectorGetCurrentStation(state.persistentState, state.runtimeState.activePathId);
-    };
+    // Reactive selectors replace previous imperative getState calls.
+    const currentPlayer = useGameSessionStore((s) =>
+        selectorGetCurrentPlayer(s.persistentState)
+    );
+    const station = useGameSessionStore((s) =>
+        selectorGetCurrentStation(s.persistentState, s.runtimeState.activePathId)
+    );
 
     /* ─── Session initialization ─── */
     useEffect(() => {
@@ -111,8 +109,6 @@ export function useGameSession() {
 
     /* ─── Derived values ─── */
     const hydratedState = getHydratedState();
-    const currentPlayer = getCurrentPlayerDerived();
-    const station = getStation();
     // Derive the active path deterministically from persistent state + activePathId.
     const activePath = runtimeState.activePathId
         ? getCurrentPath(persistentState, runtimeState.activePathId)
@@ -120,7 +116,15 @@ export function useGameSession() {
 
     // Derive the active treasure view from the stored treasure ID when needed.
     // The full treasure object is obtained via selectors elsewhere; here we keep only the ID.
-    const activeTreasureId = runtimeState.activeTreasureId ?? null;
+    // Derive active treasure ID reactively. Full treasure object is derived elsewhere via a selector when needed.
+    const activeTreasureId = useGameSessionStore((s) => s.runtimeState.activeTreasureId ?? null);
+    // Derive the full active treasure object reactively from the ID.
+    const activeTreasure = useGameSessionStore((s) => {
+        if (!s.runtimeState.activeTreasureId) return null;
+        // Search the theme's treasure pool for the matching ID.
+        const found = eidTreasures.find((t) => t.id === s.runtimeState.activeTreasureId);
+        return found ? toGameplayTreasureView(found) : null;
+    });
 
     const progressLabel = useGameSessionStore((s) =>
         s.persistentState ? getSessionProgressLabel(s.persistentState) : ""
@@ -208,15 +212,17 @@ export function useGameSession() {
         OPEN TREASURE — Player chooses to open the treasure
        ═══════════════════════════════════════════════════════════ */
     const handleOpenTreasure = useCallback(() => {
-        const hydrated = getHydratedState();
-        if (!hydrated?.activeTreasure) return;
+        // Guard: only open treasure during treasure phase and when a treasure ID exists
+        if (gameplayPhase !== "treasure" || !activeTreasureId) return;
 
-        // Guard: only open treasure during treasure phase
-        if (gameplayPhase !== "treasure") return;
+        // Resolve the full treasure definition from the theme pool.
+        const fullTreasure = eidTreasures.find((t) => t.id === activeTreasureId);
+        if (!fullTreasure) return; // safety fallback
 
         openTreasure();
 
-        if (hydrated.activeTreasure.treasure.reward.type === "title" && currentPlayer) {
+        // If the opened treasure rewards a title, assign a random title to the player.
+        if (fullTreasure.reward.type === "title" && currentPlayer) {
             const title = pickRandomTitle(currentPlayer.titles);
             setAwardedTitle(title);
         }
@@ -251,6 +257,8 @@ export function useGameSession() {
         currentPlayer,
         station,
         activePath,
+        // UI components can use either the ID or the full object derived here.
+        activeTreasureId,
         activeTreasure,
         awardedTitle,
         lastResult,

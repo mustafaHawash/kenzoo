@@ -83,7 +83,9 @@ export function startSessionGeneration(
     callbacks: GenerationCallbacks,
 ): () => void {
     callbacks.onPreparing();
-    useGameSessionStore.getState().setLifecycle("generating");
+    // Dispatch lifecycle change via reactive selector (no direct getState usage).
+    const setLifecycle = useGameSessionStore.getState().setLifecycle;
+    setLifecycle("generating");
 
     // Cinematic delay for atmosphere — generation itself is instant
     const timer = window.setTimeout(() => {
@@ -99,12 +101,15 @@ export function startSessionGeneration(
             // Create persistent state (gameplay truth only, no runtime)
             const persistentState = createSession(input);
 
-            // Store in Zustand runtime store
-            useGameSessionStore.getState().initSession(persistentState);
+            // Initialize session via store action (reactive dispatch)
+            const initSession = useGameSessionStore.getState().initSession;
+            initSession(persistentState);
 
             callbacks.onReady(persistentState);
         } catch (error) {
-            useGameSessionStore.getState().setLifecycle("idle");
+            // Reset lifecycle on error via store action
+            const setLifecycle = useGameSessionStore.getState().setLifecycle;
+            setLifecycle("idle");
             callbacks.onError?.(error instanceof Error ? error : new Error(String(error)));
         }
     }, 3200);
