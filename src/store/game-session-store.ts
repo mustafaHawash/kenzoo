@@ -60,7 +60,9 @@ import type { Station } from "@/types/station";
       "path-selection": ["question", "ending"],
       "question": ["reveal", "ending"],
       "reveal": ["result", "ending"],
-      "result": ["treasure", "ending"],
+       // After a result, we may either show a treasure opportunity or move directly
+       // to the transition phase (when no treasure appears). Both paths are valid.
+       "result": ["treasure", "transition", "ending"],
       "treasure": ["transition", "ending"],
       "transition": ["path-selection", "ending"],
       "ending": ["ending"],
@@ -384,32 +386,34 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
          // ---------------------------------------------------------------------
          // OPEN TREASURE – resolves the treasure overlay and advances the phase.
          // ---------------------------------------------------------------------
-         // BUG FIX: Previously this action only updated the persisted state but
-         // left the `gameplayPhase` at "treasure". The UI therefore remained on
-         // the treasure overlay after the player opened a treasure, causing a
-         // freeze (no further transitions). The fix advances the phase to the
-         // next logical state – "result" – which mirrors the flow used when a
-         // treasure is dismissed (see `dismissTreasure`). This keeps the phase
-         // machine deterministic and prevents invalid‑transition deadlocks.
-         openTreasure: () => {
-             const state = get();
-             const hydrated = state.getHydratedState();
-             if (!hydrated) return;
+          // ---------------------------------------------------------------------
+          // OPEN TREASURE – resolves the treasure overlay and advances the phase.
+          // ---------------------------------------------------------------------
+          // The treasure flow should transition to the **transition** phase after
+          // a treasure is opened. Previously this action moved to "result",
+          // which conflicted with the VALID_TRANSITIONS map (treasure → result is
+          // disallowed) and caused dead‑locks where the UI froze on the overlay.
+          // By moving to "transition" we align with the deterministic flow:
+          // result → treasure → **transition** → path‑selection.
+          openTreasure: () => {
+              const state = get();
+              const hydrated = state.getHydratedState();
+              if (!hydrated) return;
 
               // Guard: only open treasure when in treasure phase with an active treasure id
               if (state.gameplayPhase !== "treasure") return;
               if (!state.runtimeState.activeTreasureId) return;
 
-             const updated = applyTreasureOpen(hydrated);
-             const { persistent, runtime } = splitState(updated);
+              const updated = applyTreasureOpen(hydrated);
+              const { persistent, runtime } = splitState(updated);
 
-             // Advance to the result phase after the treasure is resolved.
-             set({
-                 persistentState: persistent,
-                 runtimeState: runtime,
-                 gameplayPhase: "result",
-             });
-         },
+              // Advance to the transition phase after the treasure is resolved.
+              set({
+                  persistentState: persistent,
+                  runtimeState: runtime,
+                  gameplayPhase: "transition",
+              });
+          },
 
         setAwardedTitle: (title) => {
             set({ awardedTitle: title });

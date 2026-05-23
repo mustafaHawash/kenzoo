@@ -105,12 +105,17 @@ export function useGameSession() {
         // No path handoff here – path selection is performed via the store's selectPath action.
     }, [lifecycle, persistentState, hasHydrated, router]);
 
-    /* ─── Session guard ─── */
+    // Duplicate session guard removed – the initialization effect above already
+    // handles redirection after hydration. Keeping a single guard prevents
+    // multiple redirects that could cause navigation loops.
+
+    // Navigate to the play page when the phase switches to path-selection.
+    // This occurs after a turn ends and the UI should show the path selection screen.
     useEffect(() => {
-        if (lifecycle === "idle" && !persistentState) {
-            router.replace("/session/setup");
+        if (gameplayPhase === "path-selection") {
+            router.replace("/play");
         }
-    }, [lifecycle, persistentState, router]);
+    }, [gameplayPhase, router]);
 
     /* ─── Derived values ─── */
     // Derive the active path deterministically from persistent state + activePathId.
@@ -253,10 +258,13 @@ export function useGameSession() {
      // Navigation must occur before state transition to avoid clearing runtime
      // state prematurely. The router push triggers a page change, then the
      // store updates the turn.
-     const handleTransition = useCallback(() => {
-         router.push("/gameplay");
-         transitionToNextTurn();
-     }, [router, transitionToNextTurn]);
+      // After a turn ends we need to show the path‑selection UI. The correct page for that
+      // is "/play" (the path selection screen). Previously this navigated to "/gameplay",
+      // which expects an active path and caused the UI to freeze on the loading state.
+      const handleTransition = useCallback(() => {
+          router.push("/play");
+          transitionToNextTurn();
+      }, [router, transitionToNextTurn]);
 
     /* ═══════════════════════════════════════════════════════════
         ADVANCE CEREMONY — Step through ending ceremony phases
