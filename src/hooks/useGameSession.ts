@@ -78,7 +78,8 @@ export function useGameSession() {
     const setLastResult = useGameSessionStore((s) => s.setLastResult);
     const continueFromResult = useGameSessionStore((s) => s.continueFromResult);
     const dismissTreasure = useGameSessionStore((s) => s.dismissTreasure);
-    const transitionToNextTurn = useGameSessionStore((s) => s.transitionToNextTurn);
+     const transitionToNextTurn = useGameSessionStore((s) => s.transitionToNextTurn);
+     const clearRuntime = useGameSessionStore((s) => s.clearRuntime);
     const openTreasure = useGameSessionStore((s) => s.openTreasure);
     const setAwardedTitle = useGameSessionStore((s) => s.setAwardedTitle);
     const advanceCeremony = useGameSessionStore((s) => s.advanceCeremony);
@@ -261,10 +262,14 @@ export function useGameSession() {
       // After a turn ends we need to show the path‑selection UI. The correct page for that
       // is "/play" (the path selection screen). Previously this navigated to "/gameplay",
       // which expects an active path and caused the UI to freeze on the loading state.
-      const handleTransition = useCallback(() => {
-          router.push("/play");
-          transitionToNextTurn();
-      }, [router, transitionToNextTurn]);
+       const handleTransition = useCallback(() => {
+           // Navigate first to ensure the UI still has ownership of the active path.
+           router.push("/play");
+           // Advance turn logic.
+           transitionToNextTurn();
+           // After navigation, clean up transient runtime references.
+           clearRuntime();
+       }, [router, transitionToNextTurn, clearRuntime]);
 
     /* ═══════════════════════════════════════════════════════════
         ADVANCE CEREMONY — Step through ending ceremony phases

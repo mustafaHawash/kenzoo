@@ -134,7 +134,7 @@ function splitState(state: SessionState) {
 
 /* ─── Store Actions ────────────────────────────────────── */
 
-export type GameSessionActions = {
+     export type GameSessionActions = {
     /* ─── Session lifecycle ─── */
     initSession: (persistent: PersistentSessionState, pathId?: string | null) => void;
     clearSession: () => void;
@@ -150,7 +150,9 @@ export type GameSessionActions = {
     /* ─── Continue / Dismiss / Transition ─── */
     continueFromResult: () => void;
     dismissTreasure: () => void;
-    transitionToNextTurn: () => void;
+         transitionToNextTurn: () => void;
+         /** Clear transient runtime references after navigation completes */
+         clearRuntime: () => void;
 
     /* ─── Treasure ─── */
     openTreasure: () => void;
@@ -174,9 +176,17 @@ export type GameSessionActions = {
  * ONLY PersistentSessionState is stored — no runtime state,
  * no UI flags, no timers, no animation state.
  */
-type PersistedGameSessionState = {
-    persistentState: PersistentSessionState | null;
-};
+ // Persisted shape now includes the lightweight activePathId reference.
+ type PersistedGameSessionState = {
+     persistentState: PersistentSessionState | null;
+     /**
+      * The ID of the currently active path. This is the ONLY runtime reference
+      * that needs to survive a page refresh. All other runtime data (active
+      * treasure, phase, etc.) is reconstructed from the persistent session
+      * state combined with this ID.
+      */
+     activePathId: string | null;
+ };
 
 /* ─── Store ────────────────────────────────────────────── */
 
@@ -266,19 +276,24 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
          // Action to select a path – used by UI when player chooses a path.
          // UI invokes this when a player selects a path. It updates the activePathId
          // and moves the phase to "question".
-         selectPath: (pathId: string) => {
-             console.log("[DEBUG] selectPath called", { pathId });
-             const hydrated = get().getHydratedState();
-             if (!hydrated) return;
-             const withPath = engineSelectPath(hydrated, pathId);
-             const { persistent, runtime } = splitState(withPath);
-             console.log("[DEBUG] selectPath result", { gameplayPhase: "question", activePathId: runtime.activePathId });
-             set({
-                 persistentState: persistent,
-                 runtimeState: runtime,
-                 gameplayPhase: "question",
-             });
-         },
+          selectPath: (pathId: string) => {
+              console.log("[DEBUG] selectPath called", { pathId });
+              const hydrated = get().getHydratedState();
+              if (!hydrated) return;
+              const withPath = engineSelectPath(hydrated, pathId);
+              const { persistent, runtime } = splitState(withPath);
+              // Ensure transient runtime flags are reset when a new path is selected.
+              const cleanedRuntime = {
+                  activePathId: runtime.activePathId,
+                  activeTreasureId: null,
+              };
+              console.log("[DEBUG] selectPath result", { gameplayPhase: "question", activePathId: cleanedRuntime.activePathId });
+              set({
+                  persistentState: persistent,
+                  runtimeState: cleanedRuntime,
+                  gameplayPhase: "question",
+              });
+          },
          // Apply turn outcome without any path‑clearing logic. Path completion
          // ownership is handled by `resolveContinueFromResult` and
          // `resolveTransition` in the session‑engine. This action now simply
@@ -356,28 +371,32 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
             set(updates);
         },
 
-        transitionToNextTurn: () => {
-            const state = get();
-            const hydrated = state.getHydratedState();
-            if (!hydrated) return;
-
-            // Guard: only transition from transition phase
-            if (state.gameplayPhase !== "transition") return;
-
-            const decision = resolveTransition(hydrated, state.lastResult);
-            const updates: Partial<GameSessionState> = {
-                lastResult: null,
-                gameplayPhase: decision.nextPhase,
-            };
-
-            if (decision.updatedState) {
-                const { persistent, runtime } = splitState(decision.updatedState);
-                updates.persistentState = persistent;
-                updates.runtimeState = runtime;
-            }
-
-            set(updates);
-        },
+         transitionToNextTurn: () => {
+              const state = get();
+              const hydrated = state.getHydratedState();
+              if (!hydrated) return;
+  
+              // Guard: only transition from transition phase
+              if (state.gameplayPhase !== "transition") return;
+  
+              const decision = resolveTransition(hydrated, state.lastResult);
+              const updates: Partial<GameSessionState> = {
+                  lastResult: null,
+                  gameplayPhase: decision.nextPhase,
+              };
+  
+              if (decision.updatedState) {
+                  const { persistent, runtime } = splitState(decision.updatedState);
+                  updates.persistentState = persistent;
+                  updates.runtimeState = runtime;
+              }
+  
+              // Do NOT clear activePathId here. Runtime cleanup is now owned by the navigation layer.
+              set(updates);
+          },
+         clearRuntime: () => {
+             set({ runtimeState: { activePathId: null, activeTreasureId: null } });
+         },
 
         /* ═══════════════════════════════════════════════════════════
            TREASURE
@@ -440,21 +459,18 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
      // derivations of activePath and activeStation.
           // Derive a full SessionState on demand. Runtime objects are derived
           // from lightweight IDs to avoid stale references.
-          getHydratedState: () => {
-              const state = get();
-              if (!state.persistentState) return null;
-              const { activePathId, activeTreasureId } = state.runtimeState;
-              // activePath is derived by callers via selectors; we do not include it
-              // in the SessionState to satisfy the type definition.
-              // Full activeTreasure is derived elsewhere; we keep only the ID.
-              const activeTreasure = null;
-              return {
-                  ...state.persistentState,
-                  activePathId,
-                  activeTreasureId,
-                  activeTreasure,
-              } as SessionState;
-          },
+      getHydratedState: () => {
+               const state = get();
+               if (!state.persistentState) return null;
+               const { activePathId, activeTreasureId } = state.runtimeState;
+               // Construct a full SessionState without unsafe casting.
+               const hydrated: SessionState = {
+                   ...state.persistentState,
+                   activePathId,
+                   activeTreasureId,
+               };
+               return hydrated;
+           },
 
         getProgressLabel: () => {
             const state = get();
@@ -474,9 +490,11 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
          * ceremony, lastResult, awardedTitle, lifecycle, isGenerating)
          * is NEVER persisted — it resets on page refresh.
          */
-        partialize: (state): PersistedGameSessionState => ({
-            persistentState: state.persistentState,
-        }),
+          partialize: (state): PersistedGameSessionState => ({
+              persistentState: state.persistentState,
+              // Store the activePathId safely – it is a simple string reference.
+              activePathId: state.runtimeState.activePathId,
+          }),
 
         /**
          * After rehydration from localStorage:
@@ -487,9 +505,17 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
          onRehydrateStorage: () => (state) => {
              if (state?.persistentState) {
                  state.lifecycle = "active";
+                 // The persisted activePathId is stored as a top‑level property by the
+                 // `partialize` function. It is not part of the typed store shape, so we
+                 // access it via a type‑unsafe cast.
+                 const persistedPathId = ((state as unknown) as { activePathId?: string | null }).activePathId ?? null;
+                 // ALWAYS start in path‑selection after a refresh – the UI must re‑select a path.
                  state.gameplayPhase = "path-selection";
-                  // Only lightweight references are kept. Full activePath is derived via selectors.
-                  state.runtimeState = { activePathId: null, activeTreasureId: null };
+                 // Restore runtime references safely.
+                 state.runtimeState = {
+                     activePathId: persistedPathId ?? null,
+                     activeTreasureId: null,
+                 };
                  state.ceremony = null;
                  state.lastResult = null;
                  state.awardedTitle = null;
