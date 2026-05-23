@@ -7,7 +7,8 @@ export type StationType =
     | "memory"
     | "puzzle"
     | "mystery"
-    | "story";
+    | "story"
+    | "treasure"; // Added treasure station type for gameplay
 
 export type StationStatus = "locked" | "active" | "completed";
 

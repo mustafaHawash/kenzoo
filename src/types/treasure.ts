@@ -142,12 +142,17 @@ export type Treasure = {
  * Excludes rarity, star cost, and hidden points to strictly enforce the mystery.
  * NO cinematic data that could leak rarity is included.
  */
+// UI-facing view of a treasure during gameplay. It retains the reward details
+// (type, amount, title, etc.) needed for rendering the treasure overlay, while
+// omitting hidden economic fields such as rarity and star cost.
 export type GameplayTreasureView = Omit<
     Treasure,
-    "rarity" | "starsRequired" | "reward"
+    "rarity" | "starsRequired"
 > & {
-    /** Safe display text for the reward — no hidden values leaked */
+    /** Human‑readable reward description used in the UI */
     rewardText: string;
+    /** Full reward detail – required by components that inspect reward.type */
+    reward: TreasureRewardDetail;
 };
 
 /**
@@ -185,7 +190,7 @@ export function toGameplayTreasureView(
     treasure: Treasure,
 ): GameplayTreasureView {
     const { rarity, starsRequired, reward, ...safeData } = treasure;
-    return { ...safeData, rewardText: deriveRewardText(reward) };
+    return { ...safeData, reward, rewardText: deriveRewardText(reward) };
 }
 
 /**

@@ -27,6 +27,7 @@ import { MemoryRenderer } from "./memory-renderer";
 import { PuzzleRenderer } from "./puzzle-renderer";
 import { MysteryRenderer } from "./mystery-renderer";
 import { StoryRenderer } from "./story-renderer";
+import { TreasureRenderer } from "./treasure-renderer";
 
 export const stationRenderers: StationRendererRegistry = {
     quiz: QuizRenderer,
@@ -36,6 +37,7 @@ export const stationRenderers: StationRendererRegistry = {
     puzzle: PuzzleRenderer,
     mystery: MysteryRenderer,
     story: StoryRenderer,
+    treasure: TreasureRenderer,
 };
 
 // Re-export types

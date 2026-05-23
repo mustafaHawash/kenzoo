@@ -176,7 +176,12 @@ export function useGameSession() {
 
             if (!persistentState) return; // Guard for persistentState
 
-            const treasureMultiplier = activePath?.treasureProbabilityMultiplier ?? 1;
+            // Derive treasure multiplier from the active path ID without relying on the
+            // derived `activePath` object (to keep the callback dependencies minimal).
+            const activePathObj = activePathId
+                ? getCurrentPath(persistentState, activePathId)
+                : null;
+            const treasureMultiplier = activePathObj?.treasureProbabilityMultiplier ?? 1;
 
             // 1. Pure resolution
             const outcome = resolveTurn(
@@ -245,10 +250,13 @@ export function useGameSession() {
     /* ═══════════════════════════════════════════════════════════
         TRANSITION — Navigate back to gameplay / path selection
        ═══════════════════════════════════════════════════════════ */
-    const handleTransition = useCallback(() => {
-        transitionToNextTurn();
-        router.push("/gameplay");
-    }, [transitionToNextTurn, router]);
+     // Navigation must occur before state transition to avoid clearing runtime
+     // state prematurely. The router push triggers a page change, then the
+     // store updates the turn.
+     const handleTransition = useCallback(() => {
+         router.push("/gameplay");
+         transitionToNextTurn();
+     }, [router, transitionToNextTurn]);
 
     /* ═══════════════════════════════════════════════════════════
         ADVANCE CEREMONY — Step through ending ceremony phases
@@ -277,6 +285,7 @@ export function useGameSession() {
                 handleTransition: () => {},
                 handleAdvanceCeremony,
                 progressLabel,
+                hasHydrated,
             } as const;
         }
         return {
@@ -296,6 +305,7 @@ export function useGameSession() {
             handleTransition,
             handleAdvanceCeremony,
             progressLabel,
+            hasHydrated,
         } as const;
     }, [
         ceremony,

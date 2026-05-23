@@ -195,27 +195,28 @@ function EndingCeremonyView({
 function PlayPageContent() {
     const router = useRouter();
 
-    const {
-        sessionState,
-        ceremony,
-        gameplayPhase,
-        currentPlayer,
-        station,
-        activePath,
-        activeTreasure,
-        awardedTitle,
-        lastResult,
-        handleSubmit,
-        handleContinueFromResult,
-        handleOpenTreasure,
-        handleDismissTreasure,
-        handleTransition,
-        handleAdvanceCeremony,
-        progressLabel,
-    } = useGameSession();
+        const {
+            ceremony,
+            gameplayPhase,
+            currentPlayer,
+            station,
+            activePath,
+            activeTreasure,
+            awardedTitle,
+            lastResult,
+            handleSubmit,
+            handleContinueFromResult,
+            handleOpenTreasure,
+            handleDismissTreasure,
+            handleTransition,
+            handleAdvanceCeremony,
+            progressLabel,
+            hasHydrated,
+        } = useGameSession();
 
     /* ─── No session — show loading (redirect handled by useGameSession) ─── */
-    if (!sessionState || !currentPlayer) {
+    // If the store hasn't hydrated or there is no active player, show a loading state.
+    if (!hasHydrated || !currentPlayer) {
         return (
             <ScreenContainer className="justify-center items-center">
                 <Muted>جاري التحميل...</Muted>

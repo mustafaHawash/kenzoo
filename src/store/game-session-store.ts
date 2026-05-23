@@ -202,23 +202,25 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
            SESSION LIFECYCLE
            ═══════════════════════════════════════════════════════════ */
 
-     initSession: (persistent, pathId) => {
-            const hydrated = hydrateSessionState(persistent);
-    const withPath = pathId ? engineSelectPath(hydrated, pathId) : hydrated;
-            const { persistent: updatedPersistent, runtime } = splitState(withPath);
+      initSession: (persistent, pathId) => {
+          // Hydrate the persisted session state without marking hydration as complete.
+          // Hydration flag is solely managed by the `onRehydrateStorage` callback.
+          const hydrated = hydrateSessionState(persistent);
+          const withPath = pathId ? engineSelectPath(hydrated, pathId) : hydrated;
+          const { persistent: updatedPersistent, runtime } = splitState(withPath);
 
-         set({
-             lifecycle: "active",
-             persistentState: updatedPersistent,
-             runtimeState: runtime,
-             gameplayPhase: pathId ? "question" : "path-selection",
-             ceremony: null,
-             lastResult: null,
-             awardedTitle: null,
-             isGenerating: false,
-             hasHydrated: true,
-         });
-        },
+          set({
+              lifecycle: "active",
+              persistentState: updatedPersistent,
+              runtimeState: runtime,
+              gameplayPhase: pathId ? "question" : "path-selection",
+              ceremony: null,
+              lastResult: null,
+              awardedTitle: null,
+              isGenerating: false,
+              // Do NOT set hasHydrated here – it will be set by onRehydrateStorage after rehydration.
+          });
+      },
 
          clearSession: () => {
              set({
@@ -275,28 +277,19 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
                  gameplayPhase: "question",
              });
          },
+         // Apply turn outcome without any path‑clearing logic. Path completion
+         // ownership is handled by `resolveContinueFromResult` and
+         // `resolveTransition` in the session‑engine. This action now simply
+         // updates the persisted state and runtime references returned by the
+         // engine.
          commitTurnOutcome: (outcome) => {
-             const hydrated = get().getHydratedState();
-             if (!hydrated) return;
+              const hydrated = get().getHydratedState();
+              if (!hydrated) return;
 
-             const updated = applyTurnOutcome(hydrated, outcome);
-             const { persistent, runtime } = splitState(updated);
+              const updated = applyTurnOutcome(hydrated, outcome);
+              const { persistent, runtime } = splitState(updated);
 
-             // If a path was active and the outcome resulted in its completion,
-             // clear the activePathId so selectors no longer return a stale path.
-             if (runtime.activePathId) {
-                 const journey = persistent.journeys.find((j) =>
-                     j.paths.some((p) => p.id === runtime.activePathId)
-                 );
-                 if (journey) {
-                     const path = journey.paths.find((p) => p.id === runtime.activePathId);
-                     if (path?.completed) {
-                         runtime.activePathId = null;
-                     }
-                 }
-             }
-
-             set({ persistentState: persistent, runtimeState: runtime });
+              set({ persistentState: persistent, runtimeState: runtime });
          },
 
         setLastResult: (result) => {
@@ -441,22 +434,23 @@ export const useGameSessionStore = create<GameSessionState & GameSessionActions>
      // Derive full hydrated state on demand. No reconstruction logic – only
      // lightweight references are stored. Selectors provide deterministic
      // derivations of activePath and activeStation.
-     getHydratedState: () => {
-         const state = get();
-         if (!state.persistentState) return null;
-          const { activePathId, activeTreasureId } = state.runtimeState;
-          const activePath = activePathId
-              ? getCurrentPath(state.persistentState, activePathId)
-              : null;
-          // Derive the full activeTreasure object lazily if needed elsewhere.
-          const activeTreasure = null; // placeholder – full object derived by selectors elsewhere
-          return {
-              ...state.persistentState,
-              activePathId,
-              activePath,
-              activeTreasure,
-          } as SessionState;
-     },
+          // Derive a full SessionState on demand. Runtime objects are derived
+          // from lightweight IDs to avoid stale references.
+          getHydratedState: () => {
+              const state = get();
+              if (!state.persistentState) return null;
+              const { activePathId, activeTreasureId } = state.runtimeState;
+              // activePath is derived by callers via selectors; we do not include it
+              // in the SessionState to satisfy the type definition.
+              // Full activeTreasure is derived elsewhere; we keep only the ID.
+              const activeTreasure = null;
+              return {
+                  ...state.persistentState,
+                  activePathId,
+                  activeTreasureId,
+                  activeTreasure,
+              } as SessionState;
+          },
 
         getProgressLabel: () => {
             const state = get();
