@@ -110,13 +110,9 @@ export function useGameSession() {
     // handles redirection after hydration. Keeping a single guard prevents
     // multiple redirects that could cause navigation loops.
 
-    // Navigate to the play page when the phase switches to path-selection.
-    // This occurs after a turn ends and the UI should show the path selection screen.
-    useEffect(() => {
-        if (gameplayPhase === "path-selection") {
-            router.replace("/play");
-        }
-    }, [gameplayPhase, router]);
+    // NOTE: Removed automatic navigation on gameplayPhase change.
+    // Navigation is now performed explicitly via handlers (e.g., handleTransition).
+    // This prevents navigation races and hydration conflicts caused by phase‑watcher effects.
 
     /* ─── Derived values ─── */
     // Derive the active path deterministically from persistent state + activePathId.
@@ -169,55 +165,56 @@ export function useGameSession() {
         3. Transition to "reveal" phase
         4. Schedule reveal→result transition after cinematic delay
        ═══════════════════════════════════════════════════════════ */
-    const handleSubmit = useCallback(
-        (answer: string) => {
-            if (!station || !currentPlayer) return;
-
-            // Guard: prevent double submission during reveal phase
-            if (isSubmittingRef.current) return;
-            // Guard: only submit from question phase
-            if (gameplayPhase !== "question") return;
-
-            isSubmittingRef.current = true;
-
-            if (!persistentState) return; // Guard for persistentState
-
-            // Derive treasure multiplier from the active path ID without relying on the
-            // derived `activePath` object (to keep the callback dependencies minimal).
-            const activePathObj = activePathId
-                ? getCurrentPath(persistentState, activePathId)
-                : null;
-            const treasureMultiplier = activePathObj?.treasureProbabilityMultiplier ?? 1;
-
-            // 1. Pure resolution
-            const outcome = resolveTurn(
-                currentPlayer,
-                station,
-                answer,
-                eidTreasures,
-                persistentState.claimedLegendaryIds,
-                treasureMultiplier,
-            );
-
-            // 2. Commit outcome to store IMMEDIATELY
-            commitTurnOutcome(outcome);
-            setLastResult(outcome.roundResult);
-
-            // 3. Transition to reveal phase
-            setGameplayPhase("reveal");
-
-            // 4. Schedule cinematic reveal→result transition
-            if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
-            revealTimerRef.current = setTimeout(() => {
-                // Guard: don't fire if component unmounted
-                if (!isMountedRef.current) return;
-                setGameplayPhase("result");
-                revealTimerRef.current = null;
-                isSubmittingRef.current = false;
-            }, REVEAL_DELAY_MS);
-        },
-        [station, currentPlayer, activePath, gameplayPhase, persistentState, commitTurnOutcome, setLastResult, setGameplayPhase],
-    );
+        const handleSubmit = useCallback(
+            (answer: string) => {
+                if (!station || !currentPlayer) return;
+                
+                // Guard: prevent double submission during reveal phase
+                if (isSubmittingRef.current) return;
+                // Guard: only submit from question phase
+                if (gameplayPhase !== "question") return;
+                
+                isSubmittingRef.current = true;
+                
+                if (!persistentState) return; // Guard for persistentState
+                
+                // Derive treasure multiplier from the active path ID without relying on the
+                // derived `activePath` object (to keep the callback dependencies minimal).
+                const activePathObj = activePathId
+                    ? getCurrentPath(persistentState, activePathId)
+                    : null;
+                const treasureMultiplier = activePathObj?.treasureProbabilityMultiplier ?? 1;
+                
+                // 1. Pure resolution
+                const outcome = resolveTurn(
+                    currentPlayer,
+                    station,
+                    answer,
+                    eidTreasures,
+                    persistentState.claimedLegendaryIds,
+                    treasureMultiplier,
+                );
+                
+                // 2. Commit outcome to store IMMEDIATELY
+                commitTurnOutcome(outcome);
+                setLastResult(outcome.roundResult);
+                
+                // 3. Transition to reveal phase
+                setGameplayPhase("reveal");
+                
+                // 4. Schedule cinematic reveal→result transition
+                if (revealTimerRef.current) clearTimeout(revealTimerRef.current);
+                revealTimerRef.current = setTimeout(() => {
+                    // Guard: don't fire if component unmounted
+                    if (!isMountedRef.current) return;
+                    setGameplayPhase("result");
+                    revealTimerRef.current = null;
+                    isSubmittingRef.current = false;
+                }, REVEAL_DELAY_MS);
+            },
+            // Dependency array updated: replace `activePath` with `activePathId`
+            [station, currentPlayer, activePathId, gameplayPhase, persistentState, commitTurnOutcome, setLastResult, setGameplayPhase],
+        );
 
     /* ═══════════════════════════════════════════════════════════
         CONTINUE FROM RESULT — Delegates to store
@@ -262,14 +259,29 @@ export function useGameSession() {
       // After a turn ends we need to show the path‑selection UI. The correct page for that
       // is "/play" (the path selection screen). Previously this navigated to "/gameplay",
       // which expects an active path and caused the UI to freeze on the loading state.
-       const handleTransition = useCallback(() => {
-           // Navigate first to ensure the UI still has ownership of the active path.
-           router.push("/play");
-           // Advance turn logic.
-           transitionToNextTurn();
-           // After navigation, clean up transient runtime references.
-           clearRuntime();
-       }, [router, transitionToNextTurn, clearRuntime]);
+        const handleTransition = useCallback(() => {
+            // Use replace to avoid adding a history entry that could cause a stale player
+            // when the user navigates back. Navigation must settle before we clear runtime
+            // state, otherwise the gameplay page may lose its active path and freeze.
+            // After a turn ends we need to show the path‑selection UI. The correct page for that
+            // is "/gameplay" (the path‑selection screen). Previously this navigated to "/play",
+            // which expects an active path and caused the UI to freeze on loading.
+            router.replace("/gameplay");
+            // Defer state cleanup to the next animation frame, ensuring the router has
+            // processed the navigation asynchronously.
+            if (typeof requestAnimationFrame === "function") {
+                requestAnimationFrame(() => {
+                    transitionToNextTurn();
+                    clearRuntime();
+                });
+            } else {
+                // Fallback for environments without requestAnimationFrame (e.g., SSR)
+                setTimeout(() => {
+                    transitionToNextTurn();
+                    clearRuntime();
+                }, 0);
+            }
+        }, [router, transitionToNextTurn, clearRuntime]);
 
     /* ═══════════════════════════════════════════════════════════
         ADVANCE CEREMONY — Step through ending ceremony phases
