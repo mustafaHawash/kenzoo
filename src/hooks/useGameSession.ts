@@ -293,25 +293,28 @@ export function useGameSession() {
     // Consolidate return object in a single useMemo to keep hook order stable.
     const exported = useMemo(() => {
         if (!hasHydrated) {
-            return {
-                ceremony,
-                gameplayPhase,
-                currentPlayer: null,
-                station: null,
-                activePath: null,
-                activeTreasureId: null,
-                activeTreasure: null,
-                awardedTitle,
-                lastResult: null,
-                handleSubmit: () => {},
-                handleContinueFromResult,
-                handleOpenTreasure: () => {},
-                handleDismissTreasure: () => {},
-                handleTransition: () => {},
-                handleAdvanceCeremony,
-                progressLabel,
-                hasHydrated,
-            } as const;
+        return {
+            ceremony,
+            gameplayPhase,
+            currentPlayer: null,
+            station: null,
+            activePath: null,
+            activeTreasureId: null,
+            activeTreasure: null,
+            awardedTitle,
+            lastResult: null,
+            handleSubmit: () => {},
+            handleContinueFromResult,
+            handleOpenTreasure: () => {},
+            handleDismissTreasure: () => {},
+            handleTransition: () => {},
+            handleAdvanceCeremony,
+            progressLabel,
+            hasHydrated,
+            // expose for play page terminal exit flow
+            transitionToNextTurn,
+            clearRuntime,
+        } as const;
         }
         return {
             ceremony,
@@ -331,6 +334,8 @@ export function useGameSession() {
             handleAdvanceCeremony,
             progressLabel,
             hasHydrated,
+            transitionToNextTurn,
+            clearRuntime,
         } as const;
     }, [
         ceremony,

@@ -195,24 +195,26 @@ function EndingCeremonyView({
 function PlayPageContent() {
     const router = useRouter();
 
-        const {
-            ceremony,
-            gameplayPhase,
-            currentPlayer,
-            station,
-            activePath,
-            activeTreasure,
-            awardedTitle,
-            lastResult,
-            handleSubmit,
-            handleContinueFromResult,
-            handleOpenTreasure,
-            handleDismissTreasure,
-            handleTransition,
-            handleAdvanceCeremony,
-            progressLabel,
-            hasHydrated,
-        } = useGameSession();
+    const {
+        ceremony,
+        gameplayPhase,
+        currentPlayer,
+        station,
+        activePath,
+        activeTreasure,
+        awardedTitle,
+        lastResult,
+        handleSubmit,
+        handleContinueFromResult,
+        handleOpenTreasure,
+        handleDismissTreasure,
+        // New explicit exit handler for completed paths
+        handleTransition,
+        handleAdvanceCeremony,
+        progressLabel,
+        hasHydrated,
+        // Added from useGameSession for explicit exit actions
+    } = useGameSession();
 
     /* ─── No session — show loading (redirect handled by useGameSession) ─── */
     // If the store hasn't hydrated or there is no active player, show a loading state.
@@ -239,11 +241,32 @@ function PlayPageContent() {
     // If we reach here with a pathId but no activePath, the store
     // hydration may still be in progress. Show loading instead of
     // immediately showing "no path" error.
-    if (!station || !activePath) {
-        // Show a generic loading state when no active path is available.
+    // If there is no current station (e.g., after completing a path) and the
+    // active path is not marked as completed, show a loading fallback. When the
+    // path is completed we want to render the transition UI instead of the
+    // generic "جاري تحميل المسار..." fallback, because the turn system will
+    // navigate to the next player shortly.
+    if (!station && (!activePath || !activePath.completed)) {
+        // Show a generic loading state when no active path is available or the
+        // path is still in progress.
         return (
             <ScreenContainer className="justify-center items-center">
                 <Muted>جاري تحميل المسار...</Muted>
+            </ScreenContainer>
+        );
+    }
+
+    // If the active path is marked completed, show a terminal success UI.
+    if (activePath?.completed) {
+        return (
+            <ScreenContainer className="justify-center items-center gap-4">
+                <Headline className="text-primary text-2xl">أحسنت! اكتمل المسار ✨</Headline>
+                <button
+                    onClick={handleTransition}
+                    className="rounded-full border border-secondary/20 bg-card/60 px-6 py-2.5 text-sm text-secondary/80 backdrop-blur-sm transition-all hover:bg-card/80 active:scale-95"
+                >
+                    العودة للمسارات
+                </button>
             </ScreenContainer>
         );
     }
@@ -311,31 +334,33 @@ function PlayPageContent() {
                     Progress derives from: currentStationIndex + completed stations.
                     Shows completed stations out of total, with station dots.
                     ═══════════════════════════════════════════ */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.1 }}
-                    className="flex flex-col gap-1.5 px-2"
-                >
-                    <div className="flex items-center justify-between">
-                        <Muted className="text-[10px]">
-                            {progressLabel}
-                        </Muted>
-                        <Muted className="text-[10px]">
-    {activePath.currentStationIndex} من {activePath.stations.length} محطات
-                        </Muted>
-                    </div>
-                    <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-soft">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{
-    width: `${Math.round((activePath.currentStationIndex / activePath.stations.length) * 100)}%`,
-                            }}
-                            transition={{ duration: 0.5, ease: "easeOut" as const }}
-                            className="absolute inset-y-0 right-0 rounded-full bg-linear-to-l from-secondary via-amber-400 to-secondary/80"
-                        />
-                    </div>
-                </motion.div>
+                 {activePath && (
+                     <motion.div
+                         initial={{ opacity: 0 }}
+                         animate={{ opacity: 1 }}
+                         transition={{ delay: 0.1 }}
+                         className="flex flex-col gap-1.5 px-2"
+                     >
+                         <div className="flex items-center justify-between">
+                             <Muted className="text-[10px]">
+                                 {progressLabel}
+                             </Muted>
+                             <Muted className="text-[10px]">
+                                 {activePath.currentStationIndex} من {activePath.stations.length} محطات
+                             </Muted>
+                         </div>
+                         <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-soft">
+                             <motion.div
+                                 initial={{ width: 0 }}
+                                 animate={{
+                                     width: `${Math.round((activePath.currentStationIndex / activePath.stations.length) * 100)}%`,
+                                 }}
+                                 transition={{ duration: 0.5, ease: "easeOut" as const }}
+                                 className="absolute inset-y-0 right-0 rounded-full bg-linear-to-l from-secondary via-amber-400 to-secondary/80"
+                             />
+                         </div>
+                     </motion.div>
+                 )}
 
                 {/* ═══════════════════════════════════════════
                     🃏 ACTIVE GAMEPLAY SURFACE
