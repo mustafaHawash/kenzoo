@@ -41,11 +41,14 @@ import {
   selectPath as engineSelectPath,
   applyTurnOutcome,
   applyTreasureOpen,
+  advanceActivePath,
+  clearActiveTreasure,
   resolveContinueFromResult,
   resolveDismissTreasure,
   resolveTransition,
   getSessionProgressLabel,
   advanceCeremonyPhase,
+  createEndingCeremonyState,
 } from "@/lib/session-runtime/session-engine";
 import { getCurrentPath } from "@/lib/session-runtime/selectors/get-current-path";
 import type { RoundResult } from "@/types/session";
@@ -153,7 +156,7 @@ export type GameSessionActions = {
   clearRuntime: () => void;
 
   /* ─── Treasure ─── */
-  openTreasure: () => void;
+  openTreasure: (outcome: import("@/lib/session-runtime/turn-engine").TreasureOpenOutcome) => void;
   setAwardedTitle: (title: string | null) => void;
 
   /* ─── Ceremony ─── */
@@ -418,7 +421,7 @@ export const useGameSessionStore = create<
       // disallowed) and caused dead‑locks where the UI froze on the overlay.
       // By moving to "transition" we align with the deterministic flow:
       // result → treasure → **transition** → path‑selection.
-      openTreasure: () => {
+      openTreasure: (outcome: import("@/lib/session-runtime/turn-engine").TreasureOpenOutcome) => {
         const state = get();
         const hydrated = state.getHydratedState();
         if (!hydrated) return;
@@ -427,15 +430,44 @@ export const useGameSessionStore = create<
         if (state.gameplayPhase !== "treasure") return;
         if (!state.runtimeState.activeTreasureId) return;
 
-        const updated = applyTreasureOpen(hydrated);
-        const { persistent, runtime } = splitState(updated);
+        // 1. Apply treasure rewards (star deduction, record, legendary claim)
+        const withTreasure = applyTreasureOpen(hydrated, outcome);
 
-        // Advance to the transition phase after the treasure is resolved.
-        set({
+        // 2. Advance the path — treasure appears after a correct answer,
+        //    so the path must be advanced (same logic as resolveDismissTreasure).
+        //    The path was NOT advanced when the treasure appeared
+        //    (resolveContinueFromResult took the treasure branch instead).
+        const lastResult = state.lastResult;
+        let nextPhase: GameplayPhase = "transition";
+        let finalState = withTreasure;
+        let ceremony: EndingCeremonyState | undefined;
+
+        if (lastResult?.isCorrect) {
+          const advanced = advanceActivePath(withTreasure, lastResult.starsEarned);
+
+          if (advanced.isComplete) {
+            nextPhase = "ending";
+            ceremony = createEndingCeremonyState(advanced);
+          } else if (advanced.activePathId) {
+            // More stations remain — back to question phase
+            nextPhase = "question";
+          }
+          // else: path completed — stay in transition
+
+          finalState = advanced;
+        }
+
+        const { persistent, runtime } = splitState(finalState);
+        const updates: Partial<GameSessionState> = {
           persistentState: persistent,
           runtimeState: runtime,
-          gameplayPhase: "transition",
-        });
+          gameplayPhase: nextPhase,
+        };
+        if (ceremony) {
+          updates.ceremony = ceremony;
+        }
+
+        set(updates);
       },
 
       setAwardedTitle: (title) => {

@@ -686,14 +686,29 @@ export function applyPlayerUpdate(
  * Applies a treasure opening to session state.
  * Deducts hidden star cost, records the opened treasure, tracks legendary claims.
  */
-export function applyTreasureOpen(state: SessionState): SessionState {
-  // For now, simply clear the active treasure reference.
-  // Full treasure resolution (points, star cost) is handled elsewhere when the
-  // treasure object is available. This avoids stale object reads.
+export function applyTreasureOpen(
+  state: SessionState,
+  outcome: import("./turn-engine").TreasureOpenOutcome,
+): SessionState {
   if (!state.activeTreasureId) return state;
+
+  // Apply the resolved treasure outcome to the current player
+  const updatedPlayers = state.players.map((p, i) =>
+    i === state.currentPlayerIndex ? outcome.updatedPlayer : p,
+  );
+
+  // Track legendary treasure claims to prevent duplicates
+  const treasure = outcome.record;
+  let claimedLegendaryIds = state.claimedLegendaryIds;
+  if (treasure.rarity === "legendary") {
+    claimedLegendaryIds = [...claimedLegendaryIds, treasure.treasureId];
+  }
+
   return {
     ...state,
+    players: updatedPlayers,
     activeTreasureId: null,
+    claimedLegendaryIds,
   };
 }
 

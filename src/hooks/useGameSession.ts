@@ -25,7 +25,7 @@ import { useCallback, useEffect, useRef, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useGameSessionStore } from "@/store/game-session-store";
-import { resolveTurn } from "@/lib/session-runtime/turn-engine";
+import { resolveTurn, resolveTreasureOpen } from "@/lib/session-runtime/turn-engine";
 import {
     applyTurnOutcome,
     getSessionProgressLabel,
@@ -276,21 +276,41 @@ export function useGameSession() {
         const fullTreasure = eidTreasures.find((t) => t.id === activeTreasureId);
         if (!fullTreasure) return; // safety fallback
 
-        openTreasure();
+        // Resolve the treasure outcome (star deduction, record, player update)
+        if (!currentPlayer) return;
+        const outcome = resolveTreasureOpen(currentPlayer, fullTreasure);
+
+        // Commit the resolved outcome to the store
+        openTreasure(outcome);
 
         // If the opened treasure rewards a title, assign a random title to the player.
-        if (fullTreasure.reward.type === "title" && currentPlayer) {
-            const title = pickRandomTitle(currentPlayer.titles);
+        if (fullTreasure.reward.type === "title") {
+            const title = pickRandomTitle(outcome.updatedPlayer.titles);
             setAwardedTitle(title);
         }
-    }, [openTreasure, currentPlayer, setAwardedTitle, gameplayPhase, activeTreasureId]);
+
+        // openTreasure() sets gameplayPhase to "transition" synchronously.
+        // We must call handleTransition() to advance the turn — same pattern
+        // as handleContinueFromResult.
+        const phase = useGameSessionStore.getState().gameplayPhase;
+        if (phase === "transition") {
+            handleTransition();
+        }
+    }, [openTreasure, currentPlayer, setAwardedTitle, gameplayPhase, activeTreasureId, handleTransition]);
 
     /* ═══════════════════════════════════════════════════════════
         DISMISS TREASURE — Delegates to store
        ═══════════════════════════════════════════════════════════ */
     const handleDismissTreasure = useCallback(() => {
         dismissTreasure();
-    }, [dismissTreasure]);
+        // dismissTreasure() is synchronous. After it runs, if the engine decided
+        // "transition" phase (e.g., path completed after dismiss), we must call
+        // handleTransition() to advance the turn — same pattern as handleContinueFromResult.
+        const phase = useGameSessionStore.getState().gameplayPhase;
+        if (phase === "transition") {
+            handleTransition();
+        }
+    }, [dismissTreasure, handleTransition]);
 
     /* ═══════════════════════════════════════════════════════════
         CONTINUE FROM RESULT — Delegates to store
