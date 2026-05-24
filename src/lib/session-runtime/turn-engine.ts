@@ -64,6 +64,8 @@ export type TreasureOpenOutcome = {
     updatedPlayer: Player;
     /** The record appended to player.openedTreasures — used in ceremony reveal */
     record: OpenedTreasureRecord;
+    /** The treasure that was opened — needed for reveal UI */
+    treasure: Treasure;
 };
 
 /**
@@ -160,7 +162,7 @@ export function resolveTreasureOpen(
         openedTreasures: [...player.openedTreasures, record],
     };
 
-    return { updatedPlayer, record };
+    return { updatedPlayer, record, treasure };
 }
 
 /**

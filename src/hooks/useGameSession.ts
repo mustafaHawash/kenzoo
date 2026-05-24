@@ -87,8 +87,10 @@ export function useGameSession() {
     const transitionToNextTurn = useGameSessionStore((s) => s.transitionToNextTurn);
     const clearRuntime = useGameSessionStore((s) => s.clearRuntime);
     const openTreasure = useGameSessionStore((s) => s.openTreasure);
+    const continueFromTreasureReveal = useGameSessionStore((s) => s.continueFromTreasureReveal);
     const setAwardedTitle = useGameSessionStore((s) => s.setAwardedTitle);
     const advanceCeremony = useGameSessionStore((s) => s.advanceCeremony);
+    const treasureRevealData = useGameSessionStore((s) => s.treasureRevealData);
     // Primitive runtime selectors – avoid returning whole objects.
     const activePathId = useGameSessionStore((s) => s.runtimeState.activePathId);
 
@@ -280,23 +282,18 @@ export function useGameSession() {
         if (!currentPlayer) return;
         const outcome = resolveTreasureOpen(currentPlayer, fullTreasure);
 
-        // Commit the resolved outcome to the store
-        openTreasure(outcome);
-
         // If the opened treasure rewards a title, assign a random title to the player.
+        // Must set this BEFORE calling openTreasure, so the reveal data captures it.
         if (fullTreasure.reward.type === "title") {
             const title = pickRandomTitle(outcome.updatedPlayer.titles);
             setAwardedTitle(title);
         }
 
-        // openTreasure() sets gameplayPhase to "transition" synchronously.
-        // We must call handleTransition() to advance the turn — same pattern
-        // as handleContinueFromResult.
-        const phase = useGameSessionStore.getState().gameplayPhase;
-        if (phase === "transition") {
-            handleTransition();
-        }
-    }, [openTreasure, currentPlayer, setAwardedTitle, gameplayPhase, activeTreasureId, handleTransition]);
+        // Commit the resolved outcome to the store.
+        // openTreasure() now transitions to "treasure-reveal" phase (NOT "transition").
+        // The player sees the reveal UI, then continues via handleContinueFromTreasureReveal().
+        openTreasure(outcome);
+    }, [openTreasure, currentPlayer, setAwardedTitle, gameplayPhase, activeTreasureId]);
 
     /* ═══════════════════════════════════════════════════════════
         DISMISS TREASURE — Delegates to store
@@ -311,6 +308,20 @@ export function useGameSession() {
             handleTransition();
         }
     }, [dismissTreasure, handleTransition]);
+
+    /* ═══════════════════════════════════════════════════════════
+        CONTINUE FROM TREASURE REVEAL — After player sees the reveal
+       ═══════════════════════════════════════════════════════════ */
+    const handleContinueFromTreasureReveal = useCallback(() => {
+        continueFromTreasureReveal();
+        // continueFromTreasureReveal() is synchronous. After it runs, if the engine
+        // decided "transition" phase (path completed), we must call handleTransition()
+        // to advance the turn — same pattern as handleContinueFromResult.
+        const phase = useGameSessionStore.getState().gameplayPhase;
+        if (phase === "transition") {
+            handleTransition();
+        }
+    }, [continueFromTreasureReveal, handleTransition]);
 
     /* ═══════════════════════════════════════════════════════════
         CONTINUE FROM RESULT — Delegates to store
@@ -352,6 +363,8 @@ export function useGameSession() {
             handleContinueFromResult,
             handleOpenTreasure: () => {},
             handleDismissTreasure: () => {},
+            handleContinueFromTreasureReveal: () => {},
+            treasureRevealData: null,
             handleTransition,
             handleAdvanceCeremony,
             progressLabel,
@@ -376,6 +389,8 @@ export function useGameSession() {
             handleContinueFromResult,
             handleOpenTreasure,
             handleDismissTreasure,
+            handleContinueFromTreasureReveal,
+            treasureRevealData,
             handleTransition,
             handleAdvanceCeremony,
             progressLabel,
@@ -398,6 +413,8 @@ export function useGameSession() {
         handleContinueFromResult,
         handleOpenTreasure,
         handleDismissTreasure,
+        handleContinueFromTreasureReveal,
+        treasureRevealData,
         handleTransition,
         handleAdvanceCeremony,
         progressLabel,

@@ -65,7 +65,9 @@ const VALID_TRANSITIONS: Record<GameplayPhase, GameplayPhase[]> = {
   // After a result, we may either show a treasure opportunity or move directly
   // to the transition phase (when no treasure appears). Both paths are valid.
   result: ["treasure", "transition", "ending"],
-  treasure: ["transition", "ending"],
+  treasure: ["treasure-reveal", "ending"],
+  // After treasure reveal, continue to question (mid-path) or transition (path done)
+  "treasure-reveal": ["question", "transition", "ending"],
   transition: ["path-selection", "ending"],
   ending: ["ending"],
 };
@@ -92,6 +94,32 @@ function splitState(state: SessionState) {
 }
 
 /* ─── Store State ──────────────────────────────────────── */
+
+export type TreasureRevealData = {
+  /** The treasure that was opened */
+  treasureId: string;
+  /** Treasure emoji */
+  emoji: string;
+  /** Treasure title */
+  title: string;
+  /** Treasure flavor text */
+  flavor: string;
+  /** Treasure description */
+  description: string;
+  /** Rarity — revealed only after opening */
+  rarity: "common" | "rare" | "legendary";
+  /** Stars consumed to open */
+  starsConsumed: number;
+  /** Reward details */
+  reward: {
+    type: string;
+    starsAmount?: number;
+    titleText?: string;
+    message?: string;
+  };
+  /** Title awarded (if reward type is "title") */
+  awardedTitle: string | null;
+};
 
 export type GameSessionState = {
   /* ─── Session lifecycle ─── */
@@ -122,6 +150,9 @@ export type GameSessionState = {
 
   /* ─── Treasure UI ─── */
   awardedTitle: string | null;
+
+  /* ─── Treasure reveal data (temporary, cleared after continue) ─── */
+  treasureRevealData: TreasureRevealData | null;
 
   /* ─── Generation guard ─── */
   isGenerating: boolean;
@@ -157,6 +188,8 @@ export type GameSessionActions = {
 
   /* ─── Treasure ─── */
   openTreasure: (outcome: import("@/lib/session-runtime/turn-engine").TreasureOpenOutcome) => void;
+  /** Continue after treasure reveal — clears treasure, advances path, determines next phase */
+  continueFromTreasureReveal: () => void;
   setAwardedTitle: (title: string | null) => void;
 
   /* ─── Ceremony ─── */
@@ -209,6 +242,7 @@ export const useGameSessionStore = create<
       ceremony: null,
       lastResult: null,
       awardedTitle: null,
+      treasureRevealData: null,
       isGenerating: false,
       hasHydrated: false,
 
@@ -398,6 +432,10 @@ export const useGameSessionStore = create<
           updates.runtimeState = runtime;
         }
 
+        if (decision.ceremony) {
+          updates.ceremony = decision.ceremony;
+        }
+
         // Do NOT clear activePathId here. Runtime cleanup is now owned by the navigation layer.
         set(updates);
       },
@@ -410,17 +448,12 @@ export const useGameSessionStore = create<
            ═══════════════════════════════════════════════════════════ */
 
       // ---------------------------------------------------------------------
-      // OPEN TREASURE – resolves the treasure overlay and advances the phase.
+      // OPEN TREASURE – applies rewards and transitions to treasure-reveal phase.
       // ---------------------------------------------------------------------
-      // ---------------------------------------------------------------------
-      // OPEN TREASURE – resolves the treasure overlay and advances the phase.
-      // ---------------------------------------------------------------------
-      // The treasure flow should transition to the **transition** phase after
-      // a treasure is opened. Previously this action moved to "result",
-      // which conflicted with the VALID_TRANSITIONS map (treasure → result is
-      // disallowed) and caused dead‑locks where the UI froze on the overlay.
-      // By moving to "transition" we align with the deterministic flow:
-      // result → treasure → **transition** → path‑selection.
+      // Phase flow: treasure → treasure-reveal → (question | transition | ending)
+      // The treasure-reveal phase shows the reward/penalty/title to the player.
+      // activeTreasureId is NOT cleared here — it stays for the reveal UI.
+      // Path advancement is deferred to continueFromTreasureReveal().
       openTreasure: (outcome: import("@/lib/session-runtime/turn-engine").TreasureOpenOutcome) => {
         const state = get();
         const hydrated = state.getHydratedState();
@@ -431,25 +464,66 @@ export const useGameSessionStore = create<
         if (!state.runtimeState.activeTreasureId) return;
 
         // 1. Apply treasure rewards (star deduction, record, legendary claim)
+        //    but do NOT advance the path yet — that happens after reveal.
         const withTreasure = applyTreasureOpen(hydrated, outcome);
+        const { persistent, runtime } = splitState(withTreasure);
 
-        // 2. Advance the path — treasure appears after a correct answer,
-        //    so the path must be advanced (same logic as resolveDismissTreasure).
-        //    The path was NOT advanced when the treasure appeared
-        //    (resolveContinueFromResult took the treasure branch instead).
+        // 2. Store reveal data for the treasure-reveal UI
+        const revealData: TreasureRevealData = {
+          treasureId: outcome.treasure.id,
+          emoji: outcome.treasure.emoji,
+          title: outcome.treasure.title,
+          flavor: outcome.treasure.flavor,
+          description: outcome.treasure.description,
+          rarity: outcome.record.rarity,
+          starsConsumed: outcome.record.starsConsumed,
+          reward: {
+            type: outcome.treasure.reward.type,
+            starsAmount: outcome.treasure.reward.starsAmount,
+            titleText: outcome.treasure.reward.titleText,
+            message: outcome.treasure.reward.message,
+          },
+          awardedTitle: state.awardedTitle,
+        };
+
+        // 3. Transition to treasure-reveal phase (activeTreasureId still set for reveal UI)
+        set({
+          persistentState: persistent,
+          runtimeState: runtime,
+          gameplayPhase: "treasure-reveal",
+          treasureRevealData: revealData,
+        });
+      },
+
+      // ---------------------------------------------------------------------
+      // CONTINUE FROM TREASURE REVEAL – player has seen the reveal, now
+      // clear the treasure and advance the path.
+      // ---------------------------------------------------------------------
+      continueFromTreasureReveal: () => {
+        const state = get();
+        const hydrated = state.getHydratedState();
+        if (!hydrated) return;
+
+        // Guard: only continue from treasure-reveal phase
+        if (state.gameplayPhase !== "treasure-reveal") return;
+
+        // 1. Clear the active treasure reference
+        const cleared = clearActiveTreasure(hydrated);
+
+        // 2. Advance the path — treasure appeared after a correct answer,
+        //    so the path must be advanced now (same logic as resolveDismissTreasure).
         const lastResult = state.lastResult;
         let nextPhase: GameplayPhase = "transition";
-        let finalState = withTreasure;
+        let finalState = cleared;
         let ceremony: EndingCeremonyState | undefined;
 
         if (lastResult?.isCorrect) {
-          const advanced = advanceActivePath(withTreasure, lastResult.starsEarned);
+          const advanced = advanceActivePath(cleared, lastResult.starsEarned);
 
           if (advanced.isComplete) {
             nextPhase = "ending";
             ceremony = createEndingCeremonyState(advanced);
           } else if (advanced.activePathId) {
-            // More stations remain — back to question phase
             nextPhase = "question";
           }
           // else: path completed — stay in transition
@@ -462,6 +536,7 @@ export const useGameSessionStore = create<
           persistentState: persistent,
           runtimeState: runtime,
           gameplayPhase: nextPhase,
+          treasureRevealData: null,
         };
         if (ceremony) {
           updates.ceremony = ceremony;

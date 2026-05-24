@@ -208,6 +208,8 @@ function PlayPageContent() {
         handleContinueFromResult,
         handleOpenTreasure,
         handleDismissTreasure,
+        handleContinueFromTreasureReveal,
+        treasureRevealData,
         // Transition to path‑selection screen after a turn ends
         handleTransition,
         handleAdvanceCeremony,
@@ -264,9 +266,13 @@ function PlayPageContent() {
         return null;
     }
 
-    if (!station && (!activePath || !activePath.completed)) {
+    // When gameplayPhase is "treasure-reveal", the treasure reveal UI is showing.
+    // Do NOT show the loading fallback — the reveal renders independently.
+    if (gameplayPhase === "treasure-reveal") {
+        // Fall through to the main render which includes the treasure-reveal block
+    } else if (!station && (!activePath || !activePath.completed)) {
         // Show a generic loading state when no active path is available or the
-        // path is still in progress — but NOT during transition (handled above).
+        // path is still in progress — but NOT during transition or treasure-reveal.
         return (
             <ScreenContainer className="justify-center items-center">
                 <Muted>جاري تحميل المسار...</Muted>
@@ -412,6 +418,100 @@ function PlayPageContent() {
                             onDismiss={handleDismissTreasure}
                             awardedTitle={awardedTitle}
                         />
+                    </motion.div>
+                )}
+
+                {/* ═══════════════════════════════════════════
+                    🎁 TREASURE REVEAL — Shows reward/penalty after opening
+                    ═══════════════════════════════════════════ */}
+                {gameplayPhase === "treasure-reveal" && treasureRevealData && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.85 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
+                        className="flex flex-col items-center gap-6 text-center max-w-sm"
+                    >
+                        {/* Treasure emoji */}
+                        <motion.div
+                            initial={{ scale: 0.5, rotate: -10 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ delay: 0.1, duration: 0.4, type: "spring", stiffness: 200 }}
+                            className="text-6xl"
+                        >
+                            {treasureRevealData.emoji}
+                        </motion.div>
+
+                        {/* Rarity badge */}
+                        <div className={`rounded-full px-4 py-1 text-xs font-medium ${
+                            treasureRevealData.rarity === "legendary"
+                                ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                                : treasureRevealData.rarity === "rare"
+                                ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                                : "bg-secondary/10 text-secondary/70 border border-secondary/20"
+                        }`}>
+                            {treasureRevealData.rarity === "legendary"
+                                ? "أسطوري ✦"
+                                : treasureRevealData.rarity === "rare"
+                                ? "نادر ★"
+                                : "عادي"}
+                        </div>
+
+                        {/* Treasure title */}
+                        <Headline className="text-primary text-xl">
+                            {treasureRevealData.title}
+                        </Headline>
+
+                        {/* Flavor text */}
+                        <Muted className="text-sm leading-relaxed opacity-60">
+                            {treasureRevealData.flavor}
+                        </Muted>
+
+                        {/* Reward / penalty info */}
+                        <div className="flex flex-col gap-2 w-full rounded-xl border border-secondary/15 bg-card/50 px-5 py-4 backdrop-blur-sm">
+                            {/* Stars consumed */}
+                            <div className="flex justify-between items-center">
+                                <Muted className="text-xs">⭐ التكلفة</Muted>
+                                <Label className="text-sm text-secondary/80">
+                                    -{treasureRevealData.starsConsumed} نجوم
+                                </Label>
+                            </div>
+                            {/* Reward */}
+                            <div className="flex justify-between items-center">
+                                <Muted className="text-xs">🎁 المكافأة</Muted>
+                                <Label className="text-sm text-primary">
+                                    {treasureRevealData.reward.type === "stars" && `+${treasureRevealData.reward.starsAmount ?? 0} نجوم`}
+                                    {treasureRevealData.reward.type === "double-stars" && "نجوم مزدوجة"}
+                                    {treasureRevealData.reward.type === "bonus-turn" && "جولة إضافية"}
+                                    {treasureRevealData.reward.type === "title" && (treasureRevealData.reward.titleText ?? "لقب جديد")}
+                                    {treasureRevealData.reward.type === "wisdom" && (treasureRevealData.reward.message ?? "حكمة خاصة")}
+                                    {treasureRevealData.reward.type === "secret" && "سر مخفي 🤫"}
+                                    {treasureRevealData.reward.type === "atmosphere" && "لمسة سحرية ✨"}
+                                    {treasureRevealData.reward.type === "real-gift" && "هدية حقيقية 🎁"}
+                                </Label>
+                            </div>
+                            {/* Awarded title */}
+                            {treasureRevealData.awardedTitle && (
+                                <div className="flex justify-between items-center">
+                                    <Muted className="text-xs">🏅 اللقب</Muted>
+                                    <Label className="text-sm text-amber-300">
+                                        {treasureRevealData.awardedTitle}
+                                    </Label>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Description */}
+                        <Muted className="text-xs leading-relaxed opacity-40">
+                            {treasureRevealData.description}
+                        </Muted>
+
+                        {/* Continue button */}
+                        <button
+                            onClick={handleContinueFromTreasureReveal}
+                            className="mt-2 rounded-full border border-secondary/20 bg-card/60 px-6 py-2.5 text-sm text-secondary/80 backdrop-blur-sm transition-all hover:bg-card/80 active:scale-95"
+                        >
+                            متابعة ✨
+                        </button>
                     </motion.div>
                 )}
 

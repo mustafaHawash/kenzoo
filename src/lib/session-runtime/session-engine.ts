@@ -225,6 +225,7 @@ export type GameplayPhase =
   | "reveal"
   | "result"
   | "treasure"
+  | "treasure-reveal"
   | "transition"
   | "ending";
 
@@ -386,12 +387,23 @@ export function resolveTransition(
   lastResult: StationResult | null,
 ): GameplayFlowDecision {
   const next = advanceTurn(state, lastResult);
+
+  // If all players completed all paths, trigger the ending ceremony
+  if (next.isComplete) {
+    const decision: GameplayFlowDecision = {
+      nextPhase: "ending",
+      updatedState: next,
+      ceremony: createEndingCeremonyState(next),
+    };
+    console.log("transition → ending", decision);
+    return decision;
+  }
+
   const decision: GameplayFlowDecision = {
     nextPhase: "path-selection",
     updatedState: next,
   };
   console.log("transition", decision);
-  console.log("[DEBUG] transition result", decision);
   return decision;
 }
 
