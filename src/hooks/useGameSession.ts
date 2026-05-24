@@ -21,7 +21,7 @@
  *   - Progression logic (session-engine owns this)
  */
 
-import { useCallback, useEffect, useRef, useMemo } from "react";
+import { useCallback, useEffect, useRef, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useGameSessionStore } from "@/store/game-session-store";
@@ -48,15 +48,21 @@ import type { Player } from "@/types/player";
 const REVEAL_DELAY_MS = 800;
 
 /**
- * useGameSession — React runtime adapter.
- *
- * Connects Zustand store to React components.
- * Handles timers, navigation, and session initialization.
- * Delegates all gameplay decisions to session-engine.
+ * useGameSession – React adapter for gameplay.
+ * Connects the Zustand store to components, handling timers, navigation,
+ * and UI state. All game‑logic decisions are delegated to the session engine.
  */
-// The hook no longer receives a pathId – activePathId is owned solely by the store.
 export function useGameSession() {
     const router = useRouter();
+
+    // ---------------------------------------------------------------------
+    // 1️⃣ Explicit exit UI state
+    // ---------------------------------------------------------------------
+    // Represents a user‑initiated navigation away from the play page.
+    // It is *not* derived from runtime values such as `!activePath` because
+    // those can be true during hydration or when a path is legitimately
+    // completed. The flag is set only by `handleTransition`.
+    const [isLeavingPlay, setIsLeavingPlay] = useState(false);
 
     /* ─── Store reads ─── */
     // Primitive selectors – each returns a stable primitive/value reference.
@@ -78,8 +84,8 @@ export function useGameSession() {
     const setLastResult = useGameSessionStore((s) => s.setLastResult);
     const continueFromResult = useGameSessionStore((s) => s.continueFromResult);
     const dismissTreasure = useGameSessionStore((s) => s.dismissTreasure);
-     const transitionToNextTurn = useGameSessionStore((s) => s.transitionToNextTurn);
-     const clearRuntime = useGameSessionStore((s) => s.clearRuntime);
+    const transitionToNextTurn = useGameSessionStore((s) => s.transitionToNextTurn);
+    const clearRuntime = useGameSessionStore((s) => s.clearRuntime);
     const openTreasure = useGameSessionStore((s) => s.openTreasure);
     const setAwardedTitle = useGameSessionStore((s) => s.setAwardedTitle);
     const advanceCeremony = useGameSessionStore((s) => s.advanceCeremony);
@@ -157,26 +163,31 @@ export function useGameSession() {
         };
     }, []);
 
-    /* ═══════════════════════════════════════════════════════════
-        SUBMIT — Player submits an answer
+    /* ─── SUBMIT — Player submits an answer ─── */
+    const handleSubmit = useCallback(
+        (answer: string) => {
+            // Guard: missing data – clear flag before exit
+            if (!station || !currentPlayer) {
+                isSubmittingRef.current = false;
+                return;
+            }
+            // Guard: prevent double submission
+            if (isSubmittingRef.current) {
+                isSubmittingRef.current = false;
+                return;
+            }
+            // Guard: only allow submit in question phase
+            if (gameplayPhase !== "question") {
+                isSubmittingRef.current = false;
+                return;
+            }
 
-        1. Resolve answer via turn-engine (pure function)
-        2. Commit outcome to store (stars, treasure opportunity)
-        3. Transition to "reveal" phase
-        4. Schedule reveal→result transition after cinematic delay
-       ═══════════════════════════════════════════════════════════ */
-        const handleSubmit = useCallback(
-            (answer: string) => {
-                if (!station || !currentPlayer) return;
-                
-                // Guard: prevent double submission during reveal phase
-                if (isSubmittingRef.current) return;
-                // Guard: only submit from question phase
-                if (gameplayPhase !== "question") return;
-                
-                isSubmittingRef.current = true;
-                
-                if (!persistentState) return; // Guard for persistentState
+            isSubmittingRef.current = true;
+
+            if (!persistentState) {
+                isSubmittingRef.current = false;
+                return;
+            }
                 
                 // Derive treasure multiplier from the active path ID without relying on the
                 // derived `activePath` object (to keep the callback dependencies minimal).
@@ -219,9 +230,40 @@ export function useGameSession() {
     /* ═══════════════════════════════════════════════════════════
         CONTINUE FROM RESULT — Delegates to store
        ═══════════════════════════════════════════════════════════ */
-    const handleContinueFromResult = useCallback(() => {
-        continueFromResult();
-    }, [continueFromResult]);
+    /* ═══════════════════════════════════════════════════════════
+        TRANSITION — Navigate back to gameplay / path selection
+       ═══════════════════════════════════════════════════════════ */
+     // Navigation must occur before state transition to avoid clearing runtime
+     // state prematurely. The router push triggers a page change, then the
+     // store updates the turn.
+      // After a turn ends we need to show the path‑selection UI. The correct page for that
+      // is "/gameplay" (the path‑selection screen). Previously this navigated to "/play",
+      // which expects an active path and caused the UI to freeze on loading.
+        const handleTransition = useCallback(() => {
+            // Mark intentional exit so the play page can render the exit fallback.
+            setIsLeavingPlay(true);
+
+            // Replace the URL with the path‑selection screen.
+            router.replace("/gameplay");
+
+            // Defer runtime cleanup until after navigation has been processed.
+            if (typeof requestAnimationFrame === "function") {
+                requestAnimationFrame(() => {
+                    transitionToNextTurn();
+                    clearRuntime();
+                });
+            } else {
+                setTimeout(() => {
+                    transitionToNextTurn();
+                    clearRuntime();
+                }, 0);
+            }
+        }, [router, transitionToNextTurn, clearRuntime, setIsLeavingPlay]);
+
+    /* ═══════════════════════════════════════════════════════════
+        CONTINUE FROM RESULT — Delegates to store
+       ═══════════════════════════════════════════════════════════ */
+    // (removed - will be re-added after handleTransition)
 
     /* ═══════════════════════════════════════════════════════════
         OPEN TREASURE — Player chooses to open the treasure
@@ -251,37 +293,15 @@ export function useGameSession() {
     }, [dismissTreasure]);
 
     /* ═══════════════════════════════════════════════════════════
-        TRANSITION — Navigate back to gameplay / path selection
+        CONTINUE FROM RESULT — Delegates to store
        ═══════════════════════════════════════════════════════════ */
-     // Navigation must occur before state transition to avoid clearing runtime
-     // state prematurely. The router push triggers a page change, then the
-     // store updates the turn.
-      // After a turn ends we need to show the path‑selection UI. The correct page for that
-      // is "/play" (the path selection screen). Previously this navigated to "/gameplay",
-      // which expects an active path and caused the UI to freeze on the loading state.
-        const handleTransition = useCallback(() => {
-            // Use replace to avoid adding a history entry that could cause a stale player
-            // when the user navigates back. Navigation must settle before we clear runtime
-            // state, otherwise the gameplay page may lose its active path and freeze.
-            // After a turn ends we need to show the path‑selection UI. The correct page for that
-            // is "/gameplay" (the path‑selection screen). Previously this navigated to "/play",
-            // which expects an active path and caused the UI to freeze on loading.
-            router.replace("/gameplay");
-            // Defer state cleanup to the next animation frame, ensuring the router has
-            // processed the navigation asynchronously.
-            if (typeof requestAnimationFrame === "function") {
-                requestAnimationFrame(() => {
-                    transitionToNextTurn();
-                    clearRuntime();
-                });
-            } else {
-                // Fallback for environments without requestAnimationFrame (e.g., SSR)
-                setTimeout(() => {
-                    transitionToNextTurn();
-                    clearRuntime();
-                }, 0);
-            }
-        }, [router, transitionToNextTurn, clearRuntime]);
+    const handleContinueFromResult = useCallback(() => {
+        if (activePath?.completed) {
+            handleTransition();
+        } else {
+            continueFromResult();
+        }
+    }, [continueFromResult, activePath?.completed, handleTransition]);
 
     /* ═══════════════════════════════════════════════════════════
         ADVANCE CEREMONY — Step through ending ceremony phases
@@ -307,13 +327,14 @@ export function useGameSession() {
             handleContinueFromResult,
             handleOpenTreasure: () => {},
             handleDismissTreasure: () => {},
-            handleTransition: () => {},
+            handleTransition,
             handleAdvanceCeremony,
             progressLabel,
             hasHydrated,
             // expose for play page terminal exit flow
             transitionToNextTurn,
             clearRuntime,
+            isLeavingPlay,
         } as const;
         }
         return {
@@ -336,6 +357,7 @@ export function useGameSession() {
             hasHydrated,
             transitionToNextTurn,
             clearRuntime,
+            isLeavingPlay,
         } as const;
     }, [
         ceremony,

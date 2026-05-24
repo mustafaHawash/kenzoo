@@ -208,20 +208,22 @@ function PlayPageContent() {
         handleContinueFromResult,
         handleOpenTreasure,
         handleDismissTreasure,
-        // New explicit exit handler for completed paths
+        // Transition to path‑selection screen after a turn ends
         handleTransition,
         handleAdvanceCeremony,
         progressLabel,
         hasHydrated,
-        // Added from useGameSession for explicit exit actions
+        // Explicit UI exit flag – true when navigating away from play page
+        isLeavingPlay,
     } = useGameSession();
 
     /* ─── No session — show loading (redirect handled by useGameSession) ─── */
     // If the store hasn't hydrated or there is no active player, show a loading state.
+    // 1️⃣ Hydration safety – show session loading message.
     if (!hasHydrated || !currentPlayer) {
         return (
             <ScreenContainer className="justify-center items-center">
-                <Muted>جاري التحميل...</Muted>
+                <Muted>جاري تحميل الجلسة...</Muted>
             </ScreenContainer>
         );
     }
@@ -246,6 +248,14 @@ function PlayPageContent() {
     // path is completed we want to render the transition UI instead of the
     // generic "جاري تحميل المسار..." fallback, because the turn system will
     // navigate to the next player shortly.
+
+    // Exit detection: when a path completes, activePathId becomes null.
+    // During this exit, we should not render any loading fallback to avoid flicker.
+    // 2️⃣ Explicit exit detection – when navigation is triggered we render nothing.
+    if (isLeavingPlay) {
+        return null;
+    }
+
     if (!station && (!activePath || !activePath.completed)) {
         // Show a generic loading state when no active path is available or the
         // path is still in progress.
@@ -397,33 +407,7 @@ function PlayPageContent() {
                     </motion.div>
                 )}
 
-                {/* ═══════════════════════════════════════════
-                    🔄 TRANSITION PHASE
-                    ═══════════════════════════════════════════ */}
-                {gameplayPhase === "transition" && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="flex flex-col items-center gap-4 text-center"
-                    >
-                        <Headline className="text-secondary text-lg">
-                            {lastResult?.isCorrect
-                                ? "أحسنت! المسار اكتمل 🌟"
-                                : "الجولة خلصت"}
-                        </Headline>
-                        <Muted className="text-sm">
-                            {lastResult?.isCorrect
-                                ? "اختار مسار جديد"
-                                : "تقدمك محفوظ، كمّل بعدين 💪"}
-                        </Muted>
-                        <button
-                            onClick={handleTransition}
-                            className="rounded-full border border-secondary/20 bg-card/60 px-6 py-2.5 text-sm text-secondary/80 backdrop-blur-sm transition-all hover:bg-card/80 active:scale-95"
-                        >
-                            العودة للمسارات
-                        </button>
-                    </motion.div>
-                )}
+                {/* Transition UI is handled earlier via isExitingPlay logic */}
             </div>
         </ScreenContainer>
     );
