@@ -256,9 +256,17 @@ function PlayPageContent() {
         return null;
     }
 
+    // When gameplayPhase is "transition", the turn is ending and handleTransition()
+    // is navigating away. Do NOT show the loading fallback — it creates a freeze.
+    // The transition phase means the engine decided the turn is over; we just wait
+    // for navigation to complete (or show a brief transition UI).
+    if (gameplayPhase === "transition") {
+        return null;
+    }
+
     if (!station && (!activePath || !activePath.completed)) {
         // Show a generic loading state when no active path is available or the
-        // path is still in progress.
+        // path is still in progress — but NOT during transition (handled above).
         return (
             <ScreenContainer className="justify-center items-center">
                 <Muted>جاري تحميل المسار...</Muted>

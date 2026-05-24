@@ -296,12 +296,17 @@ export function useGameSession() {
         CONTINUE FROM RESULT — Delegates to store
        ═══════════════════════════════════════════════════════════ */
     const handleContinueFromResult = useCallback(() => {
-        if (activePath?.completed) {
+        continueFromResult();
+        // continueFromResult() is synchronous (Zustand set()). After it runs,
+        // if the engine decided "transition" phase, we MUST call handleTransition()
+        // to advance the turn. Previously this only fired when activePath?.completed
+        // was truthy — but activePath is null after path completion, and wrong answers
+        // never triggered handleTransition at all.
+        const phase = useGameSessionStore.getState().gameplayPhase;
+        if (phase === "transition") {
             handleTransition();
-        } else {
-            continueFromResult();
         }
-    }, [continueFromResult, activePath?.completed, handleTransition]);
+    }, [continueFromResult, handleTransition]);
 
     /* ═══════════════════════════════════════════════════════════
         ADVANCE CEREMONY — Step through ending ceremony phases

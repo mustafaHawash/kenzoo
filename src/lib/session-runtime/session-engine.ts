@@ -295,6 +295,7 @@ export function resolveContinueFromResult(
   // No treasure — advance based on answer result
   if (lastResult?.isCorrect) {
     const next = advanceActivePath(state, lastResult.starsEarned);
+    console.log("continue", next);
 
     // Session completed — trigger ending
     if (next.isComplete) {
@@ -315,7 +316,20 @@ export function resolveContinueFromResult(
   }
 
   // Wrong answer — save progress, end turn
-  return { nextPhase: "transition" };
+  const currentPlayer = state.players[state.currentPlayerIndex];
+  const updatedPlayer = resolveTurnEnd(currentPlayer, lastResult);
+  const updatedPlayers = state.players.map((p) =>
+    p.id === updatedPlayer.id ? updatedPlayer : p,
+  );
+  const updatedState = {
+    ...state,
+    players: updatedPlayers,
+  };
+  console.log("[DEBUG] continue", updatedState);
+  return {
+    nextPhase: "transition",
+    updatedState,
+  };
 }
 
 /**
@@ -376,6 +390,7 @@ export function resolveTransition(
     nextPhase: "path-selection",
     updatedState: next,
   };
+  console.log("transition", decision);
   console.log("[DEBUG] transition result", decision);
   return decision;
 }
@@ -566,7 +581,10 @@ export function advanceActivePath(
   const currentJourney = updatedJourneys[state.currentPlayerIndex];
   if (!currentJourney) return state; // safety
 
-  const isComplete = currentJourney.allPathsCompleted;
+  // BUG 2 FIX: Session completes ONLY when ALL players finish ALL paths
+  const isComplete = updatedJourneys.every(
+    (journey) => journey.allPathsCompleted,
+  );
 
   const updatedPath = currentJourney.paths.find((p) => p.id === pathId);
   if (!updatedPath) return state;
@@ -576,9 +594,20 @@ export function advanceActivePath(
   // Determine the next activePathId (null if path completed)
   const nextActivePathId = nextStation ? pathId : null;
 
+  // BUG 3 FIX: Increment completedMissions when a path is completed
+  let updatedPlayers = state.players;
+  if (updatedPath.completed) {
+    updatedPlayers = state.players.map((p, i) =>
+      i === state.currentPlayerIndex
+        ? { ...p, completedMissions: p.completedMissions + 1 }
+        : p,
+    );
+  }
+
   return {
     ...state,
     journeys: updatedJourneys,
+    players: updatedPlayers,
     activePathId: nextActivePathId,
     // activePath field removed – derived via selectors elsewhere
     isComplete,

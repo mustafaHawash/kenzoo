@@ -382,6 +382,7 @@ export const useGameSessionStore = create<
         if (state.gameplayPhase !== "transition") return;
 
         const decision = resolveTransition(hydrated, state.lastResult);
+        console.log("transition fired");
         console.log("[DEBUG] transitionToNextTurn fired", decision);
         const updates: Partial<GameSessionState> = {
           lastResult: null,
