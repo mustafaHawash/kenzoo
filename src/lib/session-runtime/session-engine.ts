@@ -30,8 +30,12 @@
 import type { Player } from "@/types/player";
 import type { Treasure } from "@/types/treasure";
 import type { Station } from "@/types/station";
-import type { PlayerJourneyState, JourneyPath, ActivePathSession } from "@/types/path";
-import { advancePathProgression, hasCompletedAllPaths, getNextStation } from "@/types/path";
+import type { PlayerJourneyState, JourneyPath } from "@/types/path";
+import {
+  advancePathProgression,
+  hasCompletedAllPaths,
+  getNextStation,
+} from "@/types/path";
 import { HIDDEN_POINTS_BY_RARITY } from "@/types/treasure";
 import { resolveTreasureOpen, resolveTurnEnd } from "./turn-engine";
 import type { RoundResult, StationResult } from "@/types/session";
@@ -41,16 +45,17 @@ import { getCurrentPath } from "@/lib/session-runtime/selectors/get-current-path
 /* ─── Session Configuration ──────────────────────────────── */
 
 /** Session length to stations-per-path mapping */
-export const STATIONS_BY_LENGTH: Record<import("@/types/session").SessionLength, number> = {
-    short: 3,
-    normal: 4,
-    long: 5,
+export const STATIONS_BY_LENGTH: Record<
+  import("@/types/session").SessionLength,
+  number
+> = {
+  short: 3,
+  normal: 4,
+  long: 5,
 };
 
 /** Number of paths each player receives */
 export const PATHS_PER_PLAYER = 4;
-
-
 
 /* ═══════════════════════════════════════════════════════════
    SESSION STATE BOUNDARIES
@@ -129,29 +134,29 @@ export const PATHS_PER_PLAYER = 4;
  *   No runtime-only state should ever leak into this structure.
  */
 export type PersistentSessionState = {
-    /** All players and their current economy state */
-    players: Player[];
+  /** All players and their current economy state */
+  players: Player[];
 
-    /** Per-player journey state — 4 paths each with individual progression */
-    journeys: PlayerJourneyState[];
+  /** Per-player journey state — 4 paths each with individual progression */
+  journeys: PlayerJourneyState[];
 
-    /** 0-indexed index into players[] — whose turn it is */
-    currentPlayerIndex: number;
+  /** 0-indexed index into players[] — whose turn it is */
+  currentPlayerIndex: number;
 
-    /** Session length chosen during setup (short, normal, long) */
-    sessionLength: import("@/types/session").SessionLength;
+  /** Session length chosen during setup (short, normal, long) */
+  sessionLength: import("@/types/session").SessionLength;
 
-    /** Number of stations per path. Derived from sessionLength. */
-    stationsPerPath: number;
+  /** Number of stations per path. Derived from sessionLength. */
+  stationsPerPath: number;
 
-    /** Global turn counter across the entire session. */
-    globalTurnIndex: number;
+  /** Global turn counter across the entire session. */
+  globalTurnIndex: number;
 
-    /** True when any player has completed all 4 paths. */
-    isComplete: boolean;
+  /** True when any player has completed all 4 paths. */
+  isComplete: boolean;
 
-    /** Legendary treasure IDs already claimed this session. */
-    claimedLegendaryIds: string[];
+  /** Legendary treasure IDs already claimed this session. */
+  claimedLegendaryIds: string[];
 };
 
 /* ─── Runtime-Only State ───────────────────────────────── */
@@ -172,16 +177,16 @@ export type PersistentSessionState = {
  *   then it belongs here, NOT in PersistentSessionState.
  */
 export type RuntimeSessionState = {
-    /** Lightweight reference to which path is active — lookup key into journeys[].
-     *  RUNTIME-ONLY: used to deterministically derive the current station
-     *  from PersistentSessionState, avoiding stale references.
-     *  When null, no path is being played (path-selection screen). */
-    activePathId: string | null;
+  /** Lightweight reference to which path is active — lookup key into journeys[].
+   *  RUNTIME-ONLY: used to deterministically derive the current station
+   *  from PersistentSessionState, avoiding stale references.
+   *  When null, no path is being played (path-selection screen). */
+  activePathId: string | null;
 
-    /** Reference to the currently active treasure by its id.
-     *  RUNTIME-ONLY: UI uses this id to fetch the full treasure via selectors.
-     */
-    activeTreasureId: string | null;
+  /** Reference to the currently active treasure by its id.
+   *  RUNTIME-ONLY: UI uses this id to fetch the full treasure via selectors.
+   */
+  activeTreasureId: string | null;
 };
 
 /* ─── Combined Session State (current architecture) ─────── */
@@ -215,13 +220,13 @@ export type SessionState = PersistentSessionState & RuntimeSessionState;
  *   - Path progression saved -> "transition" -> next player -> "path-selection"
  */
 export type GameplayPhase =
-    | "path-selection"
-    | "question"
-    | "reveal"
-    | "result"
-    | "treasure"
-    | "transition"
-    | "ending";
+  | "path-selection"
+  | "question"
+  | "reveal"
+  | "result"
+  | "treasure"
+  | "transition"
+  | "ending";
 
 /* ─── Session Lifecycle ────────────────────────────────── */
 
@@ -234,11 +239,11 @@ export type GameplayPhase =
  * Flow: idle → generating → active → ending → completed
  */
 export type SessionLifecycleState =
-    | "idle"        // No session exists
-    | "generating"  // Session is being created (cinematic delay / future: AI call)
-    | "active"      // Session is in progress — gameplay is happening
-    | "ending"      // Session completion detected — ceremony pending
-    | "completed";  // Session finished — ceremony done
+  | "idle" // No session exists
+  | "generating" // Session is being created (cinematic delay / future: AI call)
+  | "active" // Session is in progress — gameplay is happening
+  | "ending" // Session completion detected — ceremony pending
+  | "completed"; // Session finished — ceremony done
 
 /* ─── Gameplay Flow Decisions ───────────────────────────── */
 
@@ -254,14 +259,14 @@ export type SessionLifecycleState =
  *   - Whether an ending ceremony should start
  */
 export type GameplayFlowDecision = {
-    /** The next gameplay phase */
-    nextPhase: GameplayPhase;
+  /** The next gameplay phase */
+  nextPhase: GameplayPhase;
 
-    /** Updated session state (if changed) */
-    updatedState?: SessionState;
+  /** Updated session state (if changed) */
+  updatedState?: SessionState;
 
-    /** Ending ceremony to start (if session completed) */
-    ceremony?: EndingCeremonyState;
+  /** Ending ceremony to start (if session completed) */
+  ceremony?: EndingCeremonyState;
 };
 
 /**
@@ -279,38 +284,38 @@ export type GameplayFlowDecision = {
  * It does NOT manage timers, React state, or UI transitions.
  */
 export function resolveContinueFromResult(
-    state: SessionState,
-    lastResult: StationResult | null,
+  state: SessionState,
+  lastResult: StationResult | null,
 ): GameplayFlowDecision {
-    // Treasure opportunity takes priority — gameplay freezes
-    if (state.activeTreasureId) {
-        return { nextPhase: "treasure" };
+  // Treasure opportunity takes priority — gameplay freezes
+  if (state.activeTreasureId) {
+    return { nextPhase: "treasure" };
+  }
+
+  // No treasure — advance based on answer result
+  if (lastResult?.isCorrect) {
+    const next = advanceActivePath(state, lastResult.starsEarned);
+
+    // Session completed — trigger ending
+    if (next.isComplete) {
+      return {
+        nextPhase: "ending",
+        updatedState: next,
+        ceremony: createEndingCeremonyState(next),
+      };
     }
 
-    // No treasure — advance based on answer result
-    if (lastResult?.isCorrect) {
-        const next = advanceActivePath(state, lastResult.starsEarned);
-
-        // Session completed — trigger ending
-        if (next.isComplete) {
-            return {
-                nextPhase: "ending",
-                updatedState: next,
-                ceremony: createEndingCeremonyState(next),
-            };
-        }
-
-        // Path still active — next station
-        if (next.activePathId) {
-            return { nextPhase: "question", updatedState: next };
-        }
-
-        // Path completed — back to path selection
-        return { nextPhase: "transition", updatedState: next };
+    // Path still active — next station
+    if (next.activePathId) {
+      return { nextPhase: "question", updatedState: next };
     }
 
-    // Wrong answer — save progress, end turn
-    return { nextPhase: "transition" };
+    // Path completed — back to path selection
+    return { nextPhase: "transition", updatedState: next };
+  }
+
+  // Wrong answer — save progress, end turn
+  return { nextPhase: "transition" };
 }
 
 /**
@@ -324,33 +329,33 @@ export function resolveContinueFromResult(
  * Progression was already committed before the treasure appeared.
  */
 export function resolveDismissTreasure(
-    state: SessionState,
-    lastResult: StationResult | null,
+  state: SessionState,
+  lastResult: StationResult | null,
 ): GameplayFlowDecision {
-    // Clear the treasure overlay first (only the id)
-    const cleared = clearActiveTreasure(state);
+  // Clear the treasure overlay first (only the id)
+  const cleared = clearActiveTreasure(state);
 
-    // Now resolve progression (same logic as continue from result)
-    if (lastResult?.isCorrect) {
-        const next = advanceActivePath(cleared, lastResult.starsEarned);
+  // Now resolve progression (same logic as continue from result)
+  if (lastResult?.isCorrect) {
+    const next = advanceActivePath(cleared, lastResult.starsEarned);
 
-        if (next.isComplete) {
-            return {
-                nextPhase: "ending",
-                updatedState: next,
-                ceremony: createEndingCeremonyState(next),
-            };
-        }
-
-        if (next.activePathId) {
-            return { nextPhase: "question", updatedState: next };
-        }
-
-        return { nextPhase: "transition", updatedState: next };
+    if (next.isComplete) {
+      return {
+        nextPhase: "ending",
+        updatedState: next,
+        ceremony: createEndingCeremonyState(next),
+      };
     }
 
-    // Wrong answer after treasure — transition
-    return { nextPhase: "transition", updatedState: cleared };
+    if (next.activePathId) {
+      return { nextPhase: "question", updatedState: next };
+    }
+
+    return { nextPhase: "transition", updatedState: next };
+  }
+
+  // Wrong answer after treasure — transition
+  return { nextPhase: "transition", updatedState: cleared };
 }
 
 /**
@@ -363,44 +368,49 @@ export function resolveDismissTreasure(
  * The hook handles the actual navigation.
  */
 export function resolveTransition(
-    state: SessionState,
-    lastResult: StationResult | null,
+  state: SessionState,
+  lastResult: StationResult | null,
 ): GameplayFlowDecision {
-    const next = advanceTurn(state, lastResult);
-    return { nextPhase: "path-selection", updatedState: next };
+  const next = advanceTurn(state, lastResult);
+  const decision: GameplayFlowDecision = {
+    nextPhase: "path-selection",
+    updatedState: next,
+  };
+  console.log("[DEBUG] transition result", decision);
+  return decision;
 }
 
 /* ─── Ending Ceremony ────────────────────────────────────── */
 
 export type EndingCeremonyPhase =
-    | "intro"
-    | "session-summary"
-    | "titles-reveal"
-    | "player-reveals"
-    | "ranking-reveal"
-    | "winner-reveal"
-    | "closing";
+  | "intro"
+  | "session-summary"
+  | "titles-reveal"
+  | "player-reveals"
+  | "ranking-reveal"
+  | "winner-reveal"
+  | "closing";
 
 const CEREMONY_PHASE_ORDER: EndingCeremonyPhase[] = [
-    "intro",
-    "session-summary",
-    "titles-reveal",
-    "player-reveals",
-    "ranking-reveal",
-    "winner-reveal",
-    "closing",
+  "intro",
+  "session-summary",
+  "titles-reveal",
+  "player-reveals",
+  "ranking-reveal",
+  "winner-reveal",
+  "closing",
 ];
 
 export type PlayerFinalScore = {
-    player: Player;
-    hiddenPoints: number;
-    rank: number;
+  player: Player;
+  hiddenPoints: number;
+  rank: number;
 };
 
 export type EndingCeremonyState = {
-    phase: EndingCeremonyPhase;
-    finalScores: PlayerFinalScore[];
-    winnerId: string;
+  phase: EndingCeremonyPhase;
+  finalScores: PlayerFinalScore[];
+  winnerId: string;
 };
 
 /* ─── Factory ────────────────────────────────────────────── */
@@ -417,21 +427,21 @@ export type EndingCeremonyState = {
  * This guarantees that state.journeys[i] is NEVER undefined.
  */
 export function createEmptyJourney(playerId: string): PlayerJourneyState {
-    return {
-        playerId,
-        paths: Array.from({ length: PATHS_PER_PLAYER }, (_, i) => ({
-            id: `path-${playerId}-${i}`,
-            emoji: "🌙",
-            title: `مسار ${i + 1}`,
-            subtitle: "",
-            difficultyTier: (i + 1) as 1 | 2 | 3 | 4,
-            treasureProbabilityMultiplier: 1,
-            stations: [],
-            currentStationIndex: 0,
-            completed: false,
-        })),
-        allPathsCompleted: false,
-    };
+  return {
+    playerId,
+    paths: Array.from({ length: PATHS_PER_PLAYER }, (_, i) => ({
+      id: `path-${playerId}-${i}`,
+      emoji: "🌙",
+      title: `مسار ${i + 1}`,
+      subtitle: "",
+      difficultyTier: (i + 1) as 1 | 2 | 3 | 4,
+      treasureProbabilityMultiplier: 1,
+      stations: [],
+      currentStationIndex: 0,
+      completed: false,
+    })),
+    allPathsCompleted: false,
+  };
 }
 
 /**
@@ -439,16 +449,16 @@ export function createEmptyJourney(playerId: string): PlayerJourneyState {
  * Used when session content becomes available (e.g., from gameplay/page.tsx).
  */
 export function injectJourneyPaths(
-    state: SessionState,
-    playerId: string,
-    paths: JourneyPath[],
+  state: SessionState,
+  playerId: string,
+  paths: JourneyPath[],
 ): SessionState {
-    return {
-        ...state,
-        journeys: state.journeys.map((j) =>
-            j.playerId === playerId ? { ...j, paths } : j,
-        ),
-    };
+  return {
+    ...state,
+    journeys: state.journeys.map((j) =>
+      j.playerId === playerId ? { ...j, paths } : j,
+    ),
+  };
 }
 
 /* ─── Factory ────────────────────────────────────────────── */
@@ -466,27 +476,27 @@ export function injectJourneyPaths(
  * or by passing pre-built journeys from the gameplay page.
  */
 export function createSessionState(
-    players: Player[],
-    journeys: PlayerJourneyState[],
-    sessionLength: import("@/types/session").SessionLength = "normal",
+  players: Player[],
+  journeys: PlayerJourneyState[],
+  sessionLength: import("@/types/session").SessionLength = "normal",
 ): PersistentSessionState {
-    const stationsPerPath = STATIONS_BY_LENGTH[sessionLength];
+  const stationsPerPath = STATIONS_BY_LENGTH[sessionLength];
 
-    // GUARANTEE: Every player has a journey entry — never undefined
-    const safeJourneys = players.map((player, i) =>
-        journeys[i] ?? createEmptyJourney(player.id),
-    );
+  // GUARANTEE: Every player has a journey entry — never undefined
+  const safeJourneys = players.map(
+    (player, i) => journeys[i] ?? createEmptyJourney(player.id),
+  );
 
-    return {
-        players,
-        journeys: safeJourneys,
-        currentPlayerIndex: 0,
-        sessionLength,
-        stationsPerPath,
-        globalTurnIndex: 0,
-        isComplete: false,
-        claimedLegendaryIds: [],
-    };
+  return {
+    players,
+    journeys: safeJourneys,
+    currentPlayerIndex: 0,
+    sessionLength,
+    stationsPerPath,
+    globalTurnIndex: 0,
+    isComplete: false,
+    claimedLegendaryIds: [],
+  };
 }
 
 /* ─── Path Selection ────────────────────────────────────── */
@@ -496,24 +506,21 @@ export function createSessionState(
  * Creates an ActivePathSession from the current journey state.
  * The path opens at the player's saved progression point.
  */
-export function selectPath(
-    state: SessionState,
-    pathId: string,
-): SessionState {
-    const currentJourney = state.journeys[state.currentPlayerIndex];
-    if (!currentJourney) return state; // Runtime safety: no journey exists
+export function selectPath(state: SessionState, pathId: string): SessionState {
+  const currentJourney = state.journeys[state.currentPlayerIndex];
+  if (!currentJourney) return state; // Runtime safety: no journey exists
 
-    const path = currentJourney.paths.find((p) => p.id === pathId);
-    if (!path || path.completed) return state;
+  const path = currentJourney.paths.find((p) => p.id === pathId);
+  if (!path || path.completed) return state;
 
-    const station = getNextStation(path);
-    if (!station) return state; // Runtime safety: no available station
+  const station = getNextStation(path);
+  if (!station) return state; // Runtime safety: no available station
 
-    // Set the active path ID; full activePath data is derived via selectors when needed.
-    return {
-        ...state,
-        activePathId: path.id,
-    };
+  // Set the active path ID; full activePath data is derived via selectors when needed.
+  return {
+    ...state,
+    activePathId: path.id,
+  };
 }
 
 /* ─── Path Progression ──────────────────────────────────── */
@@ -524,58 +531,58 @@ export function selectPath(
  * If the path is completed, checks if the player completed all 4 paths.
  */
 export function advanceActivePath(
-    state: SessionState,
-    starsEarned: number,
+  state: SessionState,
+  starsEarned: number,
 ): SessionState {
-    // If no active path is selected, nothing to advance.
-    if (!state.activePathId) return state;
+  // If no active path is selected, nothing to advance.
+  if (!state.activePathId) return state;
 
-    // Derive the current active path using selectors.
-    const activePath = getCurrentPath(state, state.activePathId);
-    if (!activePath) return state;
+  // Derive the current active path using selectors.
+  const activePath = getCurrentPath(state, state.activePathId);
+  if (!activePath) return state;
 
-    // JourneyPath does not contain playerId; retrieve it from the current journey.
-    const pathId = activePath.id;
-    const journey = state.journeys[state.currentPlayerIndex];
-    const playerId = journey?.playerId;
+  // JourneyPath does not contain playerId; retrieve it from the current journey.
+  const pathId = activePath.id;
+  const journey = state.journeys[state.currentPlayerIndex];
+  const playerId = journey?.playerId;
 
-    const updatedJourneys = state.journeys.map((journey) => {
-        if (journey.playerId !== playerId) return journey;
+  const updatedJourneys = state.journeys.map((journey) => {
+    if (journey.playerId !== playerId) return journey;
 
-        const updatedPaths = journey.paths.map((path) => {
-            if (path.id !== pathId) return path;
-            return advancePathProgression(path);
-        });
-
-        const allCompleted = updatedPaths.every((p) => p.completed);
-
-        return {
-            ...journey,
-            paths: updatedPaths,
-            allPathsCompleted: allCompleted,
-        };
+    const updatedPaths = journey.paths.map((path) => {
+      if (path.id !== pathId) return path;
+      return advancePathProgression(path);
     });
 
-    const currentJourney = updatedJourneys[state.currentPlayerIndex];
-    if (!currentJourney) return state; // safety
-
-    const isComplete = currentJourney.allPathsCompleted;
-
-    const updatedPath = currentJourney.paths.find((p) => p.id === pathId);
-    if (!updatedPath) return state;
-
-    const nextStation = getNextStation(updatedPath);
-
-    // Determine the next activePathId (null if path completed)
-    const nextActivePathId = nextStation ? pathId : null;
+    const allCompleted = updatedPaths.every((p) => p.completed);
 
     return {
-        ...state,
-        journeys: updatedJourneys,
-        activePathId: nextActivePathId,
-        // activePath field removed – derived via selectors elsewhere
-        isComplete,
+      ...journey,
+      paths: updatedPaths,
+      allPathsCompleted: allCompleted,
     };
+  });
+
+  const currentJourney = updatedJourneys[state.currentPlayerIndex];
+  if (!currentJourney) return state; // safety
+
+  const isComplete = currentJourney.allPathsCompleted;
+
+  const updatedPath = currentJourney.paths.find((p) => p.id === pathId);
+  if (!updatedPath) return state;
+
+  const nextStation = getNextStation(updatedPath);
+
+  // Determine the next activePathId (null if path completed)
+  const nextActivePathId = nextStation ? pathId : null;
+
+  return {
+    ...state,
+    journeys: updatedJourneys,
+    activePathId: nextActivePathId,
+    // activePath field removed – derived via selectors elsewhere
+    isComplete,
+  };
 }
 
 /* ─── Turn Advancement ───────────────────────────────────── */
@@ -585,27 +592,25 @@ export function advanceActivePath(
  * Clears the active path session and moves to the next player in round-robin.
  */
 export function advanceTurn(
-    state: SessionState,
-    lastResult: RoundResult | null,
+  state: SessionState,
+  lastResult: RoundResult | null,
 ): SessionState {
-    const playerCount = state.players.length;
+  const playerCount = state.players.length;
 
-    const updatedPlayers = state.players.map((p, i) =>
-        i === state.currentPlayerIndex
-            ? resolveTurnEnd(p, lastResult)
-            : p,
-    );
+  const updatedPlayers = state.players.map((p, i) =>
+    i === state.currentPlayerIndex ? resolveTurnEnd(p, lastResult) : p,
+  );
 
-    const nextPlayerIndex = (state.currentPlayerIndex + 1) % playerCount;
+  const nextPlayerIndex = (state.currentPlayerIndex + 1) % playerCount;
 
-    return {
-        ...state,
-        players: updatedPlayers,
-        currentPlayerIndex: nextPlayerIndex,
-        globalTurnIndex: state.globalTurnIndex + 1,
-        activePathId: null,
-        activeTreasureId: null,
-    };
+  return {
+    ...state,
+    players: updatedPlayers,
+    currentPlayerIndex: nextPlayerIndex,
+    globalTurnIndex: state.globalTurnIndex + 1,
+    activePathId: null,
+    activeTreasureId: null,
+  };
 }
 
 /* ─── Player & Turn Update ───────────────────────────────── */
@@ -615,37 +620,35 @@ export function advanceTurn(
  * Captures the updated player and any resulting treasure opportunity.
  */
 export function applyTurnOutcome(
-    state: SessionState,
-    outcome: import("./turn-engine").TurnOutcome,
+  state: SessionState,
+  outcome: import("./turn-engine").TurnOutcome,
 ): SessionState {
-    const updatedPlayers = state.players.map((p, i) =>
-        i === state.currentPlayerIndex ? outcome.updatedPlayer : p,
-    );
+  const updatedPlayers = state.players.map((p, i) =>
+    i === state.currentPlayerIndex ? outcome.updatedPlayer : p,
+  );
 
-    return {
-        ...state,
-        players: updatedPlayers,
-        // Store only the treasure id for runtime state; full object derived via selector.
-        activeTreasureId: outcome.treasureOpportunity
-            ? outcome.treasureOpportunity.id
-            : null,
-    };
+  return {
+    ...state,
+    players: updatedPlayers,
+    // Store only the treasure id for runtime state; full object derived via selector.
+    activeTreasureId: outcome.treasureOpportunity
+      ? outcome.treasureOpportunity.id
+      : null,
+  };
 }
 
 /**
  * Applies an immutable player update to session state.
  */
 export function applyPlayerUpdate(
-    state: SessionState,
-    playerIndex: number,
-    updater: (p: Player) => Player,
+  state: SessionState,
+  playerIndex: number,
+  updater: (p: Player) => Player,
 ): SessionState {
-    return {
-        ...state,
-        players: state.players.map((p, i) =>
-            i === playerIndex ? updater(p) : p,
-        ),
-    };
+  return {
+    ...state,
+    players: state.players.map((p, i) => (i === playerIndex ? updater(p) : p)),
+  };
 }
 
 /* ─── Treasure Economy ───────────────────────────────────── */
@@ -655,24 +658,24 @@ export function applyPlayerUpdate(
  * Deducts hidden star cost, records the opened treasure, tracks legendary claims.
  */
 export function applyTreasureOpen(state: SessionState): SessionState {
-    // For now, simply clear the active treasure reference.
-    // Full treasure resolution (points, star cost) is handled elsewhere when the
-    // treasure object is available. This avoids stale object reads.
-    if (!state.activeTreasureId) return state;
-    return {
-        ...state,
-        activeTreasureId: null,
-    };
+  // For now, simply clear the active treasure reference.
+  // Full treasure resolution (points, star cost) is handled elsewhere when the
+  // treasure object is available. This avoids stale object reads.
+  if (!state.activeTreasureId) return state;
+  return {
+    ...state,
+    activeTreasureId: null,
+  };
 }
 
 /**
  * Clears the active treasure opportunity from session state.
  */
 export function clearActiveTreasure(state: SessionState): SessionState {
-    return {
-        ...state,
-        activeTreasureId: null,
-    };
+  return {
+    ...state,
+    activeTreasureId: null,
+  };
 }
 
 /* ─── Session-End Scoring ────────────────────────────────── */
@@ -682,21 +685,23 @@ export function clearActiveTreasure(state: SessionState): SessionState {
  * Called ONLY when session.isComplete === true.
  * Results are fed into the ending ceremony — never shown during active gameplay.
  */
-export function computeFinalScores(state: PersistentSessionState): PlayerFinalScore[] {
-    const scored = state.players.map((player) => {
-        const hiddenPoints = player.openedTreasures.reduce(
-            (sum, t) => sum + t.hiddenPoints,
-            0,
-        );
-        return { player, hiddenPoints };
-    });
+export function computeFinalScores(
+  state: PersistentSessionState,
+): PlayerFinalScore[] {
+  const scored = state.players.map((player) => {
+    const hiddenPoints = player.openedTreasures.reduce(
+      (sum, t) => sum + t.hiddenPoints,
+      0,
+    );
+    return { player, hiddenPoints };
+  });
 
-    const sorted = [...scored].sort((a, b) => b.hiddenPoints - a.hiddenPoints);
+  const sorted = [...scored].sort((a, b) => b.hiddenPoints - a.hiddenPoints);
 
-    return sorted.map((entry, index) => ({
-        ...entry,
-        rank: index + 1,
-    }));
+  return sorted.map((entry, index) => ({
+    ...entry,
+    rank: index + 1,
+  }));
 }
 
 /* ─── Ending Ceremony ────────────────────────────────────── */
@@ -706,16 +711,16 @@ export function computeFinalScores(state: PersistentSessionState): PlayerFinalSc
  * Computes final scores and sets the starting phase to "intro".
  */
 export function createEndingCeremonyState(
-    state: PersistentSessionState,
+  state: PersistentSessionState,
 ): EndingCeremonyState {
-    const finalScores = computeFinalScores(state);
-    const winner = finalScores[0];
+  const finalScores = computeFinalScores(state);
+  const winner = finalScores[0];
 
-    return {
-        phase: "intro",
-        finalScores,
-        winnerId: winner.player.id,
-    };
+  return {
+    phase: "intro",
+    finalScores,
+    winnerId: winner.player.id,
+  };
 }
 
 /**
@@ -723,18 +728,15 @@ export function createEndingCeremonyState(
  * Stops at "closing" — the final phase.
  */
 export function advanceCeremonyPhase(
-    ceremony: EndingCeremonyState,
+  ceremony: EndingCeremonyState,
 ): EndingCeremonyState {
-    const currentIndex = CEREMONY_PHASE_ORDER.indexOf(ceremony.phase);
-    const nextIndex = Math.min(
-        currentIndex + 1,
-        CEREMONY_PHASE_ORDER.length - 1,
-    );
+  const currentIndex = CEREMONY_PHASE_ORDER.indexOf(ceremony.phase);
+  const nextIndex = Math.min(currentIndex + 1, CEREMONY_PHASE_ORDER.length - 1);
 
-    return {
-        ...ceremony,
-        phase: CEREMONY_PHASE_ORDER[nextIndex],
-    };
+  return {
+    ...ceremony,
+    phase: CEREMONY_PHASE_ORDER[nextIndex],
+  };
 }
 
 /* ─── Deterministic Selectors ────────────────────────────── */
@@ -744,10 +746,10 @@ export function advanceCeremonyPhase(
  * Returns null if index is out of bounds.
  */
 export function getJourneyByPlayer(
-    state: PersistentSessionState,
-    playerIndex: number,
+  state: PersistentSessionState,
+  playerIndex: number,
 ): PlayerJourneyState | null {
-    return state.journeys[playerIndex] ?? null;
+  return state.journeys[playerIndex] ?? null;
 }
 
 /**
@@ -755,12 +757,12 @@ export function getJourneyByPlayer(
  * Returns null if not found.
  */
 export function getPathById(
-    state: PersistentSessionState,
-    pathId: string,
+  state: PersistentSessionState,
+  pathId: string,
 ): JourneyPath | null {
-    const journey = state.journeys[state.currentPlayerIndex];
-    if (!journey) return null;
-    return journey.paths.find((p) => p.id === pathId) ?? null;
+  const journey = state.journeys[state.currentPlayerIndex];
+  if (!journey) return null;
+  return journey.paths.find((p) => p.id === pathId) ?? null;
 }
 
 /**
@@ -777,54 +779,25 @@ export function getPathById(
  *   - The station index is out of bounds
  */
 export function getCurrentStationFromPersistentState(
-    state: PersistentSessionState,
-    pathId: string | null,
+  state: PersistentSessionState,
+  pathId: string | null,
 ): Station | null {
-    if (!pathId) return null;
+  if (!pathId) return null;
 
-    const journey = state.journeys[state.currentPlayerIndex];
-    if (!journey) return null;
+  const journey = state.journeys[state.currentPlayerIndex];
+  if (!journey) return null;
 
-    const path = journey.paths.find((p) => p.id === pathId);
-    if (!path || path.completed) return null;
+  const path = journey.paths.find((p) => p.id === pathId);
+  if (!path || path.completed) return null;
 
-    if (path.currentStationIndex >= path.stations.length) return null;
+  if (path.currentStationIndex >= path.stations.length) return null;
 
-    return path.stations[path.currentStationIndex].station;
+  return path.stations[path.currentStationIndex].station;
 }
 
-/**
- * Derives an ActivePathSession from persistent state ONLY.
- *
- * This is the DETERMINISTIC way to reconstruct the active path context.
- * It NEVER reuses a cached activePath — always fresh from journey state.
- *
- * Returns null if the path is completed or not found.
+/* The legacy `deriveActivePathFromPersistentState` function has been removed.
+ * Active path information is now accessed via selectors using `activePathId`.
  */
-export function deriveActivePathFromPersistentState(
-    state: PersistentSessionState,
-    pathId: string,
-): ActivePathSession | null {
-    const journey = state.journeys[state.currentPlayerIndex];
-    if (!journey) return null;
-
-    const path = journey.paths.find((p) => p.id === pathId);
-    if (!path || path.completed) return null;
-
-    const station = getNextStation(path);
-    if (!station) return null;
-
-    return {
-        pathId: path.id,
-        playerId: journey.playerId,
-        currentStation: station,
-        currentStationIndex: path.currentStationIndex,
-        totalStations: path.stations.length,
-        stationsClearedThisTurn: 0,
-        starsEarnedThisTurn: 0,
-        treasureProbabilityMultiplier: path.treasureProbabilityMultiplier,
-    };
-}
 
 /* ─── Utility ────────────────────────────────────────────── */
 
@@ -833,23 +806,26 @@ export function deriveActivePathFromPersistentState(
  * Example: "المسار 2 من 4"
  */
 export function getSessionProgressLabel(state: PersistentSessionState): string {
-    const journey = state.journeys[state.currentPlayerIndex];
-    if (!journey) return "";
-    const completed = journey.paths.filter((p) => p.completed).length;
-    return `${completed} من ${PATHS_PER_PLAYER} مسارات`;
+  const journey = state.journeys[state.currentPlayerIndex];
+  if (!journey) return "";
+  const completed = journey.paths.filter((p) => p.completed).length;
+  return `${completed} من ${PATHS_PER_PLAYER} مسارات`;
 }
 
 /**
  * Returns total remaining stations across all uncompleted paths for all players.
  */
 export function getRemainingStations(state: PersistentSessionState): number {
-    return state.journeys.reduce((total, journey) => {
-        if (!journey) return total; // Runtime safety
-        return total + journey.paths.reduce((pathTotal, path) => {
-            if (path.completed) return pathTotal;
-            return pathTotal + (path.stations.length - path.currentStationIndex);
-        }, 0);
-    }, 0);
+  return state.journeys.reduce((total, journey) => {
+    if (!journey) return total; // Runtime safety
+    return (
+      total +
+      journey.paths.reduce((pathTotal, path) => {
+        if (path.completed) return pathTotal;
+        return pathTotal + (path.stations.length - path.currentStationIndex);
+      }, 0)
+    );
+  }, 0);
 }
 
 /* ─── Serialization Boundary ─────────────────────────────── */
@@ -868,17 +844,19 @@ export function getRemainingStations(state: PersistentSessionState): number {
  *   No runtime-only state (activePath, activeTreasure) is included.
  *   Round-trip safe: JSON.parse(extractPersistentState(state)) is valid.
  */
-export function extractPersistentState(state: SessionState): PersistentSessionState {
-    return {
-        players: state.players,
-        journeys: state.journeys,
-        currentPlayerIndex: state.currentPlayerIndex,
-        sessionLength: state.sessionLength,
-        stationsPerPath: state.stationsPerPath,
-        globalTurnIndex: state.globalTurnIndex,
-        isComplete: state.isComplete,
-        claimedLegendaryIds: state.claimedLegendaryIds,
-    };
+export function extractPersistentState(
+  state: SessionState,
+): PersistentSessionState {
+  return {
+    players: state.players,
+    journeys: state.journeys,
+    currentPlayerIndex: state.currentPlayerIndex,
+    sessionLength: state.sessionLength,
+    stationsPerPath: state.stationsPerPath,
+    globalTurnIndex: state.globalTurnIndex,
+    isComplete: state.isComplete,
+    claimedLegendaryIds: state.claimedLegendaryIds,
+  };
 }
 
 /**
@@ -890,13 +868,15 @@ export function extractPersistentState(state: SessionState): PersistentSessionSt
  * FUTURE ZUSTAND:
  *   This is the hydration function for the Zustand store.
  */
-export function hydrateSessionState(persistent: PersistentSessionState): SessionState {
-    return {
-        ...persistent,
-        activePathId: null,
-        activeTreasureId: null,
-        // Runtime-only objects are not stored; they are derived via selectors when needed.
-    };
+export function hydrateSessionState(
+  persistent: PersistentSessionState,
+): SessionState {
+  return {
+    ...persistent,
+    activePathId: null,
+    activeTreasureId: null,
+    // Runtime-only objects are not stored; they are derived via selectors when needed.
+  };
 }
 
 /* ─── Ending Runtime Handoff ─────────────────────────────── */
@@ -914,7 +894,7 @@ export function hydrateSessionState(persistent: PersistentSessionState): Session
  * Accepts both SessionState and PersistentSessionState.
  */
 export function shouldTriggerEnding(state: PersistentSessionState): boolean {
-    return state.isComplete;
+  return state.isComplete;
 }
 
 /**
@@ -930,16 +910,15 @@ export function shouldTriggerEnding(state: PersistentSessionState): boolean {
  * Accepts both SessionState and PersistentSessionState.
  */
 export function createEndingPayload(state: PersistentSessionState): {
-    ceremony: EndingCeremonyState;
-    finalScores: PlayerFinalScore[];
-    winnerId: string;
+  ceremony: EndingCeremonyState;
+  finalScores: PlayerFinalScore[];
+  winnerId: string;
 } {
-    const finalScores = computeFinalScores(state);
-    const ceremony = createEndingCeremonyState(state);
-    return {
-        ceremony,
-        finalScores,
-        winnerId: ceremony.winnerId,
-    };
+  const finalScores = computeFinalScores(state);
+  const ceremony = createEndingCeremonyState(state);
+  return {
+    ceremony,
+    finalScores,
+    winnerId: ceremony.winnerId,
+  };
 }
-
