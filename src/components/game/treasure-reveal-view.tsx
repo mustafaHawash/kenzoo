@@ -10,13 +10,14 @@ import { Headline, Muted, Body } from "@/components/ui/typography";
 
 import type { TreasureRevealStyle } from "@/types/treasure";
 import { useSound } from "@/hooks/useSound";
+import { soundAssets } from "@/assets";
 
 /* ─── SFX Paths ─── */
 const SFX = {
-    openStart: "/sounds/sfx/chimes-whoosh-OpenTreaasureStart.mp3",
-    revealCommon: "/sounds/sfx/Gentle chime-CommonTreasureReveal.mp3",
-    revealRare: "/sounds/sfx/Sparkle + tone - RareTreasureReveal.mp3",
-    revealLegendary: "/sounds/sfx/Magic-Reveal-LegendaryTreasureReveal.mp3",
+    openStart: soundAssets.treasureOpenStart,
+    revealCommon: soundAssets.treasureRevealCommon,
+    revealRare: soundAssets.treasureRevealRare,
+    revealLegendary: soundAssets.treasureRevealLegendary,
 } as const;
 
 /* ═══════════════════════════════════════════════════════════
@@ -80,6 +81,8 @@ const RARITY_CONFIG = {
     },
 } as const;
 
+type RarityConfig = (typeof RARITY_CONFIG)[keyof typeof RARITY_CONFIG];
+
 /* ═══════════════════════════════════════════════════════════
     REWARD TEXT HELPER
     ═══════════════════════════════════════════════════════════ */
@@ -126,7 +129,7 @@ function CinematicReveal({
 }: {
     data: TreasureRevealData;
     phase: RevealPhase;
-    config: typeof RARITY_CONFIG.common;
+    config: RarityConfig;
     onContinue: () => void;
 }) {
     return (
@@ -217,7 +220,7 @@ function FlipCardReveal({
 }: {
     data: TreasureRevealData;
     phase: RevealPhase;
-    config: typeof RARITY_CONFIG.common;
+    config: RarityConfig;
     onContinue: () => void;
 }) {
     const isFlipped = phase === "revealed";
@@ -286,7 +289,7 @@ function MysteryReveal({
 }: {
     data: TreasureRevealData;
     phase: RevealPhase;
-    config: typeof RARITY_CONFIG.common;
+    config: RarityConfig;
     onContinue: () => void;
 }) {
     return (
@@ -355,11 +358,10 @@ function MysteryReveal({
     ═══════════════════════════════════════════════════════════ */
 
 function RarityBadge({
-    rarity,
     config,
 }: {
     rarity: TreasureRevealData["rarity"];
-    config: typeof RARITY_CONFIG.common;
+    config: RarityConfig;
 }) {
     return (
         <div className={`rounded-full px-4 py-1 text-xs font-medium border ${config.badgeClass}`}>
@@ -429,7 +431,7 @@ export function TreasureRevealView({
     onReveal,
     onComplete,
 }: TreasureRevealViewProps) {
-    const [phase, setPhase] = useState<RevealPhase>("closed");
+    const [phase, setPhase] = useState<RevealPhase>("opening");
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const config = RARITY_CONFIG[data.rarity];
 
@@ -444,7 +446,6 @@ export function TreasureRevealView({
     useEffect(() => {
         sfxOpenStart.play();
         onOpenStart?.();
-        setPhase("opening");
 
         timeoutRef.current = setTimeout(() => {
             // Play rarity-specific reveal sound

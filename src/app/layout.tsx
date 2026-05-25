@@ -38,15 +38,15 @@ export default function RootLayout({
             suppressHydrationWarning
             className={cn(
                 "h-full",
+                "overflow-hidden",
                 "antialiased",
-                "scroll-smooth",
                 alexandria.variable,
                 literata.variable,
                 plex.variable,
                 "font-sans",
             )}
         >
-            <body className={cn("min-h-full flex flex-col bg-background text-foreground")}>
+            <body className={cn("h-full overflow-hidden flex flex-col bg-background text-foreground")}>
                 <ThemeProvider>{children}</ThemeProvider>
             </body>
         </html>

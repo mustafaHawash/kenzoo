@@ -19,7 +19,7 @@ export function RevealPhase() {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex flex-col items-center gap-5 py-6"
+            className="flex flex-col items-center gap-3 py-4"
         >
             {/* Shimmer bar */}
             <motion.div
@@ -27,15 +27,15 @@ export function RevealPhase() {
                 initial="initial"
                 animate="animate"
                 className="
-                    h-2.5 w-44 rounded-full
+                    h-2 w-36 rounded-full
                     bg-linear-to-l
                     from-secondary/10 via-secondary/25 to-secondary/10
                     bg-size-[200%_100%]
                 "
             />
 
-            <Muted className="text-sm animate-pulse">
-                🔮 بنشوف إجابتك...
+            <Muted className="text-xs animate-pulse">
+                بنشوف إجابتك...
             </Muted>
 
             {/* Floating dots */}

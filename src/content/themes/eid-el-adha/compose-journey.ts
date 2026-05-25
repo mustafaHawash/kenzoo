@@ -40,22 +40,22 @@ import { eidRiddleStations } from "./riddles";
  */
 const PATH_ATMOSPHERE: Record<PathDifficultyTier, { emoji: string; title: string; subtitle: string }> = {
     1: {
-        emoji: "🌙",
+        emoji: "/images/icons/big-moon-icon.webp",
         title: "حكايات القمر",
         subtitle: "أسرار الليل الهادئ",
     },
     2: {
-        emoji: "🔮",
+        emoji: "/images/icons/lantern-icon.webp",
         title: "الغرفة المقفولة",
         subtitle: "غموض بلا نهاية",
     },
     3: {
-        emoji: "🕯️",
+        emoji: "/images/icons/main-key-icon.webp",
         title: "أسرار الليلة",
         subtitle: "خيوط الضوء الخافت",
     },
     4: {
-        emoji: "👁️",
+        emoji: "/images/icons/treasure-symbol.webp",
         title: "باب المجهول",
         subtitle: "ما وراء الظلام",
     },

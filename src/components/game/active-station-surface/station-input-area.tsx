@@ -51,7 +51,7 @@ export function StationInputArea({
     return (
         <motion.div
             {...fadeIn}
-            className="flex flex-col gap-5"
+            className="flex flex-col gap-2.5"
         >
             {/* ── Type-specific gameplay renderer ── */}
             <Renderer
@@ -68,29 +68,36 @@ export function StationInputArea({
             <div
                 className="
                     flex items-center justify-between
-                    rounded-2xl
-                    border border-secondary/10
-                    bg-secondary/5
-                    px-4 py-3
+                    rounded-xl
+                    border border-secondary/12
+                    bg-secondary/6
+                    px-3.5 py-2
+                    backdrop-blur-sm
                 "
             >
-                <Muted className="text-xs">
-                    {station.reward.canUnlockTreasure
-                        ? "🗝️ كنــزو محتمل"
-                        : "✨ نجم وبيجمع اخواته"}
-                </Muted>
-                <Label className="text-secondary text-xs">
-                    +{station.reward.stars} ⭐
-                </Label>
+                <div className="flex items-center gap-1.5">
+                    <span className="text-xs">{station.reward.canUnlockTreasure ? "🎁" : "⭐"}</span>
+                    <Muted className="text-[11px]">
+                        {station.reward.canUnlockTreasure
+                            ? "كنز محتمل!"
+                            : "نجم وبيجمع اخواته"}
+                    </Muted>
+                </div>
+                <div className="flex items-center gap-1">
+                    <span className="text-xs">✦</span>
+                    <Label className="text-secondary text-[11px] font-semibold">
+                        +{station.reward.stars}
+                    </Label>
+                </div>
             </div>
 
             {/* ── Confirm CTA (shared across all types) ── */}
             <LanternButton
                 disabled={!canSubmit}
                 onClick={onSubmit}
-                className="w-full"
+                className="w-full disabled:opacity-40 disabled:saturate-50"
             >
-                تأكيد الاختيار ✨
+                ✨ تأكيد الاختيار
             </LanternButton>
         </motion.div>
     );

@@ -22,19 +22,23 @@ export function MemoryRenderer({
     onTextInput,
 }: StationRendererProps) {
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2.5">
             <div
                 className="
                     relative
-                    rounded-2xl
+                    rounded-xl
                     border border-primary/15
                     bg-primary/5
                     overflow-hidden
                     transition-all duration-200
                     focus-within:border-secondary/40
-                    focus-within:shadow-[0_4px_16px_rgba(216,179,106,0.06)]
+                    focus-within:shadow-[0_4px_16px_rgba(216,179,106,0.08)]
+                    focus-within:bg-primary/8
                 "
             >
+                <div className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/30">
+                    📖
+                </div>
                 <input
                     type="text"
                     value={textInput}
@@ -43,8 +47,8 @@ export function MemoryRenderer({
                     dir="rtl"
                     className="
                         w-full bg-transparent
-                        px-5 py-4
-                        text-foreground text-[15px]
+                        px-4 py-3 pr-9
+                        text-foreground text-[13px]
                         placeholder:text-muted-foreground/40
                         outline-none
                     "
@@ -56,7 +60,7 @@ export function MemoryRenderer({
                 transition={{ delay: 0.2 }}
                 className="text-center"
             >
-                <Muted className="text-xs">
+                <Muted className="text-[10px]">
                     📖 ذكرى حلوة ليك — اكتب اللي فاكره
                 </Muted>
             </motion.div>

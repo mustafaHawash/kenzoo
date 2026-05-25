@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 import { useGameSessionStore } from "@/store/game-session-store";
 import { resolveTurn, resolveTreasureOpen } from "@/lib/session-runtime/turn-engine";
 import { useSound } from "@/hooks/useSound";
+import { soundAssets } from "@/assets";
 import {
     applyTurnOutcome,
     getSessionProgressLabel,
@@ -78,9 +79,9 @@ export function useGameSession() {
     const awardedTitle = useGameSessionStore((s) => s.awardedTitle);
 
     /* ─── Sound effects ─── */
-    const sfxCorrectAnswer = useSound("/sounds/sfx/correct-answer.mp3", { volume: 0.5 });
-    const sfxWrongAnswer = useSound("/sounds/sfx/wrong-answer.mp3", { volume: 0.5 });
-    const sfxPathComplete = useSound("/sounds/sfx/pathCompelete.mp3", { volume: 0.6 });
+    const sfxCorrectAnswer = useSound(soundAssets.correctAnswer, { volume: 0.5 });
+    const sfxWrongAnswer = useSound(soundAssets.wrongAnswer, { volume: 0.5 });
+    const sfxPathComplete = useSound(soundAssets.pathComplete, { volume: 0.6 });
 
     /* ─── Store actions ─── */
     const initSession = useGameSessionStore((s) => s.initSession);

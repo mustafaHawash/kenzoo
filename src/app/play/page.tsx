@@ -1,7 +1,7 @@
 // app/play/page.tsx
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Image from "next/image";
@@ -10,9 +10,13 @@ import { ScreenContainer } from "@/components/ui/layout/screen-container";
 import { ActiveStationSurface } from "@/components/game/active-station-surface";
 import { TreasureOpportunityCard } from "@/components/game/treasure-opportunity";
 import { Label, Muted, Headline } from "@/components/ui/typography";
+import { LanternButton } from "@/components/ui/lantern-button";
 
 import { useGameSession } from "@/hooks/useGameSession";
+import { useSoundtrack } from "@/hooks/useSoundtrack";
 import { TreasureRevealView } from "@/components/game/treasure-reveal-view";
+import { iconAssets } from "@/assets";
+import { MoodSticker } from "@/components/ui/mood-sticker";
 
 /* ─── Animation ─── */
 const floatBob = {
@@ -35,152 +39,6 @@ const floatBob = {
     ═══════════════════════════════════════════════════════════ */
 
 /* ═══════════════════════════════════════════════════════════
-    ENDING CEREMONY VIEW
-
-    Phase-driven cinematic reveal.
-    ═══════════════════════════════════════════════════════════ */
-type CeremonyPhase = "intro" | "session-summary" | "titles-reveal" | "player-reveals" | "ranking-reveal" | "winner-reveal" | "closing";
-
-const CEREMONY_EMOJI: Record<CeremonyPhase, string> = {
-    "intro": "🌙",
-    "session-summary": "✨",
-    "titles-reveal": "🏅",
-    "player-reveals": "🗝️",
-    "ranking-reveal": "📜",
-    "winner-reveal": "👑",
-    "closing": "💫",
-};
-
-const CEREMONY_LABEL: Record<CeremonyPhase, string> = {
-    "intro": "الليلة قربت تخلص...",
-    "session-summary": "كنوز الجلسة",
-    "titles-reveal": "الألقاب المكتسبة",
-    "player-reveals": "كنوز الليلة",
-    "ranking-reveal": "الترتيب النهائي",
-    "winner-reveal": "الفايز!",
-    "closing": "شكرًا على الجلسة ✨",
-};
-
-function EndingCeremonyView({
-    ceremony,
-    onAdvance,
-}: {
-    ceremony: import("@/lib/session-runtime/session-engine").EndingCeremonyState;
-    onAdvance: () => void;
-}) {
-    const isLastPhase = ceremony.phase === "closing";
-
-    return (
-        <ScreenContainer className="justify-center items-center">
-            <motion.div
-                key={ceremony.phase}
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: "easeOut" }}
-                className="flex flex-col items-center gap-8 text-center max-w-sm px-6"
-            >
-                {/* Phase emoji or Brand Logo */}
-                {ceremony.phase === "intro" || ceremony.phase === "closing" ? (
-                    <motion.div
-                        initial={{ scale: 0.85, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
-                        className="relative h-20 w-20 select-none"
-                    >
-                        <Image
-                            src="/Logo-PNG.webp"
-                            alt="Kenzoo Logo"
-                            fill
-                            priority
-                            className="object-contain drop-shadow-[0_4px_15px_rgba(216,179,106,0.2)]"
-                        />
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        initial={{ scale: 0.85, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
-                        className="text-5xl"
-                    >
-                    {CEREMONY_EMOJI[ceremony.phase]}
-                    </motion.div>
-                )}
-
-                {/* Phase heading */}
-                <Headline className="text-secondary text-2xl">
-                    {CEREMONY_LABEL[ceremony.phase]}
-                </Headline>
-
-                {/* ─── Phase: winner-reveal ─── */}
-                {ceremony.phase === "winner-reveal" && (
-                    <div className="flex flex-col items-center gap-3">
-                        <Headline className="text-primary text-4xl">
-                            {ceremony.finalScores[0]?.player.name}
-                        </Headline>
-                        <Muted className="text-sm opacity-60">
-                            {ceremony.finalScores[0]?.hiddenPoints} نقاط كنوز
-                        </Muted>
-                    </div>
-                )}
-
-                {/* ─── Phase: session-summary ─── */}
-                {ceremony.phase === "session-summary" && (
-                    <div className="flex flex-col gap-3 w-full">
-                        {ceremony.finalScores.map((score) => (
-                            <div
-                                key={score.player.id}
-                                className="flex justify-between items-center"
-                            >
-                                <Muted>{score.player.name}</Muted>
-                                <Muted className="opacity-50">
-                                    🗝️ {score.player.openedTreasures.length}
-                                </Muted>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* ─── Phase: ranking-reveal ─── */}
-                {ceremony.phase === "ranking-reveal" && (
-                    <div className="flex flex-col gap-3 w-full">
-                        {[...ceremony.finalScores].reverse().map((score) => (
-                            <div
-                                key={score.player.id}
-                                className="flex justify-between items-center"
-                            >
-                                <Muted>#{score.rank} {score.player.name}</Muted>
-                                <Muted className="opacity-50">
-                                    {score.hiddenPoints} نقطة
-                                </Muted>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* ─── Closing phase ─── */}
-                {ceremony.phase === "closing" && (
-                    <Muted className="text-sm leading-relaxed opacity-50">
-                        الليلة خلصت، بس الذكرى باقية ✨
-                    </Muted>
-                )}
-
-                {/* ─── Advance button ─── */}
-                {!isLastPhase && (
-                    <button
-                        onClick={onAdvance}
-                        className="mt-2 rounded-full border border-secondary/20 bg-card/60 px-6 py-2.5 text-sm text-secondary/80 backdrop-blur-sm transition-all hover:bg-card/80 active:scale-95"
-                    >
-                        {ceremony.phase === "winner-reveal"
-                            ? "اختتام الجلسة"
-                            : "متابعة ✨"}
-                    </button>
-                )}
-            </motion.div>
-        </ScreenContainer>
-    );
-}
-
-/* ═══════════════════════════════════════════════════════════
     PLAY PAGE — Station gameplay within a path
 
     This page handles the active station gameplay.
@@ -195,6 +53,7 @@ function EndingCeremonyView({
     ═══════════════════════════════════════════════════════════ */
 function PlayPageContent() {
     const router = useRouter();
+    const soundtrack = useSoundtrack();
 
     const {
         ceremony,
@@ -220,24 +79,56 @@ function PlayPageContent() {
         isLeavingPlay,
     } = useGameSession();
 
+    /* ─── Soundtrack — play gameplay music when session is active ─── */
+    useEffect(() => {
+        if (hasHydrated && currentPlayer && !ceremony) {
+            soundtrack.play("gameplay", 0.25);
+        }
+        return () => {
+            soundtrack.stop();
+        };
+    }, [hasHydrated, currentPlayer, ceremony]);
+
     /* ─── No session — show loading (redirect handled by useGameSession) ─── */
     // If the store hasn't hydrated or there is no active player, show a loading state.
     // 1️⃣ Hydration safety – show session loading message.
     if (!hasHydrated || !currentPlayer) {
         return (
-            <ScreenContainer className="justify-center items-center">
-                <Muted>جاري تحميل الجلسة...</Muted>
+            <ScreenContainer className="justify-center items-center gap-4">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                    className="flex flex-col items-center gap-4"
+                >
+                    <MoodSticker mood="thinking" size={80} delay={0.1} />
+                    <div className="flex flex-col items-center gap-1">
+                        <Label className="text-foreground text-sm font-semibold">جاري تحميل الجلسة</Label>
+                        <Muted className="text-xs">استنى شوية...</Muted>
+                    </div>
+                </motion.div>
             </ScreenContainer>
         );
     }
 
-    /* ─── Ending Ceremony ─── */
+    /* ─── Ending Ceremony — redirect to dedicated ceremony page ─── */
     if (ceremony) {
+        router.replace("/ending");
         return (
-            <EndingCeremonyView
-                ceremony={ceremony}
-                onAdvance={handleAdvanceCeremony}
-            />
+            <ScreenContainer className="justify-center items-center gap-4">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                    className="flex flex-col items-center gap-4"
+                >
+                    <MoodSticker mood="thinking" size={80} delay={0.1} />
+                    <div className="flex flex-col items-center gap-1">
+                        <Label className="text-foreground text-sm font-semibold">جاري تحضير الحفل</Label>
+                        <Muted className="text-xs">اللحظة الحلوة جاية...</Muted>
+                    </div>
+                </motion.div>
+            </ScreenContainer>
         );
     }
 
@@ -275,8 +166,19 @@ function PlayPageContent() {
         // Show a generic loading state when no active path is available or the
         // path is still in progress — but NOT during transition or treasure-reveal.
         return (
-            <ScreenContainer className="justify-center items-center">
-                <Muted>جاري تحميل المسار...</Muted>
+            <ScreenContainer className="justify-center items-center gap-4">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                    className="flex flex-col items-center gap-4"
+                >
+                    <MoodSticker mood="thinking" size={80} delay={0.1} />
+                    <div className="flex flex-col items-center gap-1">
+                        <Label className="text-foreground text-sm font-semibold">جاري تحميل المسار</Label>
+                        <Muted className="text-xs">استنى شوية...</Muted>
+                    </div>
+                </motion.div>
             </ScreenContainer>
         );
     }
@@ -285,20 +187,18 @@ function PlayPageContent() {
     if (activePath?.completed) {
         return (
             <ScreenContainer className="justify-center items-center gap-4">
-                <Headline className="text-primary text-2xl">أحسنت! اكتمل المسار ✨</Headline>
-                <button
-                    onClick={handleTransition}
-                    className="rounded-full border border-secondary/20 bg-card/60 px-6 py-2.5 text-sm text-secondary/80 backdrop-blur-sm transition-all hover:bg-card/80 active:scale-95"
-                >
+                <MoodSticker mood="celebration" size={72} />
+                <Headline className="bg-linear-to-l from-amber-500 via-secondary to-amber-600 bg-clip-text text-transparent text-2xl font-bold">أحسنت! اكتمل المسار</Headline>
+                <LanternButton onClick={handleTransition}>
                     العودة للمسارات
-                </button>
+                </LanternButton>
             </ScreenContainer>
         );
     }
 
     return (
         <ScreenContainer className="justify-center gap-0">
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-1 min-h-0 flex-col gap-1.5">
                 {/* ═══════════════════════════════════════════
                     🎯 PLAYER TURN INDICATOR
                     ═══════════════════════════════════════════ */}
@@ -310,11 +210,11 @@ function PlayPageContent() {
                 >
                     <div
                         className="
-                            flex items-center gap-3
+                            flex items-center gap-2
                             rounded-full
                             border border-secondary/12
                             bg-card/70
-                            px-5 py-2.5
+                            px-3 py-1
                             backdrop-blur-sm
                             shadow-soft
                         "
@@ -322,19 +222,18 @@ function PlayPageContent() {
                         <motion.div
                             variants={floatBob}
                             animate="animate"
-                            className="relative h-5 w-5 select-none"
+                            className="relative h-4 w-4 select-none"
                         >
                             <Image
-                                src="/Logo-PNG.webp"
+                                src={iconAssets.logoMark}
                                 alt="Kenzoo"
                                 fill
                                 className="object-contain"
                             />
                         </motion.div>
-                        <Label className="text-primary text-sm">
+                        <Label className="text-primary text-[11px]">
                             دور {currentPlayer.name}
                         </Label>
-                        {/* Visible treasure count only — no points or rarity */}
                         {currentPlayer.treasures > 0 && (
                             <div
                                 className="
@@ -342,11 +241,11 @@ function PlayPageContent() {
                                     rounded-full
                                     border border-primary/10
                                     bg-primary/8
-                                    px-2.5 py-0.5
+                                    px-2 py-0.5
                                 "
                             >
-                                <span className="text-[10px]">🗝️</span>
-                                <Label className="text-primary text-[11px] tabular-nums">
+                                <Image src={iconAssets.mainKey} alt="" width={10} height={10} className="object-contain" />
+                                <Label className="text-primary text-[10px] tabular-nums">
                                     {currentPlayer.treasures}
                                 </Label>
                             </div>
@@ -356,25 +255,26 @@ function PlayPageContent() {
 
                 {/* ═══════════════════════════════════════════
                     🗺️ PATH PROGRESS INDICATOR
-                    Progress derives from: currentStationIndex + completed stations.
-                    Shows completed stations out of total, with station dots.
                     ═══════════════════════════════════════════ */}
                  {activePath && (
                      <motion.div
                          initial={{ opacity: 0 }}
                          animate={{ opacity: 1 }}
                          transition={{ delay: 0.1 }}
-                         className="flex flex-col gap-1.5 px-2"
+                         className="flex flex-col gap-1 px-1"
                      >
                          <div className="flex items-center justify-between">
-                             <Muted className="text-[10px]">
+                             <Muted className="text-[9px]">
                                  {progressLabel}
                              </Muted>
-                             <Muted className="text-[10px]">
-                                 {activePath.currentStationIndex} من {activePath.stations.length} محطات
-                             </Muted>
+                             <div className="flex items-center gap-1">
+                                 <Image src={iconAssets.starsSticker} alt="" width={10} height={10} className="object-contain opacity-50" />
+                                 <Muted className="text-[9px]">
+                                     {activePath.currentStationIndex}/{activePath.stations.length}
+                                 </Muted>
+                             </div>
                          </div>
-                         <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-soft">
+                         <div className="relative h-1 w-full overflow-hidden rounded-full bg-surface-soft">
                              <motion.div
                                  initial={{ width: 0 }}
                                  animate={{

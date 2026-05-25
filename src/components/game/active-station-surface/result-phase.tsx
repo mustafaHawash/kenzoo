@@ -5,11 +5,12 @@ import { motion } from "framer-motion";
 
 import { LanternButton } from "@/components/ui/lantern-button";
 import { Headline, Muted } from "@/components/ui/typography";
+import { MoodSticker } from "@/components/ui/mood-sticker";
 
 import type { Station } from "@/types/station";
 import type { RoundResult } from "@/types/session";
 
-import { softPop, iconEntrance, slideUp } from "./motion";
+import { softPop, slideUp } from "./motion";
 import { RewardSummary } from "./reward-summary";
 import { TinyMissionCard } from "./tiny-mission-card";
 
@@ -41,42 +42,39 @@ export function ResultPhase({
             variants={softPop}
             initial="hidden"
             animate="visible"
-            className="flex flex-col gap-6"
+            className="flex flex-col gap-2.5"
         >
-            {/* ── Result icon & message ── */}
-            <div className="flex flex-col items-center gap-3 text-center">
-                <motion.div
-                    variants={iconEntrance}
-                    initial="hidden"
-                    animate="visible"
-                    className="text-5xl"
-                >
-                    {result.isCorrect ? "🌟" : "🌙"}
-                </motion.div>
+            {/* ── Result sticker & message — sticker only, no icon ── */}
+            <div className="flex flex-col items-center gap-1.5 text-center">
+                <MoodSticker
+                    mood={result.isCorrect ? "celebration" : "fail"}
+                    size={100}
+                    delay={0.1}
+                />
 
                 <Headline
                     className={
                         result.isCorrect
-                            ? "text-secondary text-2xl"
-                            : "text-foreground/70 text-2xl"
+                            ? "text-secondary text-lg font-bold"
+                            : "text-foreground/70 text-lg"
                     }
                 >
                     {result.isCorrect
-                        ? "إجابة صحيحة!"
-                        : "مش مرة.. بس محاولة حلوة!"}
+                        ? "إجابة صحيحة! ✨"
+                        : "مش مرة.. بس محاولة حلوة! 💪"}
                 </Headline>
 
                 {/* Correct answer reveal (wrong answers only) */}
                 {!result.isCorrect && (
                     <div
                         className="
-                            rounded-xl
+                            rounded-lg
                             border border-secondary/15
                             bg-secondary/6
-                            px-4 py-2.5
+                            px-3 py-1.5
                         "
                     >
-                        <Muted className="text-sm">
+                        <Muted className="text-xs">
                             الإجابة الصحيحة:{" "}
                             <span className="text-foreground font-medium">
                                 {station.answer}
@@ -91,14 +89,14 @@ export function ResultPhase({
                 <motion.div
                     {...slideUp(0.1)}
                     className="
-                        rounded-xl
+                        rounded-lg
                         border border-primary/10
                         bg-primary/5
-                        px-4 py-3
+                        px-3 py-2
                         text-center
                     "
                 >
-                    <Muted className="text-sm leading-relaxed">
+                    <Muted className="text-xs leading-relaxed">
                         📝 {station.explanation}
                     </Muted>
                 </motion.div>

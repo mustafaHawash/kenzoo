@@ -25,7 +25,7 @@ export function StoryRenderer({
     // If the story station has choices, show them
     if (station.choices?.length) {
         return (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
                 {station.choices.map((choice, i) => {
                     const isSelected = selectedChoice === choice;
 
@@ -37,10 +37,10 @@ export function StoryRenderer({
                             transition={{ delay: i * 0.06, duration: 0.3, ease: "easeOut" as const }}
                             onClick={() => onSelect(choice)}
                             className={`
-                                relative overflow-hidden
-                                rounded-2xl
-                                border px-5 py-4
-                                text-center
+                                relative flex items-center gap-3 overflow-hidden
+                                rounded-xl
+                                border px-3.5 py-3
+                                text-right
                                 transition-all duration-200
                                 outline-none
                                 focus-visible:ring-2 focus-visible:ring-secondary/40
@@ -62,7 +62,20 @@ export function StoryRenderer({
                                 }
                             `}
                         >
-                            <span className="relative z-10 text-foreground text-[15px] leading-relaxed">
+                            {/* Story choice indicator */}
+                            <div className={`
+                                relative z-10 flex h-6 w-6 shrink-0 items-center justify-center
+                                rounded-full text-[11px] font-bold
+                                transition-colors duration-200
+                                ${isSelected
+                                    ? "bg-primary/15 text-primary"
+                                    : "bg-surface-soft text-muted-foreground/60"
+                                }
+                            `}>
+                                {i + 1}
+                            </div>
+
+                            <span className="relative z-10 text-foreground text-[13px] leading-relaxed flex-1">
                                 {choice}
                             </span>
                         </motion.button>
@@ -74,19 +87,19 @@ export function StoryRenderer({
 
     // Fallback: atmospheric story placeholder
     return (
-        <div className="flex flex-col items-center gap-4 py-4">
+        <div className="flex flex-col items-center gap-3 py-4">
             <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4, ease: "easeOut" as const }}
-                className="text-5xl"
+                className="text-4xl"
             >
                 🕯️
             </motion.div>
             <Label className="text-primary text-sm">
                 حكاية جاية...
             </Label>
-            <Muted className="text-xs text-center">
+            <Muted className="text-[11px] text-center">
                 استنى القصة وهتختار مصيرك
             </Muted>
         </div>

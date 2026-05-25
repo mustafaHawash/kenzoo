@@ -104,33 +104,19 @@ export function ActiveStationSurface({
                 <CozyCard
                     className="
                         relative overflow-hidden
-                        rounded-[32px]
-                        p-7 sm:p-8
+                        rounded-[28px]
+                        p-3.5
                     "
                 >
                     {/* ═══ Ambient atmosphere ═══ */}
                     <div
                         className="
                             pointer-events-none absolute inset-0
-                            bg-[radial-gradient(circle_at_top,rgba(246,208,140,0.12),transparent_60%)]
-                        "
-                    />
-                    <div
-                        className="
-                            pointer-events-none absolute -top-3 -left-3
-                            h-28 w-28 rounded-full
-                            bg-[radial-gradient(circle,rgba(255,231,181,0.10),transparent_70%)]
-                        "
-                    />
-                    <div
-                        className="
-                            pointer-events-none absolute -bottom-4 -right-4
-                            h-24 w-24 rounded-full
-                            bg-[radial-gradient(circle,rgba(230,201,140,0.06),transparent_70%)]
+                            bg-[radial-gradient(circle_at_top,rgba(246,208,140,0.10),transparent_60%)]
                         "
                     />
 
-                    <div className="relative z-10 flex flex-col gap-7">
+                    <div className="relative z-10 flex flex-col gap-3">
                         {/* ── Station header (badge + title + question + hint) ── */}
                         <StationHeader
                             station={station}

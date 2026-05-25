@@ -1,13 +1,15 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 
 import { OpeningSceneAtmosphere } from "@/components/atmosphere/opening-scene-atmosphere";
 import { OpeningLanternMark } from "@/components/branding/opening-lantern-mark";
 import { LanternButton } from "@/components/ui/lantern-button";
+import { KScreen } from "@/components/ui/kenzoo/k-screen";
 import { Body, Muted } from "@/components/ui/typography";
-import Image from "next/image";
+import { useSoundtrack } from "@/hooks/useSoundtrack";
 
 const sceneVariants: Variants = {
     hidden: { opacity: 0 },
@@ -30,15 +32,18 @@ const revealVariants: Variants = {
     },
 };
 export default function HomePage() {
+    const soundtrack = useSoundtrack();
+
+    /* ─── Core soundtrack — warm ambient on home page ─── */
+    useEffect(() => {
+        soundtrack.play("core", 0.15);
+        return () => {
+            soundtrack.stop();
+        };
+    }, []);
+
     return (
-        <main className="relative min-h-dvh overflow-hidden bg-background text-foreground">
-            {/* add image from public/images to be as an absolute background */}
-            <Image
-                src="/images/backgrounds/backgroundsmain-gameplay.webp"
-                alt="Kenzoo Main BG"
-                fill
-                className="absolute inset-0 mx-auto opacity-60 blur-[0.5px] "
-            />
+        <KScreen scene="home" contentClassName="max-w-xl items-center justify-center px-6 py-10 text-center">
             <OpeningSceneAtmosphere />
 
             <motion.section
@@ -84,6 +89,6 @@ export default function HomePage() {
                     </motion.div>
                 </div>
             </motion.section>
-        </main>
+        </KScreen>
     );
 }

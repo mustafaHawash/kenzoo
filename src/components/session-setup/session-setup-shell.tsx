@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { OpeningSceneAtmosphere } from "@/components/atmosphere/opening-scene-atmosphere";
+import { ThemeBackground } from "@/components/theme/theme-background";
 import { Button } from "@/components/ui/button";
 import { LanternButton } from "@/components/ui/lantern-button";
 import { Body, Display, Label } from "@/components/ui/typography";
@@ -127,7 +128,8 @@ export function SessionSetupShell() {
     };
 
     return (
-        <main className="relative h-dvh overflow-hidden bg-background text-foreground">
+        <main className="relative h-dvh overflow-x-hidden overflow-y-hidden bg-background text-foreground">
+            <ThemeBackground scene="setup" />
             <OpeningSceneAtmosphere />
 
             <section className="relative z-10 mx-auto flex h-dvh w-full max-w-xl flex-col px-5 pt-[env(safe-area-inset-top)]">
@@ -179,8 +181,8 @@ export function SessionSetupShell() {
                     </Body>
                 </motion.div>
 
-                {/* ─── Step content: contained scrolling area ─── */}
-                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-0.5 pb-4 scrollbar-none">
+                {/* ─── Step content: contained area (no scroll) ─── */}
+                <div className="min-h-0 flex-1 overflow-y-hidden overscroll-contain px-0.5 pb-4 scrollbar-none">
                     <SessionStepTransition stepKey={activeStepId}>
                         <StepComponent
                             setup={setup}

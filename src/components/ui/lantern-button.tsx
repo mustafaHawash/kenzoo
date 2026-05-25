@@ -10,12 +10,21 @@ export function LanternButton({ className, children, ...props }: ButtonProps) {
             variant='primary'
             size='lg'
             className={cn(
-                "hover:-translate-y-0.5",
+                "shadow-(--shadow-ornamental)",
 
+                "hover:-translate-y-0.5",
                 "hover:shadow-(--shadow-glow)",
+                "hover:brightness-110",
 
                 "active:translate-y-0",
-                "active:scale-[0.98]",
+                "active:scale-[0.97]",
+                "active:brightness-95",
+
+                "transition-all duration-200 ease-(--ease-soft)",
+
+                "disabled:cursor-not-allowed",
+                "disabled:translate-y-0",
+                "disabled:shadow-none",
 
                 className,
             )}

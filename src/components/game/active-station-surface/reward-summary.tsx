@@ -25,18 +25,15 @@ export function RewardSummary({ result }: RewardSummaryProps) {
             {...slideUp(0.15)}
             className="
                 flex items-center justify-between
-                rounded-2xl
+                rounded-xl
                 border border-secondary/12
                 bg-secondary/6
-                px-5 py-4
+                px-3 py-2.5
             "
         >
-            <div className="flex items-center gap-3">
-                <span className="text-lg">
-                    {result.treasureUnlocked ? "🗝️" : result.isCorrect ? "⭐" : "🌙"}
-                </span>
+            <div className="flex items-center gap-2">
                 <div className="flex flex-col">
-                    <Label className="text-foreground text-sm">
+                    <Label className="text-foreground text-xs">
                         {result.treasureUnlocked
                             ? "فرصة كنز!"
                             : result.isCorrect
@@ -52,15 +49,14 @@ export function RewardSummary({ result }: RewardSummaryProps) {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.3, ease: "easeOut" as const, delay: 0.2 }}
                     className="
-                        flex items-center gap-1.5
+                        flex items-center gap-1
                         rounded-full
                         border border-secondary/20
                         bg-secondary/12
-                        px-3 py-1.5
+                        px-2 py-1
                     "
                 >
-                    <span className="text-sm">🗝️</span>
-                    <Label className="text-secondary text-xs">
+                    <Label className="text-secondary text-[10px]">
                         كنز!
                     </Label>
                 </motion.div>

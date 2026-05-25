@@ -8,11 +8,13 @@ import Image from "next/image";
 
 import { ScreenContainer } from "@/components/ui/layout/screen-container";
 import { Headline, Body, Label, Muted } from "@/components/ui/typography";
-import type { JourneyPath, PlayerJourneyState } from "@/types/path";
+import type { JourneyPath } from "@/types/path";
 import { getCompletedPathCount } from "@/types/path";
 import { useGameSessionStore } from "@/store/game-session-store";
 import { getCurrentPlayer } from "@/lib/session-runtime/selectors/get-current-player";
 import { getCurrentJourney } from "@/lib/session-runtime/selectors/get-current-journey";
+import { iconAssets } from "@/assets";
+import { MoodSticker } from "@/components/ui/mood-sticker";
 
 /* ─── Animation variants ─── */
 const containerVariants: Variants = {
@@ -44,7 +46,28 @@ const pathCardHover = {
     hover: { scale: 1.02, transition: { duration: 0.2, ease: "easeOut" as const } },
 };
 
-/* ─── Path Card Component ─── */
+/* ─── Path icon mapping — uses our icon assets instead of emoji ─── */
+const PATH_ICONS: Record<string, string> = {
+    "path-moon": iconAssets.bigMoon,
+    "path-lantern": iconAssets.lantern,
+    "path-key": iconAssets.mainKey,
+    "path-treasure": iconAssets.treasureSymbol,
+    "path-tulip": iconAssets.tulipSticker,
+    "path-star": iconAssets.starsSticker,
+    "path-shy": iconAssets.shySticker,
+    "path-moon-small": iconAssets.smallMoon,
+    "path-sec-key": iconAssets.secondaryKey,
+    "path-treasure-chest": iconAssets.treasure,
+};
+
+function getPathIcon(pathId: string, emoji: string): string {
+    return PATH_ICONS[pathId] ?? emoji;
+}
+
+/* ─── Card back image (Kenzo card) ─── */
+const CARD_BACK_SRC = "/images/stickers/Kenzoo-card-back-before-treasure-reveal.webp";
+
+/* ─── Path Card Component — Kenzo Card Design ─── */
 function PathCard({
     path,
     onSelect,
@@ -58,69 +81,132 @@ function PathCard({
             : 0;
 
     const completedStations = path.stations.filter((s) => s.completed).length;
+    const isOpened = path.currentStationIndex > 0 || path.completed;
+    const pathIcon = getPathIcon(path.id, path.emoji);
 
     return (
         <motion.button
             variants={pathCardHover}
             initial="rest"
             whileHover={!path.completed ? "hover" : undefined}
-            whileTap={!path.completed ? { scale: 0.98 } : undefined}
+            whileTap={!path.completed ? { scale: 0.97 } : undefined}
             onClick={() => !path.completed && onSelect(path.id)}
             disabled={path.completed}
             className={`
-                relative flex flex-col gap-3 rounded-2xl border p-4 text-right
-                backdrop-blur-sm transition-colors
+                relative aspect-[5/7] w-full overflow-hidden rounded-2xl
+                border-2 transition-all duration-300
                 ${path.completed
-                    ? "border-primary/20 bg-primary/5 opacity-60 cursor-default"
-                    : "border-secondary/15 bg-card/70 hover:border-secondary/30 hover:bg-card/90 cursor-pointer"
+                    ? "border-primary/25 cursor-default opacity-60"
+                    : "border-secondary/20 cursor-pointer hover:border-secondary/40 hover:shadow-glow"
                 }
             `}
         >
-            {/* Path header */}
-            <div className="flex items-center gap-3">
-                <motion.span
-                    variants={floatVariants}
-                    animate="animate"
-                    className="text-2xl"
-                >
-                    {path.emoji}
-                </motion.span>
-                <div className="flex flex-col gap-0.5">
-                    <Label className="text-foreground text-sm font-semibold">
-                        {path.title}
-                    </Label>
-                    <Muted className="text-[11px]">
-                        {path.subtitle}
-                    </Muted>
-                </div>
-            </div>
-
-            {/* Progress indicator */}
-            <div className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                    <Muted className="text-[10px]">
-                        {path.completed
-                            ? "مكتمل ✅"
-                            : `${completedStations}/${path.stations.length} محطات`
-                        }
-                    </Muted>
-                    {!path.completed && path.currentStationIndex > 0 && (
-                        <Muted className="text-[10px] text-secondary/60">
-                            متابعة من المحطة {path.currentStationIndex + 1}
-                        </Muted>
-                    )}
-                </div>
-
-                {/* Progress track */}
-                <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-soft">
-                    <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${progressPercent}%` }}
-                        transition={{ duration: 0.6, ease: "easeOut" as const, delay: 0.3 }}
-                        className="absolute inset-y-0 right-0 rounded-full bg-linear-to-l from-secondary via-amber-400 to-secondary/80"
+            {!isOpened ? (
+                /* ═══════════════════════════════════════════
+                   🃏 CARD BACK — Mysterious Kenzo Card
+                   Not yet opened: show the card back image
+                   ═══════════════════════════════════════════ */
+                <div className="relative flex h-full w-full items-center justify-center">
+                    <Image
+                        src={CARD_BACK_SRC}
+                        alt={path.title}
+                        fill
+                        className="object-cover rounded-2xl"
+                        priority
                     />
+                    {/* Shimmer overlay */}
+                    <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-white/8 via-transparent to-black/5" />
                 </div>
-            </div>
+            ) : (
+                /* ═══════════════════════════════════════════
+                   🃏 CARD FACE — Opened Path
+                   Show path details like the face of a card
+                   ═══════════════════════════════════════════ */
+                <div className={`
+                    relative flex h-full w-full flex-col items-center p-2.5
+                    ${path.completed
+                        ? "bg-gradient-to-b from-primary/12 via-card/90 to-primary/6"
+                        : "bg-gradient-to-b from-secondary/10 via-card/95 to-secondary/5"
+                    }
+                `}>
+                    {/* Ambient glow */}
+                    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(246,208,140,0.15),transparent_60%)]" />
+
+                    {/* ── Icon area — large, centered, prominent ── */}
+                    <motion.div
+                        variants={floatVariants}
+                        animate="animate"
+                        className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center"
+                    >
+                        <Image
+                            src={pathIcon}
+                            alt=""
+                            width={56}
+                            height={56}
+                            className="h-14 w-14 object-contain drop-shadow-[0_3px_12px_rgba(216,179,106,0.35)]"
+                        />
+                    </motion.div>
+
+                    {/* ── Title & subtitle — centered ── */}
+                    <div className="relative z-10 mt-1 flex flex-col items-center gap-0.5 text-center">
+                        <Label className="text-foreground text-[13px] font-bold leading-tight">
+                            {path.title}
+                        </Label>
+                        <Muted className="text-[10px] leading-snug">
+                            {path.subtitle}
+                        </Muted>
+                    </div>
+
+                    {/* ── Spacer to push progress to bottom ── */}
+                    <div className="flex-1" />
+
+                    {/* ── Progress section — bottom of card ── */}
+                    <div className="relative z-10 mt-2 flex w-full flex-col gap-1.5">
+                        {/* Station dots */}
+                        <div className="flex items-center justify-center gap-1">
+                            {path.stations.map((s, i) => (
+                                <div
+                                    key={i}
+                                    className={`
+                                        h-1.5 rounded-full transition-all duration-300
+                                        ${s.completed
+                                            ? "w-3 bg-secondary/80"
+                                            : i === path.currentStationIndex
+                                                ? "w-2.5 bg-secondary/40 ring-1 ring-secondary/30"
+                                                : "w-1.5 bg-surface-soft/80"
+                                        }
+                                    `}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Progress label */}
+                        <div className="flex items-center justify-between">
+                            <Muted className="text-[9px]">
+                                {path.completed
+                                    ? "مكتمل ✓"
+                                    : `${completedStations}/${path.stations.length} محطات`
+                                }
+                            </Muted>
+                            {!path.completed && path.currentStationIndex > 0 && (
+                                <Muted className="text-[9px] text-secondary/70">
+                                    متابعة
+                                </Muted>
+                            )}
+                        </div>
+
+                        {/* Progress bar */}
+                        <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-soft/70">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${progressPercent}%` }}
+                                transition={{ duration: 0.6, ease: "easeOut" as const, delay: 0.3 }}
+                                className="absolute inset-y-0 right-0 rounded-full bg-linear-to-l from-secondary via-amber-400 to-secondary/80"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </motion.button>
     );
 }
@@ -138,7 +224,6 @@ export default function GameplayScreen() {
     // REAL session only — read from Zustand store
     const persistentState = useGameSessionStore((s) => s.persistentState);
     // Primitive selectors – keep hook order stable.
-    const activePathId = useGameSessionStore((s) => s.runtimeState.activePathId);
     const currentPlayerIndex = useGameSessionStore((s) => s.persistentState?.currentPlayerIndex ?? 0);
     const hasHydrated = useGameSessionStore((s) => s.hasHydrated);
 
@@ -163,8 +248,19 @@ export default function GameplayScreen() {
     // No session — show loading while redirect happens
     if (!persistentState || persistentState.players.length === 0) {
         return (
-            <ScreenContainer className="justify-center items-center">
-                <Muted>جاري التحميل...</Muted>
+            <ScreenContainer className="justify-center items-center gap-4">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                    className="flex flex-col items-center gap-4"
+                >
+                    <MoodSticker mood="thinking" size={80} delay={0.1} />
+                    <div className="flex flex-col items-center gap-1">
+                        <Label className="text-foreground text-sm font-semibold">جاري التحميل</Label>
+                        <Muted className="text-xs">استنى شوية...</Muted>
+                    </div>
+                </motion.div>
             </ScreenContainer>
         );
     }
@@ -172,8 +268,19 @@ export default function GameplayScreen() {
     // Guard against missing hydration – the store indicates readiness via hasHydrated.
     if (!hasHydrated || !currentPlayer || !journey) {
         return (
-            <ScreenContainer className="justify-center items-center">
-                <Muted>جاري التحميل...</Muted>
+            <ScreenContainer className="justify-center items-center gap-4">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                    className="flex flex-col items-center gap-4"
+                >
+                    <MoodSticker mood="thinking" size={80} delay={0.1} />
+                    <div className="flex flex-col items-center gap-1">
+                        <Label className="text-foreground text-sm font-semibold">جاري تحضير الجلسة</Label>
+                        <Muted className="text-xs">الليلة هتبدأ حالاً...</Muted>
+                    </div>
+                </motion.div>
             </ScreenContainer>
         );
     }
@@ -221,20 +328,20 @@ export default function GameplayScreen() {
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="flex flex-col gap-6"
+                className="flex flex-1 flex-col gap-3"
             >
                 {/* ═══════════════════════════════════════════
                     ✨ IMMERSIVE HEADER
                     ═══════════════════════════════════════════ */}
                 <motion.header
                     variants={itemVariants}
-                    className="relative flex flex-col items-center text-center gap-3 pt-2 pb-2"
+                    className="relative flex flex-col items-center text-center gap-1 pt-0 pb-0"
                 >
                     {/* Floating decorative elements */}
                     <div className="pointer-events-none absolute -top-1 right-6 text-2xl opacity-20 select-none">
                         <motion.span variants={floatVariants} animate="animate">✦</motion.span>
                     </div>
-                    <div className="pointer-events-none absolute top-8 left-8 text-lg opacity-15 select-none">
+                    <div className="pointer-events-none absolute top-6 left-8 text-lg opacity-15 select-none">
                         <motion.span
                             variants={floatVariants}
                             animate="animate"
@@ -248,27 +355,27 @@ export default function GameplayScreen() {
                     <motion.div
                         variants={floatVariants}
                         animate="animate"
-                        className="relative h-20 w-20 select-none sm:h-24 sm:w-24"
+                        className="relative h-10 w-10 select-none"
                     >
                         <Image
-                            src="/Logo-PNG.webp"
+                            src={iconAssets.logoMark}
                             alt="Kenzoo Logo"
                             fill
                             priority
-                            className="object-contain drop-shadow-[0_6px_20px_rgba(216,179,106,0.25)]"
+                            className="object-contain drop-shadow-[0_4px_16px_rgba(216,179,106,0.25)]"
                         />
                     </motion.div>
 
                     {/* Player greeting */}
-                    <Headline className="text-foreground text-2xl font-bold leading-tight">
+                    <Headline className="text-foreground text-lg font-bold leading-tight">
                         دورك يا{" "}
                         <span className="bg-linear-to-l from-amber-500 via-secondary to-amber-600 bg-clip-text text-transparent">
                             {playerName}
                         </span>
                     </Headline>
 
-                    <Body className="text-muted-foreground text-sm leading-relaxed max-w-70">
-                        اختار المسار اللي يعجبك واكتشف الكنز 🗝️
+                    <Body className="text-muted-foreground text-[11px] leading-relaxed max-w-70">
+                        اختار الكارت اللي يعجبك واكتشف الكنز
                     </Body>
                 </motion.header>
 
@@ -281,25 +388,29 @@ export default function GameplayScreen() {
                 >
                     <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 rounded-full border border-secondary/15 bg-secondary/8 px-3 py-1">
-                            <span className="text-xs">⭐</span>
+                            <Image src={iconAssets.starsSticker} alt="" width={14} height={14} className="object-contain" />
                             <Label className="text-secondary text-xs">{playerStars}</Label>
                         </div>
                         <div className="flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/8 px-3 py-1">
-                            <span className="text-xs">🗝️</span>
+                            <Image src={iconAssets.mainKey} alt="" width={14} height={14} className="object-contain" />
                             <Label className="text-primary text-xs">{playerTreasures}</Label>
                         </div>
                     </div>
-                    <Muted className="text-xs">
-                        {completedPaths}/4 مسارات
+                    <Muted className="text-[10px]">
+                        {completedPaths}/4 كروت
                     </Muted>
                 </motion.div>
 
                 {/* ═══════════════════════════════════════════
-                    🗺️ PATH CARDS
+                    🃏 PATH CARDS — Kenzo Card Hand
                     ═══════════════════════════════════════════ */}
-                <div className="flex flex-col gap-3">
-                    {journey.paths.map((path) => (
-                        <motion.div key={path.id} variants={itemVariants}>
+                <div className="grid grid-cols-2 gap-3 px-1">
+                    {journey.paths.map((path, idx) => (
+                        <motion.div
+                            key={path.id}
+                            variants={itemVariants}
+                            className="flex justify-center"
+                        >
                             <PathCard path={path} onSelect={handlePathSelect} />
                         </motion.div>
                     ))}
@@ -310,7 +421,7 @@ export default function GameplayScreen() {
                     ═══════════════════════════════════════════ */}
                 <motion.footer
                     variants={itemVariants}
-                    className="flex flex-col items-center gap-3 pt-4 pb-6"
+                    className="flex flex-col items-center gap-1 pt-1 pb-1"
                 >
                     <div className="flex items-center gap-3 w-full">
                         <div className="h-px flex-1 bg-linear-to-l from-transparent via-secondary/20 to-transparent" />
@@ -318,8 +429,8 @@ export default function GameplayScreen() {
                         <div className="h-px flex-1 bg-linear-to-r from-transparent via-secondary/20 to-transparent" />
                     </div>
 
-                    <Muted className="text-xs text-center leading-relaxed">
-                        🌙 كنزوو — اختار مسارك وابدأ المغامرة
+                    <Muted className="text-[10px] text-center leading-relaxed">
+                        كنزوو — اختار كارتك وابدأ المغامرة
                     </Muted>
                 </motion.footer>
             </motion.div>

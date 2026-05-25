@@ -4,6 +4,7 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
+import { soundAssets } from "@/assets";
 
 const buttonVariants = cva(
     [
@@ -96,34 +97,39 @@ export interface ButtonProps
 let clickAudio: HTMLAudioElement | null = null;
 function playClickSfx() {
     try {
-        if (!clickAudio) clickAudio = new Audio("/sounds/sfx/click.mp3");
+        if (!clickAudio) clickAudio = new Audio(soundAssets.click);
         clickAudio.volume = 0.3;
         clickAudio.currentTime = 0;
         clickAudio.play().catch(() => {});
     } catch {}
 }
 
-export function Button({ className, variant, size, asChild, onClick, ...props }: ButtonProps) {
-    const Comp = asChild ? Slot : "button";
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+    ({ className, variant, size, asChild, onClick, ...props }, ref) => {
+        const Comp = asChild ? Slot : "button";
 
-    const handleClick = onClick
-        ? (e: React.MouseEvent<HTMLButtonElement>) => {
-            playClickSfx();
-            onClick(e);
-          }
-        : undefined;
+        const handleClick = onClick
+            ? (e: React.MouseEvent<HTMLButtonElement>) => {
+                playClickSfx();
+                onClick(e);
+              }
+            : undefined;
 
-    return (
-        <Comp
-            className={cn(
-                buttonVariants({
-                    variant,
-                    size,
-                }),
-                className,
-            )}
-            onClick={handleClick}
-            {...props}
-        />
-    );
-}
+        return (
+            <Comp
+                ref={ref}
+                className={cn(
+                    buttonVariants({
+                        variant,
+                        size,
+                    }),
+                    className,
+                )}
+                onClick={handleClick}
+                {...props}
+            />
+        );
+    },
+);
+
+Button.displayName = "Button";

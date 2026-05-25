@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 
 import { generationPhrases } from "./setup-content";
 import { Body, Label, Muted } from "@/components/ui/typography";
+import { MoodSticker } from "@/components/ui/mood-sticker";
 import type { GenerationTransitionStatus } from "./setup-types";
 
 export function SetupGenerationTransition({
@@ -48,26 +49,23 @@ export function SetupGenerationTransition({
             exit={{ opacity: 0 }}
             className="absolute inset-0 z-30 flex items-center justify-center bg-background/72 px-6 backdrop-blur-xl"
         >
-            <div className="flex max-w-sm flex-col items-center gap-6 text-center">
+            <div className="flex max-w-sm flex-col items-center gap-5 text-center">
+                {/* Thinking sticker — alive, emotional, subtle */}
                 <motion.div
-                    animate={{ y: [0, -8, 0], scale: [1, 1.03, 1] }}
-                    transition={{ duration: 3.2, ease: "easeInOut", repeat: Infinity }}
-                    className="relative flex size-24 items-center justify-center rounded-full border border-secondary/20 bg-secondary/10"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
                 >
-                    <div className="absolute inset-4 rounded-full bg-secondary/25 blur-2xl" />
-                    <span className="relative text-4xl">✨</span>
+                    <MoodSticker mood="thinking" size={88} delay={0.2} />
                 </motion.div>
 
-                <div className="flex flex-col gap-3">
-                    <Label className="text-secondary">
+                <div className="flex flex-col gap-2">
+                    <Label className="text-secondary text-sm">
                         {status === "preparing" ? "الليلة بتتجهز..." : "كل حاجة جاهزة ✨"}
                     </Label>
-                    <Body className="min-h-14 text-balance text-lg leading-8 text-foreground transition-opacity duration-500">
+                    <Body className="min-h-12 text-balance text-base leading-7 text-foreground transition-opacity duration-500">
                         {status === "preparing" ? generationPhrases[phraseIndex] : "يلا نبدأ الحكاية..."}
                     </Body>
-                    <Muted className="text-xs leading-6 opacity-0">
-                        هنا بعدين هنستقبل توليد الجلسة، المحتوى، الثيمات، وأي انتظار ديناميكي من غير ما الإحساس يكسر.
-                    </Muted>
                 </div>
 
                 <div className="flex items-center gap-2">

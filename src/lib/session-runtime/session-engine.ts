@@ -458,7 +458,7 @@ export function createEmptyJourney(playerId: string): PlayerJourneyState {
     playerId,
     paths: Array.from({ length: PATHS_PER_PLAYER }, (_, i) => ({
       id: `path-${playerId}-${i}`,
-      emoji: "🌙",
+      emoji: "/images/icons/big-moon-icon.webp",
       title: `مسار ${i + 1}`,
       subtitle: "",
       difficultyTier: (i + 1) as 1 | 2 | 3 | 4,
@@ -642,7 +642,19 @@ export function advanceTurn(
     i === state.currentPlayerIndex ? resolveTurnEnd(p, lastResult) : p,
   );
 
-  const nextPlayerIndex = (state.currentPlayerIndex + 1) % playerCount;
+  // Auto-skip players who have completed all paths.
+  // Start from the next player and loop until we find one with incomplete paths,
+  // or we've checked all players (meaning everyone is done).
+  let nextPlayerIndex = (state.currentPlayerIndex + 1) % playerCount;
+  let checked = 0;
+  while (
+    nextPlayerIndex !== state.currentPlayerIndex &&
+    checked < playerCount &&
+    hasCompletedAllPaths(state.journeys[nextPlayerIndex])
+  ) {
+    nextPlayerIndex = (nextPlayerIndex + 1) % playerCount;
+    checked++;
+  }
 
   return {
     ...state,

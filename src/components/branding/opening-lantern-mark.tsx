@@ -2,6 +2,7 @@
 
 import { motion, type Variants } from "framer-motion";
 import Image from "next/image";
+import { iconAssets } from "@/assets";
 
 const revealVariants: Variants = {
     hidden: { opacity: 0, y: 14, scale: 0.98 },
@@ -37,7 +38,7 @@ export function OpeningLanternMark() {
                 className="relative h-100 w-100"
             >
                 <Image
-                    src="/Logo-PNG.webp"
+                    src={iconAssets.logoMark}
                     alt="Kenzoo Logo"
                     fill
                     priority

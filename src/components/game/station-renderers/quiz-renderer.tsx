@@ -23,10 +23,13 @@ export function QuizRenderer({
 }: StationRendererProps) {
     if (!station.choices?.length) return null;
 
+    const choiceLetters = ["أ", "ب", "ج", "د", "هـ", "و"];
+
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
             {station.choices.map((choice, i) => {
                 const isSelected = selectedChoice === choice;
+                const letter = choiceLetters[i] ?? `${i + 1}`;
 
                 return (
                     <motion.button
@@ -37,10 +40,10 @@ export function QuizRenderer({
                         animate="visible"
                         onClick={() => onSelect(choice)}
                         className={`
-                            relative overflow-hidden
-                            rounded-2xl
-                            border px-5 py-4
-                            text-center
+                            relative flex items-center gap-3 overflow-hidden
+                            rounded-xl
+                            border px-3.5 py-2.5
+                            text-right
                             transition-all duration-200
                             outline-none
                             focus-visible:ring-2 focus-visible:ring-secondary/40
@@ -71,7 +74,20 @@ export function QuizRenderer({
                             />
                         )}
 
-                        <span className="relative z-10 text-foreground text-[15px] leading-relaxed">
+                        {/* Choice letter indicator */}
+                        <div className={`
+                            relative z-10 flex h-6 w-6 shrink-0 items-center justify-center
+                            rounded-full text-[11px] font-bold
+                            transition-colors duration-200
+                            ${isSelected
+                                ? "bg-secondary/20 text-secondary"
+                                : "bg-surface-soft text-muted-foreground/60"
+                            }
+                        `}>
+                            {letter}
+                        </div>
+
+                        <span className="relative z-10 text-foreground text-[13px] leading-relaxed flex-1">
                             {choice}
                         </span>
                     </motion.button>

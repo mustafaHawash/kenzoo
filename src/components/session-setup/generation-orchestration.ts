@@ -28,6 +28,7 @@ import {
 } from "@/lib/session-runtime/create-session";
 import type { PersistentSessionState } from "@/lib/session-runtime/session-engine";
 import { useGameSessionStore } from "@/store/game-session-store";
+import { soundAssets } from "@/assets";
 
 export type GenerationCallbacks = {
     onPreparing: () => void;
@@ -107,7 +108,7 @@ export function startSessionGeneration(
 
             // Play session start SFX
             try {
-                const audio = new Audio("/sounds/sfx/session-start.mp3");
+                const audio = new Audio(soundAssets.sessionStart);
                 audio.volume = 0.6;
                 audio.play().catch(() => {});
             } catch {}
