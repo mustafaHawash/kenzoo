@@ -92,8 +92,26 @@ export interface ButtonProps
     asChild?: boolean;
 }
 
-export function Button({ className, variant, size, asChild, ...props }: ButtonProps) {
+// Global click SFX — lazy singleton to avoid creating Audio on every render
+let clickAudio: HTMLAudioElement | null = null;
+function playClickSfx() {
+    try {
+        if (!clickAudio) clickAudio = new Audio("/sounds/sfx/click.mp3");
+        clickAudio.volume = 0.3;
+        clickAudio.currentTime = 0;
+        clickAudio.play().catch(() => {});
+    } catch {}
+}
+
+export function Button({ className, variant, size, asChild, onClick, ...props }: ButtonProps) {
     const Comp = asChild ? Slot : "button";
+
+    const handleClick = onClick
+        ? (e: React.MouseEvent<HTMLButtonElement>) => {
+            playClickSfx();
+            onClick(e);
+          }
+        : undefined;
 
     return (
         <Comp
@@ -104,6 +122,7 @@ export function Button({ className, variant, size, asChild, ...props }: ButtonPr
                 }),
                 className,
             )}
+            onClick={handleClick}
             {...props}
         />
     );

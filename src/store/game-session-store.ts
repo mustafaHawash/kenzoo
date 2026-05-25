@@ -119,6 +119,8 @@ export type TreasureRevealData = {
   };
   /** Title awarded (if reward type is "title") */
   awardedTitle: string | null;
+  /** Visual reveal style — determines animation type */
+  revealStyle: "cinematic" | "flip-card" | "mystery";
 };
 
 export type GameSessionState = {
@@ -484,6 +486,9 @@ export const useGameSessionStore = create<
             message: outcome.treasure.reward.message,
           },
           awardedTitle: state.awardedTitle,
+          revealStyle: outcome.treasure.revealStyle ?? (
+            ["cinematic", "flip-card", "mystery"] as const
+          )[Math.floor(Math.random() * 3)],
         };
 
         // 3. Transition to treasure-reveal phase (activeTreasureId still set for reveal UI)

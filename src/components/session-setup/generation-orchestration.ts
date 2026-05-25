@@ -105,6 +105,13 @@ export function startSessionGeneration(
             const initSession = useGameSessionStore.getState().initSession;
             initSession(persistentState);
 
+            // Play session start SFX
+            try {
+                const audio = new Audio("/sounds/sfx/session-start.mp3");
+                audio.volume = 0.6;
+                audio.play().catch(() => {});
+            } catch {}
+
             callbacks.onReady(persistentState);
         } catch (error) {
             // Reset lifecycle on error via store action

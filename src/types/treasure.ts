@@ -103,6 +103,12 @@ export type OpenedTreasureRecord = {
     starsConsumed: number;
 };
 
+/* ─── Treasure reveal style ─── */
+export type TreasureRevealStyle =
+    | "cinematic"    // Dramatic slow reveal with glow burst
+    | "flip-card"    // Card flip animation — front/back
+    | "mystery";     // Shimmer fog dissolving into clarity
+
 /* ─── Treasure ─── */
 export type Treasure = {
     id: string;
@@ -134,6 +140,12 @@ export type Treasure = {
 
     /** What the treasure contains */
     reward: TreasureRewardDetail;
+
+    /**
+     * Visual reveal style — determines the animation used when opening.
+     * If not specified, one is randomly assigned.
+     */
+    revealStyle?: TreasureRevealStyle;
 };
 
 /**

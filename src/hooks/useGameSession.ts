@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation";
 
 import { useGameSessionStore } from "@/store/game-session-store";
 import { resolveTurn, resolveTreasureOpen } from "@/lib/session-runtime/turn-engine";
+import { useSound } from "@/hooks/useSound";
 import {
     applyTurnOutcome,
     getSessionProgressLabel,
@@ -75,6 +76,11 @@ export function useGameSession() {
     const ceremony = useGameSessionStore((s) => s.ceremony);
     const lastResult = useGameSessionStore((s) => s.lastResult);
     const awardedTitle = useGameSessionStore((s) => s.awardedTitle);
+
+    /* ─── Sound effects ─── */
+    const sfxCorrectAnswer = useSound("/sounds/sfx/correct-answer.mp3", { volume: 0.5 });
+    const sfxWrongAnswer = useSound("/sounds/sfx/wrong-answer.mp3", { volume: 0.5 });
+    const sfxPathComplete = useSound("/sounds/sfx/pathCompelete.mp3", { volume: 0.6 });
 
     /* ─── Store actions ─── */
     const initSession = useGameSessionStore((s) => s.initSession);
@@ -211,6 +217,9 @@ export function useGameSession() {
                 // 2. Commit outcome to store IMMEDIATELY
                 commitTurnOutcome(outcome);
                 setLastResult(outcome.roundResult);
+
+                // Play correct answer SFX if the answer was correct
+                // SFX moved to reveal timer callback below
                 
                 // 3. Transition to reveal phase
                 setGameplayPhase("reveal");
@@ -220,6 +229,14 @@ export function useGameSession() {
                 revealTimerRef.current = setTimeout(() => {
                     // Guard: don't fire if component unmounted
                     if (!isMountedRef.current) return;
+
+                    // Play answer SFX when result overlay appears
+                    if (outcome.roundResult.isCorrect) {
+                        sfxCorrectAnswer.play();
+                    } else {
+                        sfxWrongAnswer.play();
+                    }
+
                     setGameplayPhase("result");
                     revealTimerRef.current = null;
                     isSubmittingRef.current = false;
@@ -305,9 +322,10 @@ export function useGameSession() {
         // handleTransition() to advance the turn — same pattern as handleContinueFromResult.
         const phase = useGameSessionStore.getState().gameplayPhase;
         if (phase === "transition") {
+            sfxPathComplete.play();
             handleTransition();
         }
-    }, [dismissTreasure, handleTransition]);
+    }, [dismissTreasure, handleTransition, sfxPathComplete]);
 
     /* ═══════════════════════════════════════════════════════════
         CONTINUE FROM TREASURE REVEAL — After player sees the reveal
@@ -319,14 +337,16 @@ export function useGameSession() {
         // to advance the turn — same pattern as handleContinueFromResult.
         const phase = useGameSessionStore.getState().gameplayPhase;
         if (phase === "transition") {
+            sfxPathComplete.play();
             handleTransition();
         }
-    }, [continueFromTreasureReveal, handleTransition]);
+    }, [continueFromTreasureReveal, handleTransition, sfxPathComplete]);
 
     /* ═══════════════════════════════════════════════════════════
         CONTINUE FROM RESULT — Delegates to store
        ═══════════════════════════════════════════════════════════ */
     const handleContinueFromResult = useCallback(() => {
+        const lastResultBefore = useGameSessionStore.getState().lastResult;
         continueFromResult();
         // continueFromResult() is synchronous (Zustand set()). After it runs,
         // if the engine decided "transition" phase, we MUST call handleTransition()
@@ -335,9 +355,14 @@ export function useGameSession() {
         // never triggered handleTransition at all.
         const phase = useGameSessionStore.getState().gameplayPhase;
         if (phase === "transition") {
+            // Only play pathComplete SFX when a path was actually completed (correct answer)
+            // Wrong answers also lead to transition but are NOT path completions.
+            if (lastResultBefore?.isCorrect) {
+                sfxPathComplete.play();
+            }
             handleTransition();
         }
-    }, [continueFromResult, handleTransition]);
+    }, [continueFromResult, handleTransition, sfxPathComplete]);
 
     /* ═══════════════════════════════════════════════════════════
         ADVANCE CEREMONY — Step through ending ceremony phases
