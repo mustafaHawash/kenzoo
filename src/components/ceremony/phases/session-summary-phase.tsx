@@ -39,8 +39,8 @@ function computeStats(players: Player[]) {
 }
 
 const RARITY_CONFIG: Record<TreasureRarity, { label: string; color: string; glow: string }> = {
-    legendary: { label: "كنوز أسطورية", color: "text-amber-400", glow: "shadow-[0_0_20px_rgba(245,158,11,0.3)]" },
-    rare: { label: "كنوز نادرة", color: "text-purple-400", glow: "shadow-[0_0_16px_rgba(168,85,247,0.2)]" },
+    legendary: { label: "كنوز أسطورية", color: "text-amber-300", glow: "shadow-[0_0_20px_rgba(245,158,11,0.3)]" },
+    rare: { label: "كنوز نادرة", color: "text-sky-300", glow: "shadow-[0_0_16px_rgba(56,189,248,0.25)]" },
     common: { label: "كنوز عادية", color: "text-secondary", glow: "" },
 };
 
@@ -106,15 +106,15 @@ export function SessionSummaryPhase({ players, onContinue }: SessionSummaryPhase
                         variants={staggerItem}
                         className={`
                             flex flex-col items-center gap-1
-                            rounded-xl border border-purple-400/20
-                            bg-purple-400/8
+                            rounded-xl border border-sky-400/20
+                            bg-sky-400/8
                             px-3 py-3
                             ${RARITY_CONFIG.rare.glow}
                         `}
                     >
                         <Image src={iconAssets.secondaryKey} alt="" width={20} height={20} className="object-contain" />
-                        <Label className="text-purple-400 text-lg font-bold">{stats.rareCount}</Label>
-                        <Muted className="text-[9px] text-purple-400/70">{RARITY_CONFIG.rare.label}</Muted>
+                        <Label className="text-sky-300 text-lg font-bold">{stats.rareCount}</Label>
+                        <Muted className="text-[9px] text-sky-300/70">{RARITY_CONFIG.rare.label}</Muted>
                     </motion.div>
                 )}
 

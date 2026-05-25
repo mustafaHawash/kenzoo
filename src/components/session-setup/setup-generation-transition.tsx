@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 import { generationPhrases } from "./setup-content";
-import { Body, Label, Muted } from "@/components/ui/typography";
+import { Body, Label } from "@/components/ui/typography";
 import { MoodSticker } from "@/components/ui/mood-sticker";
 import type { GenerationTransitionStatus } from "./setup-types";
 

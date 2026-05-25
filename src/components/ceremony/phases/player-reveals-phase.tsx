@@ -53,7 +53,7 @@ export function PlayerRevealsPhase({ players, onContinue }: PlayerRevealsPhasePr
                 animate="visible"
                 className="flex flex-col gap-3 w-full"
             >
-                {players.map((player) => (
+                {players.map((player, i) => (
                     <motion.div
                         key={player.id}
                         variants={staggerItem}
@@ -124,7 +124,7 @@ export function PlayerRevealsPhase({ players, onContinue }: PlayerRevealsPhasePr
                                 animate="animate"
                                 className="shrink-0"
                             >
-                                <MoodSticker mood="celebration" size={48} />
+                                <MoodSticker mood="celebration" size={64} />
                             </motion.div>
                         </div>
                     </motion.div>

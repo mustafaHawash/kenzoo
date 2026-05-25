@@ -117,7 +117,7 @@ export function WinnerRevealPhase({ finalScores, winnerId, onContinue }: WinnerR
                     </div>
 
                     {/* Celebration sticker */}
-                    <MoodSticker mood="celebration" size={56} delay={0.8} />
+                    <MoodSticker mood="celebration" size={80} delay={0.8} />
                 </div>
             </motion.div>
 

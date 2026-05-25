@@ -15,6 +15,7 @@ import { getCurrentPlayer } from "@/lib/session-runtime/selectors/get-current-pl
 import { getCurrentJourney } from "@/lib/session-runtime/selectors/get-current-journey";
 import { iconAssets } from "@/assets";
 import { MoodSticker } from "@/components/ui/mood-sticker";
+import { useSoundtrack } from "@/hooks/useSoundtrack";
 
 /* ─── Animation variants ─── */
 const containerVariants: Variants = {
@@ -136,23 +137,23 @@ function PathCard({
                     <motion.div
                         variants={floatVariants}
                         animate="animate"
-                        className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center"
+                        className="relative z-10 flex h-16 w-16 shrink-0 items-center justify-center"
                     >
                         <Image
                             src={pathIcon}
                             alt=""
-                            width={56}
-                            height={56}
-                            className="h-14 w-14 object-contain drop-shadow-[0_3px_12px_rgba(216,179,106,0.35)]"
+                            width={64}
+                            height={64}
+                            className="h-16 w-16 object-contain drop-shadow-[0_4px_16px_rgba(216,179,106,0.4)]"
                         />
                     </motion.div>
 
                     {/* ── Title & subtitle — centered ── */}
-                    <div className="relative z-10 mt-1 flex flex-col items-center gap-0.5 text-center">
-                        <Label className="text-foreground text-[13px] font-bold leading-tight">
+                    <div className="relative z-10 mt-1.5 flex flex-col items-center gap-0.5 text-center">
+                        <Label className="text-foreground text-sm font-bold leading-tight">
                             {path.title}
                         </Label>
-                        <Muted className="text-[10px] leading-snug">
+                        <Muted className="text-[11px] leading-snug">
                             {path.subtitle}
                         </Muted>
                     </div>
@@ -220,6 +221,7 @@ function PathCard({
     ═══════════════════════════════════════════════════════════ */
 export default function GameplayScreen() {
     const router = useRouter();
+    const soundtrack = useSoundtrack();
 
     // REAL session only — read from Zustand store
     const persistentState = useGameSessionStore((s) => s.persistentState);
@@ -244,6 +246,16 @@ export default function GameplayScreen() {
             router.replace("/session/setup");
         }
     }, [persistentState, router]);
+
+    /* ─── Soundtrack — play gameplay music on path selection screen ─── */
+    useEffect(() => {
+        if (persistentState && persistentState.players.length > 0) {
+            soundtrack.play("gameplay", 0.15);
+        }
+        return () => {
+            soundtrack.stop();
+        };
+    }, [persistentState]);
 
     // No session — show loading while redirect happens
     if (!persistentState || persistentState.players.length === 0) {
@@ -355,7 +367,7 @@ export default function GameplayScreen() {
                     <motion.div
                         variants={floatVariants}
                         animate="animate"
-                        className="relative h-10 w-10 select-none"
+                        className="relative h-12 w-12 select-none"
                     >
                         <Image
                             src={iconAssets.logoMark}
@@ -367,14 +379,14 @@ export default function GameplayScreen() {
                     </motion.div>
 
                     {/* Player greeting */}
-                    <Headline className="text-foreground text-lg font-bold leading-tight">
+                    <Headline className="text-foreground text-xl font-bold leading-tight">
                         دورك يا{" "}
                         <span className="bg-linear-to-l from-amber-500 via-secondary to-amber-600 bg-clip-text text-transparent">
                             {playerName}
                         </span>
                     </Headline>
 
-                    <Body className="text-muted-foreground text-[11px] leading-relaxed max-w-70">
+                    <Body className="text-muted-foreground text-xs leading-relaxed max-w-70">
                         اختار الكارت اللي يعجبك واكتشف الكنز
                     </Body>
                 </motion.header>
@@ -387,16 +399,16 @@ export default function GameplayScreen() {
                     className="flex items-center justify-between"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 rounded-full border border-secondary/15 bg-secondary/8 px-3 py-1">
-                            <Image src={iconAssets.starsSticker} alt="" width={14} height={14} className="object-contain" />
-                            <Label className="text-secondary text-xs">{playerStars}</Label>
+                        <div className="flex items-center gap-1.5 rounded-full border border-secondary/15 bg-secondary/8 px-3.5 py-1.5">
+                            <Image src={iconAssets.starsSticker} alt="" width={16} height={16} className="object-contain" />
+                            <Label className="text-secondary text-[13px]">{playerStars}</Label>
                         </div>
-                        <div className="flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/8 px-3 py-1">
-                            <Image src={iconAssets.mainKey} alt="" width={14} height={14} className="object-contain" />
-                            <Label className="text-primary text-xs">{playerTreasures}</Label>
+                        <div className="flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/8 px-3.5 py-1.5">
+                            <Image src={iconAssets.mainKey} alt="" width={16} height={16} className="object-contain" />
+                            <Label className="text-primary text-[13px]">{playerTreasures}</Label>
                         </div>
                     </div>
-                    <Muted className="text-[10px]">
+                    <Muted className="text-xs">
                         {completedPaths}/4 كروت
                     </Muted>
                 </motion.div>

@@ -37,9 +37,8 @@ export default function HomePage() {
     /* ─── Core soundtrack — warm ambient on home page ─── */
     useEffect(() => {
         soundtrack.play("core", 0.15);
-        return () => {
-            soundtrack.stop();
-        };
+        // Don't stop on unmount — next page will switch the layer.
+        // This prevents a silence gap during navigation.
     }, []);
 
     return (
@@ -69,7 +68,7 @@ export default function HomePage() {
                         variants={revealVariants}
                         className="flex w-full flex-col items-center gap-3"
                     >
-                        <LanternButton asChild className="min-w-52 border border-secondary/30 bg-secondary/15 px-8 text-secondary shadow-[0_0_34px_rgba(216,179,106,0.15)] backdrop-blur-md transition-all duration-300 hover:bg-secondary/25 hover:shadow-[0_0_42px_rgba(216,179,106,0.25)]">
+                        <LanternButton asChild className="min-w-56 border border-secondary/30 bg-secondary/15 px-10 py-3 text-base text-secondary shadow-[0_0_34px_rgba(216,179,106,0.15)] backdrop-blur-md transition-all duration-300 hover:bg-secondary/25 hover:shadow-[0_0_42px_rgba(216,179,106,0.25)]">
                             <Link href="/session/setup">✨ يلا نبدأ ✨</Link>
                         </LanternButton>
 

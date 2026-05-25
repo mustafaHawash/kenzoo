@@ -43,14 +43,14 @@ export function RiddleRenderer({
                     dir="rtl"
                     className="
                         w-full bg-transparent
-                        px-4 py-3 pr-9
-                        text-foreground text-[13px]
+                        px-4 py-3.5 pr-9
+                        text-foreground text-sm
                         placeholder:text-muted-foreground/40
                         outline-none
                     "
                 />
             </div>
-            <Muted className="text-[10px] text-center">
+            <Muted className="text-xs text-center">
                 ✍️ اكتب إجابتك وركز فالسؤال!
             </Muted>
         </div>

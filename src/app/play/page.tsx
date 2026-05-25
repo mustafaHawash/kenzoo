@@ -79,19 +79,23 @@ function PlayPageContent() {
         isLeavingPlay,
     } = useGameSession();
 
+    /* ─── Ending Ceremony — redirect to dedicated ceremony page ─── */
+    useEffect(() => {
+        if (ceremony) {
+            router.replace("/ending");
+        }
+    }, [ceremony, router]);
+
     /* ─── Soundtrack — play gameplay music when session is active ─── */
     useEffect(() => {
         if (hasHydrated && currentPlayer && !ceremony) {
             soundtrack.play("gameplay", 0.25);
         }
-        return () => {
-            soundtrack.stop();
-        };
+        // Don't stop on unmount — let the next page handle the transition.
+        // This prevents a silence gap when navigating to /ending.
     }, [hasHydrated, currentPlayer, ceremony]);
 
     /* ─── No session — show loading (redirect handled by useGameSession) ─── */
-    // If the store hasn't hydrated or there is no active player, show a loading state.
-    // 1️⃣ Hydration safety – show session loading message.
     if (!hasHydrated || !currentPlayer) {
         return (
             <ScreenContainer className="justify-center items-center gap-4">
@@ -111,9 +115,8 @@ function PlayPageContent() {
         );
     }
 
-    /* ─── Ending Ceremony — redirect to dedicated ceremony page ─── */
+    /* ─── Ending Ceremony — show loading while redirecting ─── */
     if (ceremony) {
-        router.replace("/ending");
         return (
             <ScreenContainer className="justify-center items-center gap-4">
                 <motion.div

@@ -48,15 +48,15 @@ export function ResultPhase({
             <div className="flex flex-col items-center gap-1.5 text-center">
                 <MoodSticker
                     mood={result.isCorrect ? "celebration" : "fail"}
-                    size={100}
+                    size={120}
                     delay={0.1}
                 />
 
                 <Headline
                     className={
                         result.isCorrect
-                            ? "text-secondary text-lg font-bold"
-                            : "text-foreground/70 text-lg"
+                            ? "text-secondary text-2xl font-bold"
+                            : "text-foreground/70 text-2xl"
                     }
                 >
                     {result.isCorrect
@@ -68,13 +68,13 @@ export function ResultPhase({
                 {!result.isCorrect && (
                     <div
                         className="
-                            rounded-lg
+                            rounded-xl
                             border border-secondary/15
                             bg-secondary/6
-                            px-3 py-1.5
+                            px-4 py-2
                         "
                     >
-                        <Muted className="text-xs">
+                        <Muted className="text-[13px]">
                             الإجابة الصحيحة:{" "}
                             <span className="text-foreground font-medium">
                                 {station.answer}
@@ -89,14 +89,14 @@ export function ResultPhase({
                 <motion.div
                     {...slideUp(0.1)}
                     className="
-                        rounded-lg
+                        rounded-xl
                         border border-primary/10
                         bg-primary/5
-                        px-3 py-2
+                        px-4 py-2.5
                         text-center
                     "
                 >
-                    <Muted className="text-xs leading-relaxed">
+                    <Muted className="text-[13px] leading-relaxed">
                         📝 {station.explanation}
                     </Muted>
                 </motion.div>

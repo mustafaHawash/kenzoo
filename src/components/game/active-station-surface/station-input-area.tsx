@@ -71,21 +71,21 @@ export function StationInputArea({
                     rounded-xl
                     border border-secondary/12
                     bg-secondary/6
-                    px-3.5 py-2
+                    px-4 py-2.5
                     backdrop-blur-sm
                 "
             >
-                <div className="flex items-center gap-1.5">
-                    <span className="text-xs">{station.reward.canUnlockTreasure ? "🎁" : "⭐"}</span>
-                    <Muted className="text-[11px]">
+                <div className="flex items-center gap-2">
+                    <span className="text-sm">{station.reward.canUnlockTreasure ? "🎁" : "⭐"}</span>
+                    <Muted className="text-xs">
                         {station.reward.canUnlockTreasure
                             ? "كنز محتمل!"
                             : "نجم وبيجمع اخواته"}
                     </Muted>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                     <span className="text-xs">✦</span>
-                    <Label className="text-secondary text-[11px] font-semibold">
+                    <Label className="text-secondary text-xs font-semibold">
                         +{station.reward.stars}
                     </Label>
                 </div>

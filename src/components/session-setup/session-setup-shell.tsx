@@ -17,6 +17,7 @@ import { startSessionGeneration } from "./generation-orchestration";
 import type { SessionSetupState, GenerationTransitionStatus } from "./setup-types";
 import { cn } from "@/lib/utils";
 import type { PersistentSessionState } from "@/lib/session-runtime/session-engine";
+import { useSoundtrack } from "@/hooks/useSoundtrack";
 
 /* ─── Initial state ─── */
 const initialSetupState: SessionSetupState = {
@@ -51,11 +52,18 @@ const initialSetupState: SessionSetupState = {
    ═══════════════════════════════════════════════════════════ */
 export function SessionSetupShell() {
     const router = useRouter();
+    const soundtrack = useSoundtrack();
     const [setup, setSetup] = useState<SessionSetupState>(initialSetupState);
     const [stepIndex, setStepIndex] = useState(0);
     const [generationStatus, setGenerationStatus] = useState<GenerationTransitionStatus>("idle");
     const generationCleanupRef = useRef<(() => void) | null>(null);
     const generatedStateRef = useRef<PersistentSessionState | null>(null);
+
+    /* ─── Core soundtrack — continues from home page during setup ─── */
+    useEffect(() => {
+        soundtrack.play("core", 0.15);
+        // Don't stop on unmount — gameplay page will switch to gameplay layer.
+    }, []);
 
     /* ─── Data-driven step resolution ─── */
     const activeStepDef = sortedSteps[stepIndex];

@@ -45,7 +45,7 @@ export function IntroPhase({ onContinue }: IntroPhaseProps) {
             </motion.div>
 
             {/* Thinking sticker — reflective mood */}
-            <MoodSticker mood="thinking" size={80} delay={0.3} />
+            <MoodSticker mood="thinking" size={100} delay={0.3} />
 
             {/* Atmospheric headline */}
             <Headline className="text-secondary text-xl text-center leading-relaxed">

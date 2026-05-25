@@ -41,8 +41,8 @@ export function StationHeader({ station, showHintToggle = true }: StationHeaderP
                         backdrop-blur-sm
                     "
                 >
-                    <span className="text-sm">{meta.emoji}</span>
-                    <Label className="text-primary text-[11px] font-semibold tracking-wide">
+                    <span className="text-base">{meta.emoji}</span>
+                    <Label className="text-primary text-xs font-semibold tracking-wide">
                         {meta.label}
                     </Label>
                 </motion.div>
@@ -55,7 +55,7 @@ export function StationHeader({ station, showHintToggle = true }: StationHeaderP
             >
                 <Headline
                     className="
-                        text-lg
+                        text-2xl
                         leading-snug
                         text-foreground
                         font-bold
@@ -68,11 +68,11 @@ export function StationHeader({ station, showHintToggle = true }: StationHeaderP
             {/* ── Question + hint ── */}
             <motion.div
                 {...slideUp(0.1)}
-                className="space-y-2 text-center"
+                className="space-y-2.5 text-center"
             >
                 <Body
                     className="
-                        text-[13px]
+                        text-base
                         leading-relaxed
                         text-foreground/85
                     "
@@ -100,7 +100,7 @@ export function StationHeader({ station, showHintToggle = true }: StationHeaderP
                                             backdrop-blur-sm
                                         "
                                     >
-                                        <Muted className="text-xs leading-relaxed">
+                                        <Muted className="text-[13px] leading-relaxed">
                                             💡 {station.hint}
                                         </Muted>
                                     </div>
@@ -110,12 +110,12 @@ export function StationHeader({ station, showHintToggle = true }: StationHeaderP
                         <button
                             onClick={() => setHintOpen((v) => !v)}
                             className="
-                                flex items-center gap-1
+                                flex items-center gap-1.5
                                 rounded-full
                                 border border-secondary/10
                                 bg-secondary/5
-                                px-3 py-1
-                                text-[11px] text-muted-foreground/70
+                                px-3.5 py-1.5
+                                text-xs text-muted-foreground/70
                                 hover:text-secondary hover:border-secondary/20 hover:bg-secondary/10
                                 transition-all duration-200
                                 active:scale-95

@@ -64,8 +64,8 @@ export function StoryRenderer({
                         >
                             {/* Story choice indicator */}
                             <div className={`
-                                relative z-10 flex h-6 w-6 shrink-0 items-center justify-center
-                                rounded-full text-[11px] font-bold
+                                relative z-10 flex h-7 w-7 shrink-0 items-center justify-center
+                                rounded-full text-xs font-bold
                                 transition-colors duration-200
                                 ${isSelected
                                     ? "bg-primary/15 text-primary"
@@ -75,7 +75,7 @@ export function StoryRenderer({
                                 {i + 1}
                             </div>
 
-                            <span className="relative z-10 text-foreground text-[13px] leading-relaxed flex-1">
+                            <span className="relative z-10 text-foreground text-sm leading-relaxed flex-1">
                                 {choice}
                             </span>
                         </motion.button>
@@ -99,7 +99,7 @@ export function StoryRenderer({
             <Label className="text-primary text-sm">
                 حكاية جاية...
             </Label>
-            <Muted className="text-[11px] text-center">
+            <Muted className="text-xs text-center">
                 استنى القصة وهتختار مصيرك
             </Muted>
         </div>

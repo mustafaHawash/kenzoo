@@ -42,7 +42,7 @@ export function ClosingPhase({ onNewSession }: ClosingPhaseProps) {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="flex flex-col items-center gap-5 py-6"
+            className="relative flex flex-col items-center gap-5 py-6"
         >
             {/* Sparkle overlay */}
             <motion.div
@@ -74,7 +74,7 @@ export function ClosingPhase({ onNewSession }: ClosingPhaseProps) {
             </motion.div>
 
             {/* Celebration sticker */}
-            <MoodSticker mood="celebration" size={72} delay={0.3} />
+            <MoodSticker mood="celebration" size={100} delay={0.3} />
 
             {/* Emotional message */}
             <Headline className="text-secondary text-lg text-center leading-relaxed px-4">

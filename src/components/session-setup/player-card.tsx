@@ -42,19 +42,19 @@ export function PlayerCard({
                     "border-secondary/12 bg-surface-elevated/20 hover:border-secondary/24 hover:bg-surface-elevated/36",
                 )}
             >
-                <div className="flex size-9 items-center justify-center rounded-xl bg-secondary/8 text-base">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-secondary/8 text-lg">
                     {player.avatar}
                 </div>
                 <div className="flex flex-1 flex-col gap-0 overflow-hidden">
                     <span className={cn(
-                        "truncate text-sm",
+                        "truncate text-sm font-medium",
                         trimmedName ? "text-foreground/90" : "text-muted-foreground/60",
                     )}>
                         {displayName}
                     </span>
                 </div>
-                <span className="text-[10px] text-muted-foreground/40">
-                    {player.ageGroup === "kid" ? "طفل" : "كبير"}
+                <span className="text-[11px] text-muted-foreground/50">
+                    {player.ageGroup === "kid" ? "👶 طفل" : "🧑 كبير"}
                 </span>
             </button>
         );
@@ -74,7 +74,7 @@ export function PlayerCard({
             <div className="relative flex flex-col gap-2.5">
                 {/* Name input row: avatar + input + remove */}
                 <div className="flex items-center gap-2.5">
-                    <div className="flex size-9 items-center justify-center rounded-xl bg-secondary/10 text-base">
+                    <div className="flex size-10 items-center justify-center rounded-xl bg-secondary/10 text-lg">
                         {player.avatar}
                     </div>
 
@@ -83,7 +83,7 @@ export function PlayerCard({
                         onChange={(event) => onUpdate({ ...player, name: event.target.value })}
                         placeholder="الاسم"
                         className={cn(
-                            "h-9 flex-1 rounded-xl border bg-background/30 px-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/50",
+                            "h-10 flex-1 rounded-xl border bg-background/30 px-3 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground/50",
                             validationError
                                 ? "border-destructive/28 focus:border-destructive/48 focus:ring-1 focus:ring-destructive/10"
                                 : "border-secondary/10 focus:border-secondary/32 focus:ring-1 focus:ring-secondary/10",
@@ -111,14 +111,14 @@ export function PlayerCard({
                 {/* Compact row: avatar picker + age toggle */}
                 <div className="flex items-center gap-2">
                     {/* Mini avatar picker — sourced from registry */}
-                    <div className="flex gap-1">
+                    <div className="flex gap-1.5">
                         {getAllAvatars().slice(0, 4).map((avatar) => (
                             <button
                                 key={avatar}
                                 type="button"
                                 onClick={() => onUpdate({ ...player, avatar })}
                                 className={cn(
-                                    "flex size-7 items-center justify-center rounded-lg text-sm transition-all",
+                                    "flex size-8 items-center justify-center rounded-lg text-base transition-all active:scale-90",
                                     player.avatar === avatar
                                         ? "bg-secondary/16 ring-1 ring-secondary/30"
                                         : "text-muted-foreground/50 hover:bg-foreground/5 hover:text-foreground",
@@ -129,11 +129,11 @@ export function PlayerCard({
                         ))}
                     </div>
 
-                    {/* Age group pills */}
-                    <div className="mr-auto flex gap-1">
+                    {/* Age group pills — thumb-friendly with icons */}
+                    <div className="mr-auto flex gap-1.5">
                         {[
-                            { id: "adult" as const, label: "كبير" },
-                            { id: "kid" as const, label: "طفل" },
+                            { id: "adult" as const, label: "كبير", icon: "🧑" },
+                            { id: "kid" as const, label: "طفل", icon: "👶" },
                         ].map((option) => {
                             const isSelected = player.ageGroup === option.id;
                             return (
@@ -142,12 +142,13 @@ export function PlayerCard({
                                     type="button"
                                     onClick={() => updateAgeGroup(option.id)}
                                     className={cn(
-                                        "rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all duration-(--duration-normal) ease-(--ease-soft)",
+                                        "flex items-center gap-1 rounded-xl px-3 py-1.5 text-[12px] font-medium transition-all duration-(--duration-normal) ease-(--ease-soft) active:scale-95",
                                         isSelected
-                                            ? "bg-secondary/16 text-foreground"
-                                            : "text-muted-foreground/50 hover:bg-foreground/5 hover:text-foreground",
+                                            ? "bg-secondary/16 text-foreground border border-secondary/20"
+                                            : "text-muted-foreground/50 hover:bg-foreground/5 hover:text-foreground border border-transparent",
                                     )}
                                 >
+                                    <span className="text-sm">{option.icon}</span>
                                     {option.label}
                                 </button>
                             );

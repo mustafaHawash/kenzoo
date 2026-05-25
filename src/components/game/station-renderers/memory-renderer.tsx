@@ -47,8 +47,8 @@ export function MemoryRenderer({
                     dir="rtl"
                     className="
                         w-full bg-transparent
-                        px-4 py-3 pr-9
-                        text-foreground text-[13px]
+                        px-4 py-3.5 pr-9
+                        text-foreground text-sm
                         placeholder:text-muted-foreground/40
                         outline-none
                     "
@@ -60,7 +60,7 @@ export function MemoryRenderer({
                 transition={{ delay: 0.2 }}
                 className="text-center"
             >
-                <Muted className="text-[10px]">
+                <Muted className="text-xs">
                     📖 ذكرى حلوة ليك — اكتب اللي فاكره
                 </Muted>
             </motion.div>

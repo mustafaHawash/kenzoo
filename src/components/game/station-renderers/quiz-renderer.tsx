@@ -42,7 +42,7 @@ export function QuizRenderer({
                         className={`
                             relative flex items-center gap-3 overflow-hidden
                             rounded-xl
-                            border px-3.5 py-2.5
+                            border px-4 py-3
                             text-right
                             transition-all duration-200
                             outline-none
@@ -76,8 +76,8 @@ export function QuizRenderer({
 
                         {/* Choice letter indicator */}
                         <div className={`
-                            relative z-10 flex h-6 w-6 shrink-0 items-center justify-center
-                            rounded-full text-[11px] font-bold
+                            relative z-10 flex h-7 w-7 shrink-0 items-center justify-center
+                            rounded-full text-xs font-bold
                             transition-colors duration-200
                             ${isSelected
                                 ? "bg-secondary/20 text-secondary"
@@ -87,7 +87,7 @@ export function QuizRenderer({
                             {letter}
                         </div>
 
-                        <span className="relative z-10 text-foreground text-[13px] leading-relaxed flex-1">
+                        <span className="relative z-10 text-foreground text-sm leading-relaxed flex-1">
                             {choice}
                         </span>
                     </motion.button>

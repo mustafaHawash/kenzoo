@@ -29,15 +29,15 @@ export function TinyMissionCard({ mission }: TinyMissionCardProps) {
                 rounded-xl
                 border border-primary/10
                 bg-primary/6
-                px-3 py-2.5
+                px-4 py-3
             "
         >
             <div className="flex items-start gap-2">
-                <div className="flex flex-col gap-0.5">
-                    <Label className="text-primary text-[10px]">
+                <div className="flex flex-col gap-1">
+                    <Label className="text-primary text-xs font-semibold">
                         مهمة صغيرة!
                     </Label>
-                    <Body className="text-foreground/80 text-xs leading-relaxed">
+                    <Body className="text-foreground/80 text-[13px] leading-relaxed">
                         {mission.text}
                     </Body>
                 </div>

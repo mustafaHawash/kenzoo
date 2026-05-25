@@ -26,8 +26,8 @@ const RARITY_STYLE: Record<TreasureRarity, { border: string; bg: string; label: 
         icon: "✦",
     },
     rare: {
-        border: "border-purple-400/25",
-        bg: "bg-purple-400/8",
+        border: "border-sky-400/25",
+        bg: "bg-sky-400/8",
         label: "نادر",
         icon: "◆",
     },
@@ -203,7 +203,7 @@ export function TitlesRevealPhase({ players, onContinue }: TitlesRevealPhaseProp
                     transition={{ duration: 0.5 }}
                     className="flex flex-col items-center gap-3"
                 >
-                    <MoodSticker mood="celebration" size={64} delay={0.2} />
+                    <MoodSticker mood="celebration" size={88} delay={0.2} />
 
                     <motion.button
                         initial={{ opacity: 0 }}

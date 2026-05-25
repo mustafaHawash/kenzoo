@@ -7,10 +7,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CozyCard } from "@/components/ui/cozy-card";
 import { LanternButton } from "@/components/ui/lantern-button";
 import { Headline, Muted, Body } from "@/components/ui/typography";
+import Image from "next/image";
 
 import type { TreasureRevealStyle } from "@/types/treasure";
 import { useSound } from "@/hooks/useSound";
-import { soundAssets } from "@/assets";
+import { soundAssets, stickerAssets } from "@/assets";
 
 /* ─── SFX Paths ─── */
 const SFX = {
@@ -67,8 +68,8 @@ const RARITY_CONFIG = {
     },
     rare: {
         label: "نادر ★",
-        glowColor: "rgba(168,85,247,0.18)",
-        badgeClass: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+        glowColor: "rgba(56,189,248,0.18)",
+        badgeClass: "bg-sky-500/20 text-sky-200 border-sky-500/30",
         emojiScale: 1.05,
         revealDuration: 1500,
     },
@@ -142,18 +143,32 @@ function CinematicReveal({
                     exit={{ opacity: 0 }}
                     className="flex flex-col items-center gap-6 py-8"
                 >
-                    {/* Pulsing glow orb */}
-                    <motion.div
-                        animate={{
-                            scale: [0.8, 1.3, 1],
-                            opacity: [0.3, 0.8, 0.5],
-                        }}
-                        transition={{ duration: 1.5, ease: "easeInOut" }}
-                        className="h-24 w-24 rounded-full"
-                        style={{
-                            background: `radial-gradient(circle, ${config.glowColor}, transparent 70%)`,
-                        }}
-                    />
+                    {/* Pulsing glow orb with Kenzoo card */}
+                    <div className="relative flex items-center justify-center">
+                        <motion.div
+                            animate={{
+                                scale: [0.8, 1.3, 1],
+                                opacity: [0.3, 0.8, 0.5],
+                            }}
+                            transition={{ duration: 1.5, ease: "easeInOut" }}
+                            className="absolute h-28 w-28 rounded-full"
+                            style={{
+                                background: `radial-gradient(circle, ${config.glowColor}, transparent 70%)`,
+                            }}
+                        />
+                        <motion.div
+                            animate={{ scale: [1, 1.05, 1], opacity: [0.7, 1, 0.7] }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                            className="relative h-20 w-20"
+                        >
+                            <Image
+                                src={stickerAssets.treasureBack[0]}
+                                alt=""
+                                fill
+                                className="object-contain"
+                            />
+                        </motion.div>
+                    </div>
                     <Muted className="text-sm animate-pulse">
                         {pickSuspenseMessage()}
                     </Muted>
@@ -241,11 +256,16 @@ function FlipCardReveal({
                     {phase === "opening" && (
                         <>
                             <motion.div
-                                animate={{ scale: [1, 1.05, 1], opacity: [0.5, 0.9, 0.5] }}
+                                animate={{ scale: [1, 1.05, 1], opacity: [0.7, 1, 0.7] }}
                                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" as const }}
-                                className="text-5xl"
+                                className="relative h-20 w-20"
                             >
-                                🎴
+                                <Image
+                                    src={stickerAssets.treasureBack[0]}
+                                    alt=""
+                                    fill
+                                    className="object-contain"
+                                />
                             </motion.div>
                             <Muted className="text-sm animate-pulse">{pickSuspenseMessage()}</Muted>
                         </>
@@ -302,7 +322,7 @@ function MysteryReveal({
                     transition={{ duration: 0.8 }}
                     className="flex flex-col items-center gap-5 py-8"
                 >
-                    {/* Fog layers */}
+                    {/* Fog layers with Kenzoo card */}
                     <div className="relative h-20 w-20">
                         <motion.div
                             animate={{ opacity: [0.3, 0.7, 0.3], scale: [0.9, 1.1, 0.9] }}
@@ -314,13 +334,18 @@ function MysteryReveal({
                             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" as const, delay: 0.3 }}
                             className="absolute inset-2 rounded-full bg-gradient-to-tl from-secondary/15 via-transparent to-secondary/8 blur-sm"
                         />
-                        <motion.span
-                            animate={{ opacity: [0.4, 0.8, 0.4] }}
+                        <motion.div
+                            animate={{ opacity: [0.6, 1, 0.6] }}
                             transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" as const }}
-                            className="absolute inset-0 flex items-center justify-center text-3xl"
+                            className="absolute inset-0"
                         >
-                            🌫️
-                        </motion.span>
+                            <Image
+                                src={stickerAssets.treasureBack[0]}
+                                alt=""
+                                fill
+                                className="object-contain"
+                            />
+                        </motion.div>
                     </div>
                     <Muted className="text-sm animate-pulse">{pickSuspenseMessage()}</Muted>
                 </motion.div>

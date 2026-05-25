@@ -51,13 +51,13 @@ function EndingCeremonyContent() {
         if (ceremony) {
             soundtrack.play("ceremony", 0.2);
         }
-        return () => {
-            soundtrack.stop();
-        };
+        // Don't stop on unmount during ceremony — only stop when
+        // the user explicitly starts a new session (handleNewSession).
     }, [ceremony]);
 
-    /** Start a new session — clear runtime and go to setup */
+    /** Start a new session — clear runtime, stop music, go to setup */
     const handleNewSession = () => {
+        soundtrack.stop();
         clearSession();
         router.replace("/session/setup");
     };

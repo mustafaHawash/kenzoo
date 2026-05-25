@@ -31,7 +31,7 @@ function getStickerForMood(mood: StickerMood): string {
  * Subtle, supportive, NOT overwhelming.
  * Fades in with a gentle pop animation.
  */
-export function MoodSticker({ mood, size = 72, className, delay = 0 }: MoodStickerProps) {
+export function MoodSticker({ mood, size = 96, className, delay = 0 }: MoodStickerProps) {
     const [src, setSrc] = useState<string | null>(null);
 
     useEffect(() => {
@@ -45,7 +45,7 @@ export function MoodSticker({ mood, size = 72, className, delay = 0 }: MoodStick
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay, duration: 0.4, ease: "easeOut" }}
-            className={`relative select-none bg-transparent ${className ?? ""}`}
+            className={`relative select-none ${className ?? ""}`}
             style={{ width: size, height: size }}
         >
             <Image

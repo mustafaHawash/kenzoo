@@ -3,6 +3,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { IBM_Plex_Sans_Arabic, Alexandria, Literata } from "next/font/google";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { GlobalMuteButton } from "@/components/ui/global-mute-button";
 
 const alexandria = Alexandria({
     subsets: ["arabic"],
@@ -47,7 +48,10 @@ export default function RootLayout({
             )}
         >
             <body className={cn("h-full overflow-hidden flex flex-col bg-background text-foreground")}>
-                <ThemeProvider>{children}</ThemeProvider>
+                <ThemeProvider>
+                    {children}
+                    <GlobalMuteButton />
+                </ThemeProvider>
             </body>
         </html>
     );
