@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
@@ -28,17 +28,12 @@ function getStickerForMood(mood: StickerMood): string {
 
 /**
  * MoodSticker — renders a random sticker from the given mood pool.
- * Subtle, supportive, NOT overwhelming.
+ * Uses useMemo to pick a sticker once per mood — avoids re-randomizing on re-renders.
  * Fades in with a gentle pop animation.
  */
-export function MoodSticker({ mood, size = 96, className, delay = 0 }: MoodStickerProps) {
-    const [src, setSrc] = useState<string | null>(null);
-
-    useEffect(() => {
-        setSrc(getStickerForMood(mood));
-    }, [mood]);
-
-    if (!src) return null;
+export function MoodSticker({ mood, size = 128, className, delay = 0 }: MoodStickerProps) {
+    // Pick sticker once per mood change — stable across re-renders
+    const src = useMemo(() => getStickerForMood(mood), [mood]);
 
     return (
         <motion.div

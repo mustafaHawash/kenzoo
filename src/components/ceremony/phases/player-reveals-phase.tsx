@@ -36,7 +36,7 @@ export function PlayerRevealsPhase({ players, onContinue }: PlayerRevealsPhasePr
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="flex flex-col items-center gap-4 py-4"
+            className="flex flex-col items-center gap-3 py-3"
         >
             {/* Section title */}
             <div className="flex flex-col items-center gap-1">
@@ -59,18 +59,15 @@ export function PlayerRevealsPhase({ players, onContinue }: PlayerRevealsPhasePr
                         variants={staggerItem}
                         className="
                             relative overflow-hidden
-                            rounded-2xl
-                            border border-secondary/15
-                            bg-gradient-to-b from-secondary/8 via-card/90 to-secondary/4
-                            p-3.5
+                            rounded-xl
+                            border border-secondary/12
+                            bg-gradient-to-b from-secondary/6 via-card/90 to-secondary/3
+                            p-3
                         "
                     >
-                        {/* Ambient glow */}
-                        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(246,208,140,0.10),transparent_60%)]" />
-
-                        <div className="relative z-10 flex items-start gap-3">
+                        <div className="relative z-10 flex items-start gap-2.5">
                             {/* Avatar emoji */}
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-secondary/20 bg-surface-soft/60 text-2xl">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-secondary/20 bg-surface-soft/60 text-xl">
                                 {getDefaultAvatarForIndex(i)}
                             </div>
 
@@ -83,11 +80,11 @@ export function PlayerRevealsPhase({ players, onContinue }: PlayerRevealsPhasePr
                                 {/* Stats row */}
                                 <div className="flex items-center gap-3">
                                     <div className="flex items-center gap-1">
-                                        <Image src={iconAssets.starsSticker} alt="" width={12} height={12} className="object-contain" />
+                                        <Image src={iconAssets.starsSticker} alt="" width={16} height={16} className="object-contain" />
                                         <Muted className="text-[11px]">{player.stars} نجمة</Muted>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                        <Image src={iconAssets.mainKey} alt="" width={12} height={12} className="object-contain" />
+                                        <Image src={iconAssets.treasure} alt="" width={16} height={16} className="object-contain" />
                                         <Muted className="text-[11px]">{player.treasures} كنز</Muted>
                                     </div>
                                 </div>
@@ -124,7 +121,7 @@ export function PlayerRevealsPhase({ players, onContinue }: PlayerRevealsPhasePr
                                 animate="animate"
                                 className="shrink-0"
                             >
-                                <MoodSticker mood="celebration" size={64} />
+                                <MoodSticker mood="celebration" size={100} />
                             </motion.div>
                         </div>
                     </motion.div>

@@ -47,45 +47,81 @@ export function CeremonyScreen({
     const { phase, finalScores, winnerId } = ceremony;
 
     return (
-        <div className="flex w-full justify-center px-4 py-2">
-            <CozyCard className="w-full max-w-sm rounded-[28px] p-3.5">
+        <div className="flex w-full justify-center px-3 py-2">
+            <CozyCard className="w-full max-w-sm rounded-[24px] p-3">
                 {/* Ambient atmosphere */}
-                <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-[radial-gradient(circle_at_top,rgba(246,208,140,0.10),transparent_60%)]" />
+                <div className="pointer-events-none absolute inset-0 rounded-[24px] bg-[radial-gradient(circle_at_top,rgba(246,208,140,0.10),transparent_60%)]" />
 
                 <div className="relative z-10">
                     <AnimatePresence mode="wait">
                         {phase === "intro" && (
-                            <motion.div key="intro">
+                            <motion.div
+                                key="intro"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -12 }}
+                                transition={{ duration: 0.4, ease: "easeOut" }}
+                            >
                                 <IntroPhase onContinue={onAdvance} />
                             </motion.div>
                         )}
 
                         {phase === "session-summary" && (
-                            <motion.div key="session-summary">
+                            <motion.div
+                                key="session-summary"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -12 }}
+                                transition={{ duration: 0.4, ease: "easeOut" }}
+                            >
                                 <SessionSummaryPhase players={players} onContinue={onAdvance} />
                             </motion.div>
                         )}
 
                         {phase === "titles-reveal" && (
-                            <motion.div key="titles-reveal">
+                            <motion.div
+                                key="titles-reveal"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -12 }}
+                                transition={{ duration: 0.4, ease: "easeOut" }}
+                            >
                                 <TitlesRevealPhase players={players} onContinue={onAdvance} />
                             </motion.div>
                         )}
 
                         {phase === "player-reveals" && (
-                            <motion.div key="player-reveals">
+                            <motion.div
+                                key="player-reveals"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -12 }}
+                                transition={{ duration: 0.4, ease: "easeOut" }}
+                            >
                                 <PlayerRevealsPhase players={players} onContinue={onAdvance} />
                             </motion.div>
                         )}
 
                         {phase === "ranking-reveal" && (
-                            <motion.div key="ranking-reveal">
+                            <motion.div
+                                key="ranking-reveal"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -12 }}
+                                transition={{ duration: 0.4, ease: "easeOut" }}
+                            >
                                 <RankingRevealPhase finalScores={finalScores} onContinue={onAdvance} />
                             </motion.div>
                         )}
 
                         {phase === "winner-reveal" && (
-                            <motion.div key="winner-reveal">
+                            <motion.div
+                                key="winner-reveal"
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                            >
                                 <WinnerRevealPhase
                                     finalScores={finalScores}
                                     winnerId={winnerId}
@@ -95,7 +131,13 @@ export function CeremonyScreen({
                         )}
 
                         {phase === "closing" && (
-                            <motion.div key="closing">
+                            <motion.div
+                                key="closing"
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -12 }}
+                                transition={{ duration: 0.4, ease: "easeOut" }}
+                            >
                                 <ClosingPhase onNewSession={onNewSession} />
                             </motion.div>
                         )}

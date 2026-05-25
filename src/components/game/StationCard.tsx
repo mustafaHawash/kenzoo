@@ -136,40 +136,21 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
         >
             <CozyCard
                 className={cn(
-                    "relative overflow-hidden rounded-[32px]",
-                    "p-6 sm:p-7",
+                    "relative overflow-hidden rounded-[22px]",
+                    "p-4 sm:p-5",
                 )}
             >
                 {/* Ambient warm glow - top */}
                 <div
                     className='
             pointer-events-none absolute inset-0
-            bg-[radial-gradient(ellipse_at_top_center,rgba(246,208,140,0.14),transparent_55%)]
+            bg-[radial-gradient(ellipse_at_top_center,rgba(246,208,140,0.12),transparent_55%)]
           '
                 />
 
-                {/* Playful corner sparkle */}
-                <div
-                    className='
-            pointer-events-none absolute -top-2 -left-2
-            h-24 w-24
-            rounded-full
-            bg-[radial-gradient(circle,rgba(255,231,181,0.12),transparent_70%)]
-          '
-                />
-
-                {/* Warm bottom glow */}
-                <div
-                    className='
-            pointer-events-none absolute inset-x-0 bottom-0
-            h-1/3
-            bg-[radial-gradient(ellipse_at_bottom_center,rgba(230,201,140,0.08),transparent_70%)]
-          '
-                />
-
-                <div className='relative z-10 flex flex-col gap-6'>
+                <div className='relative z-10 flex flex-col gap-3'>
                     {/* Top content */}
-                    <div className='flex items-start gap-4'>
+                    <div className='flex items-start gap-3'>
                         {/* Emoji badge */}
                         <motion.div
                             animate={{ rotate: [0, -5, 5, 0] }}
@@ -182,19 +163,19 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                             className='
                     flex shrink-0
                     items-center justify-center
-                    h-14 w-14
-                    rounded-2xl
+                    h-11 w-11
+                    rounded-xl
                     border border-secondary/20
                     bg-linear-to-br from-secondary/15 to-accent/10
-                    text-2xl
-                    shadow-[0_6px_24px_rgba(216,179,106,0.15)]
+                    text-xl
+                    shadow-[0_4px_16px_rgba(216,179,106,0.12)]
                   '
                         >
                             {meta.emoji}
                         </motion.div>
 
                         {/* Text content */}
-                        <div className='flex flex-1 flex-col gap-2.5'>
+                        <div className='flex flex-1 flex-col gap-1.5'>
                             {/* Type label */}
                             <Label
                                 className='
@@ -204,9 +185,9 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                 text-primary
                     inline-flex items-center
                     self-start
-                    px-3 py-1
-                    gap-1.5
-                    text-xs
+                    px-2.5 py-0.5
+                    gap-1
+                    text-[11px]
                     tracking-wide
                   '
                             >
@@ -216,7 +197,7 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                             {/* Main title */}
                             <Headline
                                 className='
-                  text-[26px] sm:text-[28px]
+                  text-lg sm:text-xl
                   leading-tight
                   text-foreground
                 '
@@ -228,7 +209,8 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                             <Body
                                 className='
                   text-right
-                  leading-loose
+                  text-sm
+                  leading-relaxed
                   text-foreground-soft
                 '
                             >
@@ -237,34 +219,11 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                         </div>
                     </div>
 
-                    {/* Warm divider with sparkle */}
-                    <div className='flex items-center gap-3'>
-                        <div
-                            className='
-                  h-px flex-1
-                  bg-linear-to-l
-                  from-transparent
-                  via-secondary/25
-                  to-transparent
-                '
-                        />
-                        <span className='text-xs text-secondary/40'>✦</span>
-                        <div
-                            className='
-                  h-px flex-1
-                  bg-linear-to-r
-                  from-transparent
-                  via-secondary/25
-                  to-transparent
-                '
-                        />
-                    </div>
-
                     {/* Metadata row */}
                     <div
                         className='
               flex flex-wrap items-center
-              justify-between gap-2.5
+              justify-between gap-2
             '
                     >
                         {/* Mood pill */}
@@ -273,8 +232,8 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                 rounded-full
                 border border-secondary/10
                 bg-secondary/6
-                px-3.5 py-1.5
-                text-xs'
+                px-3 py-1
+                text-[11px]'
                         >
                             {moodLabels[station.mood]}
                         </Muted>
@@ -285,8 +244,8 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                 rounded-full
                 border border-primary/10
                 bg-primary/6
-                px-3.5 py-1.5
-                text-xs
+                px-3 py-1
+                text-[11px]
               '
                         >
                             {difficultyLabels[station.difficulty]}
@@ -297,19 +256,19 @@ export function StationCard({ station, onClick, className }: StationCardProps) {
                     <div
                         className='
               flex items-center justify-between
-              rounded-2xl
+              rounded-xl
               border border-secondary/10
               bg-secondary/5
-              px-4 py-3
+              px-3.5 py-2
             '
                     >
-                        <Muted>
+                        <Muted className="text-xs">
                             {station.reward.canUnlockTreasure
-                                ? "🗝️  شكلها فيها كنز"
+                                ? "🗝️ شكلها فيها كنز"
                                 : "✨ النجوم حلوة"}
                         </Muted>
 
-                        <Label className='text-secondary'>
+                        <Label className='text-secondary text-xs'>
                             +{station.reward.stars} ⭐
                         </Label>
                     </div>

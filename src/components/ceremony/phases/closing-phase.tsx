@@ -6,9 +6,9 @@ import Image from "next/image";
 
 import { Headline, Muted } from "@/components/ui/typography";
 import { MoodSticker } from "@/components/ui/mood-sticker";
-import { iconAssets, particleAssets } from "@/assets";
+import { iconAssets } from "@/assets";
 
-import { phaseEnter, gentleFloat, shimmer } from "../ceremony-motion";
+import { phaseEnter, gentleFloat } from "../ceremony-motion";
 
 interface ClosingPhaseProps {
     onNewSession: () => void;
@@ -42,23 +42,8 @@ export function ClosingPhase({ onNewSession }: ClosingPhaseProps) {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="relative flex flex-col items-center gap-5 py-6"
+            className="relative flex flex-col items-center gap-3.5 py-4"
         >
-            {/* Sparkle overlay */}
-            <motion.div
-                variants={shimmer}
-                initial="hidden"
-                animate="visible"
-                className="pointer-events-none absolute inset-0 opacity-30"
-            >
-                <Image
-                    src={particleAssets.sparklesOverlay}
-                    alt=""
-                    fill
-                    className="object-cover"
-                />
-            </motion.div>
-
             {/* Floating logo */}
             <motion.div
                 variants={gentleFloat}

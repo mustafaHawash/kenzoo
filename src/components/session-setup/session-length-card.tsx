@@ -29,9 +29,9 @@ export function SessionLengthCard({
             type="button"
             onClick={onSelect}
             className={cn(
-                "group relative overflow-hidden rounded-2xl border p-4 text-right backdrop-blur-md",
+                "group relative overflow-hidden rounded-xl border p-3.5 text-right backdrop-blur-md",
                 "transition-all duration-(--duration-normal) ease-(--ease-soft)",
-                "min-h-[5.5rem]",
+                "min-h-[4.5rem]",
                 selected
                     ? "border-secondary/48 bg-secondary/16 shadow-[0_0_34px_rgba(216,179,106,0.16)]"
                     : "border-secondary/14 bg-surface-elevated/28 hover:border-secondary/30 hover:bg-surface-elevated/42 active:scale-[0.98]",

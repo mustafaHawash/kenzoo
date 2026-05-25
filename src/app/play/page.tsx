@@ -105,7 +105,7 @@ function PlayPageContent() {
                     transition={{ duration: 0.4 }}
                     className="flex flex-col items-center gap-4"
                 >
-                    <MoodSticker mood="thinking" size={80} delay={0.1} />
+                    <MoodSticker mood="thinking" size={160} delay={0.1} />
                     <div className="flex flex-col items-center gap-1">
                         <Label className="text-foreground text-sm font-semibold">جاري تحميل الجلسة</Label>
                         <Muted className="text-xs">استنى شوية...</Muted>
@@ -125,7 +125,7 @@ function PlayPageContent() {
                     transition={{ duration: 0.4 }}
                     className="flex flex-col items-center gap-4"
                 >
-                    <MoodSticker mood="thinking" size={80} delay={0.1} />
+                    <MoodSticker mood="thinking" size={160} delay={0.1} />
                     <div className="flex flex-col items-center gap-1">
                         <Label className="text-foreground text-sm font-semibold">جاري تحضير الحفل</Label>
                         <Muted className="text-xs">اللحظة الحلوة جاية...</Muted>
@@ -176,7 +176,7 @@ function PlayPageContent() {
                     transition={{ duration: 0.4 }}
                     className="flex flex-col items-center gap-4"
                 >
-                    <MoodSticker mood="thinking" size={80} delay={0.1} />
+                    <MoodSticker mood="thinking" size={160} delay={0.1} />
                     <div className="flex flex-col items-center gap-1">
                         <Label className="text-foreground text-sm font-semibold">جاري تحميل المسار</Label>
                         <Muted className="text-xs">استنى شوية...</Muted>
@@ -190,7 +190,7 @@ function PlayPageContent() {
     if (activePath?.completed) {
         return (
             <ScreenContainer className="justify-center items-center gap-4">
-                <MoodSticker mood="celebration" size={72} />
+                <MoodSticker mood="celebration" size={160} />
                 <Headline className="bg-linear-to-l from-amber-500 via-secondary to-amber-600 bg-clip-text text-transparent text-2xl font-bold">أحسنت! اكتمل المسار</Headline>
                 <LanternButton onClick={handleTransition}>
                     العودة للمسارات
@@ -201,7 +201,7 @@ function PlayPageContent() {
 
     return (
         <ScreenContainer className="justify-center gap-0">
-            <div className="flex flex-1 min-h-0 flex-col gap-1.5">
+            <div className="flex flex-1 min-h-0 flex-col gap-1 justify-center">
                 {/* ═══════════════════════════════════════════
                     🎯 PLAYER TURN INDICATOR
                     ═══════════════════════════════════════════ */}
@@ -225,7 +225,7 @@ function PlayPageContent() {
                         <motion.div
                             variants={floatBob}
                             animate="animate"
-                            className="relative h-4 w-4 select-none"
+                            className="relative h-6 w-6 select-none"
                         >
                             <Image
                                 src={iconAssets.logoMark}
@@ -234,21 +234,21 @@ function PlayPageContent() {
                                 className="object-contain"
                             />
                         </motion.div>
-                        <Label className="text-primary text-[11px]">
+                        <Label className="text-primary text-xs font-semibold">
                             دور {currentPlayer.name}
                         </Label>
                         {currentPlayer.treasures > 0 && (
                             <div
                                 className="
-                                    flex items-center gap-1
+                                    flex items-center gap-1.5
                                     rounded-full
                                     border border-primary/10
                                     bg-primary/8
-                                    px-2 py-0.5
+                                    px-3 py-1
                                 "
                             >
-                                <Image src={iconAssets.mainKey} alt="" width={10} height={10} className="object-contain" />
-                                <Label className="text-primary text-[10px] tabular-nums">
+                                <Image src={iconAssets.treasure} alt="" width={20} height={20} className="object-contain" />
+                                <Label className="text-primary text-xs font-semibold tabular-nums">
                                     {currentPlayer.treasures}
                                 </Label>
                             </div>
@@ -271,7 +271,7 @@ function PlayPageContent() {
                                  {progressLabel}
                              </Muted>
                              <div className="flex items-center gap-1">
-                                 <Image src={iconAssets.starsSticker} alt="" width={10} height={10} className="object-contain opacity-50" />
+                                 <Image src={iconAssets.starsSticker} alt="" width={14} height={14} className="object-contain opacity-50" />
                                  <Muted className="text-[9px]">
                                      {activePath.currentStationIndex}/{activePath.stations.length}
                                  </Muted>

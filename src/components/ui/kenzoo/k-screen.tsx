@@ -25,7 +25,7 @@ export function KScreen({
     return (
         <main
             className={cn(
-                "relative h-dvh w-full overflow-hidden bg-background text-foreground",
+                "relative min-h-dvh w-full overflow-x-hidden overflow-y-auto bg-background text-foreground",
                 className,
             )}
             {...props}
@@ -33,7 +33,7 @@ export function KScreen({
             <ThemeBackground scene={scene} themeId={themeId} particles={particles} />
             <div
                 className={cn(
-                    "relative z-10 mx-auto flex h-dvh w-full max-w-md flex-col px-3 py-2",
+                    "relative z-10 mx-auto flex min-h-dvh w-full max-w-md flex-col px-3 py-2",
                     "pb-[max(0.5rem,env(safe-area-inset-bottom))]",
                     "pt-[max(0.5rem,env(safe-area-inset-top))]",
                     contentClassName,

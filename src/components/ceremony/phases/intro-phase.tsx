@@ -28,7 +28,7 @@ export function IntroPhase({ onContinue }: IntroPhaseProps) {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="flex flex-col items-center gap-6 py-6"
+            className="flex flex-col items-center gap-4 py-4"
         >
             {/* Floating logo mark */}
             <motion.div

@@ -38,9 +38,10 @@ const buttonVariants = cva(
                     "bg-primary",
                     "text-primary-foreground",
 
-                    "shadow-[var(--shadow-ambient)]",
+                    "shadow-[0_4px_20px_rgba(216,179,106,0.25),0_1px_3px_rgba(0,0,0,0.15)]",
 
-                    "hover:brightness-105",
+                    "hover:brightness-110",
+                    "hover:shadow-[0_6px_28px_rgba(216,179,106,0.35),0_2px_6px_rgba(0,0,0,0.18)]",
                 ],
 
                 secondary: [

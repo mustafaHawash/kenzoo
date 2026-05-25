@@ -59,7 +59,7 @@ export function SessionSummaryPhase({ players, onContinue }: SessionSummaryPhase
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="flex flex-col items-center gap-5 py-4"
+            className="flex flex-col items-center gap-3 py-3"
         >
             {/* Section title */}
             <div className="flex flex-col items-center gap-1.5">
@@ -128,7 +128,7 @@ export function SessionSummaryPhase({ players, onContinue }: SessionSummaryPhase
                         px-3 py-3
                     "
                 >
-                    <Image src={iconAssets.mainKey} alt="" width={20} height={20} className="object-contain" />
+                    <Image src={iconAssets.treasure} alt="" width={28} height={28} className="object-contain" />
                     <Label className="text-secondary text-lg font-bold">{stats.totalTreasures}</Label>
                     <Muted className="text-[9px] text-secondary/70">كنوز مكتشفة</Muted>
                 </motion.div>
@@ -143,7 +143,7 @@ export function SessionSummaryPhase({ players, onContinue }: SessionSummaryPhase
                         px-3 py-3
                     "
                 >
-                    <Image src={iconAssets.starsSticker} alt="" width={20} height={20} className="object-contain" />
+                    <Image src={iconAssets.starsSticker} alt="" width={28} height={28} className="object-contain" />
                     <Label className="text-secondary text-lg font-bold">{stats.totalStars}</Label>
                     <Muted className="text-[9px] text-secondary/70">نجوم مجمعة</Muted>
                 </motion.div>

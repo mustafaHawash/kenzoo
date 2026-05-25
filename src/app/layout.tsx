@@ -38,8 +38,9 @@ export default function RootLayout({
             dir='rtl'
             suppressHydrationWarning
             className={cn(
+                "dark",
                 "h-full",
-                "overflow-hidden",
+                "overflow-x-hidden",
                 "antialiased",
                 alexandria.variable,
                 literata.variable,
@@ -47,7 +48,7 @@ export default function RootLayout({
                 "font-sans",
             )}
         >
-            <body className={cn("h-full overflow-hidden flex flex-col bg-background text-foreground")}>
+            <body className={cn("h-full overflow-x-hidden flex flex-col bg-background text-foreground")}>
                 <ThemeProvider>
                     {children}
                     <GlobalMuteButton />

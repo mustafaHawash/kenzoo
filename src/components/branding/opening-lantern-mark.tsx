@@ -30,12 +30,12 @@ export function OpeningLanternMark() {
     return (
         <motion.div
             variants={revealVariants}
-            className="relative flex h-50 w-50 items-center justify-center "
+            className="relative flex h-60 w-60 items-center justify-center "
         >
             <motion.div
                 variants={floatVariants}
                 animate="float"
-                className="relative h-100 w-100"
+                className="relative h-120 w-120"
             >
                 <Image
                     src={iconAssets.logoMark}

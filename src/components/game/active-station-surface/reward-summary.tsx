@@ -37,8 +37,8 @@ export function RewardSummary({ result }: RewardSummaryProps) {
                         {result.treasureUnlocked
                             ? "فرصة كنز!"
                             : result.isCorrect
-                                ? `+${result.starsEarned} نجوم`
-                                : "محاولة قريبة"}
+                                ? `مبروك عليك ${result.starsEarned} نجوم ✨`
+                                : ""}
                     </Label>
                 </div>
             </div>

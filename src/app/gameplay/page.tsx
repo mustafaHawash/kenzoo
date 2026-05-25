@@ -137,14 +137,14 @@ function PathCard({
                     <motion.div
                         variants={floatVariants}
                         animate="animate"
-                        className="relative z-10 flex h-16 w-16 shrink-0 items-center justify-center"
+                        className="relative z-10 flex h-24 w-24 shrink-0 items-center justify-center"
                     >
                         <Image
                             src={pathIcon}
                             alt=""
-                            width={64}
-                            height={64}
-                            className="h-16 w-16 object-contain drop-shadow-[0_4px_16px_rgba(216,179,106,0.4)]"
+                            width={96}
+                            height={96}
+                            className="h-24 w-24 object-contain drop-shadow-[0_4px_16px_rgba(216,179,106,0.4)]"
                         />
                     </motion.div>
 
@@ -265,7 +265,7 @@ export default function GameplayScreen() {
                     transition={{ duration: 0.4 }}
                     className="flex flex-col items-center gap-4"
                 >
-                    <MoodSticker mood="thinking" size={80} delay={0.1} />
+                    <MoodSticker mood="thinking" size={160} delay={0.1} />
                     <div className="flex flex-col items-center gap-1">
                         <Label className="text-foreground text-sm font-semibold">جاري التحميل</Label>
                         <Muted className="text-xs">استنى شوية...</Muted>
@@ -285,7 +285,7 @@ export default function GameplayScreen() {
                     transition={{ duration: 0.4 }}
                     className="flex flex-col items-center gap-4"
                 >
-                    <MoodSticker mood="thinking" size={80} delay={0.1} />
+                    <MoodSticker mood="thinking" size={160} delay={0.1} />
                     <div className="flex flex-col items-center gap-1">
                         <Label className="text-foreground text-sm font-semibold">جاري تحضير الجلسة</Label>
                         <Muted className="text-xs">الليلة هتبدأ حالاً...</Muted>
@@ -338,7 +338,7 @@ export default function GameplayScreen() {
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="flex flex-1 flex-col gap-3"
+                className="flex flex-1 flex-col gap-2.5"
             >
                 {/* ═══════════════════════════════════════════
                     ✨ IMMERSIVE HEADER
@@ -397,13 +397,13 @@ export default function GameplayScreen() {
                     className="flex items-center justify-between"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5 rounded-full border border-secondary/15 bg-secondary/8 px-3.5 py-1.5">
-                            <Image src={iconAssets.starsSticker} alt="" width={16} height={16} className="object-contain" />
-                            <Label className="text-secondary text-[13px]">{playerStars}</Label>
+                        <div className="flex items-center gap-2 rounded-full border border-secondary/15 bg-secondary/8 px-4 py-2">
+                            <Image src={iconAssets.starsSticker} alt="" width={28} height={28} className="object-contain" />
+                            <Label className="text-secondary text-sm font-semibold">{playerStars}</Label>
                         </div>
-                        <div className="flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/8 px-3.5 py-1.5">
-                            <Image src={iconAssets.mainKey} alt="" width={16} height={16} className="object-contain" />
-                            <Label className="text-primary text-[13px]">{playerTreasures}</Label>
+                        <div className="flex items-center gap-2 rounded-full border border-primary/15 bg-primary/8 px-4 py-2">
+                            <Image src={iconAssets.treasure} alt="" width={28} height={28} className="object-contain" />
+                            <Label className="text-primary text-sm font-semibold">{playerTreasures}</Label>
                         </div>
                     </div>
                     <Muted className="text-xs">
@@ -414,7 +414,7 @@ export default function GameplayScreen() {
                 {/* ═══════════════════════════════════════════
                     🃏 PATH CARDS — Kenzo Card Hand
                     ═══════════════════════════════════════════ */}
-                <div className="grid grid-cols-2 gap-3 px-1">
+                <div className="grid grid-cols-2 gap-2.5 px-0.5">
                     {journey.paths.map((path, idx) => (
                         <motion.div
                             key={path.id}

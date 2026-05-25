@@ -66,7 +66,7 @@ function EndingCeremonyContent() {
         return (
             <ScreenContainer className="justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <MoodSticker mood="thinking" size={72} />
+                    <MoodSticker mood="thinking" size={120} />
                     <Muted className="text-xs">جاري التحميل...</Muted>
                 </div>
             </ScreenContainer>

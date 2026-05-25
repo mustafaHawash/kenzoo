@@ -21,7 +21,7 @@ export function ThemeCard({
             onClick={isComingSoon ? undefined : onSelect}
             aria-disabled={isComingSoon}
             className={cn(
-                "group relative overflow-hidden rounded-[30px] border p-5 text-right backdrop-blur-md",
+                "group relative overflow-hidden rounded-[22px] border p-4 text-right backdrop-blur-md",
                 "transition-all duration-(--duration-normal) ease-(--ease-soft)",
                 selected
                     ? "border-secondary/50 bg-secondary/16 shadow-[0_0_36px_rgba(216,179,106,0.18)]"

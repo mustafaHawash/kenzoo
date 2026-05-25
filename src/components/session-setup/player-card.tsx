@@ -63,15 +63,13 @@ export function PlayerCard({
     /* ─── Expanded: light social editing surface ─── */
     return (
         <article className={cn(
-            "relative overflow-hidden rounded-2xl border p-3.5",
+            "relative overflow-hidden rounded-xl border p-3",
             "transition-all duration-(--duration-normal) ease-(--ease-soft)",
             validationError
                 ? "border-destructive/24 bg-surface-elevated/28"
-                : "border-secondary/16 bg-surface-elevated/28",
+                : "border-secondary/12 bg-surface-elevated/28",
         )}>
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_0%,rgba(216,179,106,0.08),transparent_36%)]" />
-
-            <div className="relative flex flex-col gap-2.5">
+            <div className="relative flex flex-col gap-2">
                 {/* Name input row: avatar + input + remove */}
                 <div className="flex items-center gap-2.5">
                     <div className="flex size-10 items-center justify-center rounded-xl bg-secondary/10 text-lg">
@@ -132,8 +130,8 @@ export function PlayerCard({
                     {/* Age group pills — thumb-friendly with icons */}
                     <div className="mr-auto flex gap-1.5">
                         {[
-                            { id: "adult" as const, label: "كبير", icon: "🧑" },
-                            { id: "kid" as const, label: "طفل", icon: "👶" },
+                            { id: "adult" as const, label: "كبير", icon: "🕵🏼‍♂️" },
+                            { id: "kid" as const, label: "صغير", icon: "👶🏼" },
                         ].map((option) => {
                             const isSelected = player.ageGroup === option.id;
                             return (

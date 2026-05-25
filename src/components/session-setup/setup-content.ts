@@ -27,9 +27,9 @@ export const setupSteps: SetupStepDefinition[] = [
     {
         id: "players",
         order: 0,
-        eyebrow: "الدعوة",
-        title: "مين هيكون معانا الليلة؟",
-        subtitle: "مين أول واحد هيشارك الليلة؟",
+        eyebrow: "جهز قلبك .. صحي عقلك",
+        title: "مين طالع معانا؟",
+        subtitle: "",
         component: PlayersStep,
         validate: validatePlayersStep,
     },

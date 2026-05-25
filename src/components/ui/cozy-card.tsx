@@ -9,37 +9,19 @@ function CozyCard({
     return (
         <div
             className={cn(
-                "group relative overflow-hidden rounded-[32px]",
-                "border border-secondary/15",
-                "shadow-(--shadow-ornamental)",
+                "group relative overflow-hidden rounded-[24px]",
+                "border border-secondary/12",
+                "shadow-[0_2px_12px_rgba(0,0,0,0.08)]",
                 "bg-linear-to-br",
-                "from-[rgba(255,231,181,0.10)]",
-                "via-[rgba(246,208,140,0.04)]",
-                "to-[rgba(230,201,140,0.06)]",
-                "p-5",
-                "transition-all duration-500 ease-out",
-
-                // Warm top reflection
-                "before:pointer-events-none",
-                "before:absolute before:inset-0",
-                "before:bg-[radial-gradient(ellipse_at_top_center,rgba(255,231,181,0.14),transparent_60%)]",
-                "before:content-['']",
-
-                // Inner warm border glow
-                "after:absolute",
-                "after:inset-px",
-                "after:rounded-[30px]",
-                "after:border",
-                "after:border-secondary/8",
-                "after:pointer-events-none",
-                "after:content-['']",
+                "from-[rgba(255,231,181,0.08)]",
+                "via-[rgba(246,208,140,0.03)]",
+                "to-[rgba(230,201,140,0.05)]",
+                "p-4",
+                "transition-all duration-300 ease-out",
 
                 // Joyful hover lift
-                "hover:shadow-(--shadow-glow)",
-                "hover:border-secondary/30",
-                "hover:from-[rgba(255,231,181,0.16)]",
-                "hover:via-[rgba(246,208,140,0.09)]",
-                "hover:to-[rgba(230,201,140,0.11)]",
+                "hover:shadow-[0_4px_20px_rgba(216,179,106,0.15)]",
+                "hover:border-secondary/20",
                 className,
             )}
             {...props}

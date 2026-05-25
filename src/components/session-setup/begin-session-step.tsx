@@ -12,10 +12,8 @@ export function BeginSessionStep({ setup }: StepComponentProps) {
     const namedPlayers = setup.players.map((player) => player.name.trim()).filter(Boolean);
 
     return (
-        <div className="relative overflow-hidden rounded-[28px] border border-secondary/16 bg-surface-elevated/32 p-5 text-center shadow-[0_18px_60px_rgba(31,27,24,0.10)] backdrop-blur-md">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(216,179,106,0.14),transparent_40%)]" />
-
-            <div className="relative flex flex-col items-center gap-5">
+        <div className="relative overflow-hidden rounded-[22px] border border-secondary/12 bg-surface-elevated/32 p-4 text-center shadow-[0_8px_30px_rgba(31,27,24,0.08)] backdrop-blur-md">
+            <div className="relative flex flex-col items-center gap-4">
                 <div className="flex size-16 items-center justify-center rounded-full border border-secondary/24 bg-secondary/12 text-2xl">
                     🕯️
                 </div>

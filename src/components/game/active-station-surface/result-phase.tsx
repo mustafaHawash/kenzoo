@@ -48,7 +48,7 @@ export function ResultPhase({
             <div className="flex flex-col items-center gap-1.5 text-center">
                 <MoodSticker
                     mood={result.isCorrect ? "celebration" : "fail"}
-                    size={120}
+                    size={160}
                     delay={0.1}
                 />
 
@@ -60,8 +60,8 @@ export function ResultPhase({
                     }
                 >
                     {result.isCorrect
-                        ? "إجابة صحيحة! ✨"
-                        : "مش مرة.. بس محاولة حلوة! 💪"}
+                        ? "صح جداً .. الله عليك 👏🏼"
+                        : "تغلط اكتر  .. تتعلم اكتر 💪"}
                 </Headline>
 
                 {/* Correct answer reveal (wrong answers only) */}
@@ -75,7 +75,7 @@ export function ResultPhase({
                         "
                     >
                         <Muted className="text-[13px]">
-                            الإجابة الصحيحة:{" "}
+                            الإجابة:{" "}
                             <span className="text-foreground font-medium">
                                 {station.answer}
                             </span>
@@ -116,10 +116,10 @@ export function ResultPhase({
                 className="w-full"
             >
                 {result.isCorrect
-                    ? "يلا المحطة الجاية 🚀"
+                    ? "يلا بينا "
                     : result.tinyMission
                         ? "عملت المهمة! يلا نكمل 🚀"
-                        : "جرب تاني 💪"}
+                        : "جرب مرة تانية 💪"}
             </LanternButton>
         </motion.div>
     );

@@ -34,10 +34,10 @@ export function TinyMissionCard({ mission }: TinyMissionCardProps) {
         >
             <div className="flex items-start gap-2">
                 <div className="flex flex-col gap-1">
-                    <Label className="text-primary text-xs font-semibold">
+                    <Label className="text-foreground text-md font-semibold leading-snug ">
                         مهمة صغيرة!
                     </Label>
-                    <Body className="text-foreground/80 text-[13px] leading-relaxed">
+                    <Body className="text-secondary text-[13px] leading-relaxed">
                         {mission.text}
                     </Body>
                 </div>

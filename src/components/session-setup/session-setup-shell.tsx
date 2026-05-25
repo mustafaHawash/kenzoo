@@ -178,7 +178,7 @@ export function SessionSetupShell() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.32, ease: "easeOut" }}
-                    className="shrink-0 pb-4 pt-2 text-center"
+                    className="shrink-0 pb-2.5 pt-1 text-center"
                 >
                     <Label className="text-secondary">{activeStepDef.eyebrow}</Label>
                     <Display className="text-[2rem] leading-tight text-primary sm:text-[2.6rem]">

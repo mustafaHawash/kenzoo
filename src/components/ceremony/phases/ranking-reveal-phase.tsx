@@ -72,7 +72,7 @@ export function RankingRevealPhase({ finalScores, onContinue }: RankingRevealPha
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="flex flex-col items-center gap-4 py-4"
+            className="flex flex-col items-center gap-3 py-3"
         >
             {/* Section title */}
             <div className="flex flex-col items-center gap-1">
@@ -115,11 +115,11 @@ export function RankingRevealPhase({ finalScores, onContinue }: RankingRevealPha
                                             </Label>
                                             <div className="flex items-center gap-2">
                                                 <div className="flex items-center gap-1">
-                                                    <Image src={iconAssets.starsSticker} alt="" width={10} height={10} className="object-contain" />
+                                                    <Image src={iconAssets.starsSticker} alt="" width={14} height={14} className="object-contain" />
                                                     <Muted className="text-[10px]">{entry.player.stars} نجمة</Muted>
                                                 </div>
                                                 <div className="flex items-center gap-1">
-                                                    <Image src={iconAssets.mainKey} alt="" width={10} height={10} className="object-contain" />
+                                                    <Image src={iconAssets.treasure} alt="" width={14} height={14} className="object-contain" />
                                                     <Muted className="text-[10px]">{entry.player.treasures} كنز</Muted>
                                                 </div>
                                             </div>

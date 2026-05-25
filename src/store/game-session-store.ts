@@ -619,6 +619,12 @@ export const useGameSessionStore = create<
        *   - Player must re-select a path after refresh
        */
       onRehydrateStorage: () => (state) => {
+        // ALWAYS mark hydration as complete, even if no persisted state exists.
+        // Without this, the app freezes on first visit (no localStorage data).
+        if (state) {
+          state.hasHydrated = true;
+        }
+
         if (state?.persistentState) {
           state.lifecycle = "active";
           // The persisted activePathId is stored as a top‑level property by the
@@ -638,7 +644,6 @@ export const useGameSessionStore = create<
           state.lastResult = null;
           state.awardedTitle = null;
           state.isGenerating = false;
-          state.hasHydrated = true;
         }
       },
     },

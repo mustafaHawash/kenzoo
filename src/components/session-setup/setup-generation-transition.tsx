@@ -56,7 +56,7 @@ export function SetupGenerationTransition({
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4 }}
                 >
-                    <MoodSticker mood="thinking" size={88} delay={0.2} />
+                    <MoodSticker mood="thinking" size={120} delay={0.2} />
                 </motion.div>
 
                 <div className="flex flex-col gap-2">

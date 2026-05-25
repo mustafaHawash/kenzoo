@@ -69,7 +69,7 @@ export default function HomePage() {
                         className="flex w-full flex-col items-center gap-3"
                     >
                         <LanternButton asChild className="min-w-56 border border-secondary/30 bg-secondary/15 px-10 py-3 text-base text-secondary shadow-[0_0_34px_rgba(216,179,106,0.15)] backdrop-blur-md transition-all duration-300 hover:bg-secondary/25 hover:shadow-[0_0_42px_rgba(216,179,106,0.25)]">
-                            <Link href="/session/setup">✨ يلا نبدأ ✨</Link>
+                            <Link href="/session/setup">جهز الرحلة</Link>
                         </LanternButton>
 
                         <button
@@ -83,7 +83,7 @@ export default function HomePage() {
 
                     <motion.div variants={revealVariants}>
                         <Muted className="max-w-[16rem] text-xs leading-6 text-muted-foreground/72">
-                            جلسة صغيرة، اختيارات غامضة، وذكريات دافئة بينكم.
+                            جلسة صغيرة، اختيارات غامضة، وذكريات جميلة بينكم.
                         </Muted>
                     </motion.div>
                 </div>

@@ -117,7 +117,7 @@ export function TreasureOpportunityCard({
                 animate="animate"
                 exit="exit"
             >
-                <CozyCard className="relative overflow-hidden rounded-[32px] p-7 sm:p-8">
+                <CozyCard className="relative overflow-hidden rounded-[24px] p-5 sm:p-6">
                     {/* ═══ Ambient atmosphere ═══
                         Phase 1 & 2: neutral warm glow — no rarity hints
                         Phase 3: rarity-specific glow revealed after opening */}
@@ -130,7 +130,7 @@ export function TreasureOpportunityCard({
                         }}
                     />
 
-                    <div className="relative z-10 flex flex-col items-center gap-6">
+                    <div className="relative z-10 flex flex-col items-center gap-4">
 
                         {/* ═══ Phase 1: OPPORTUNITY ═══
                             All treasures look completely identical here.
@@ -176,7 +176,7 @@ export function TreasureOpportunityCard({
 
                                 <div className="flex flex-col gap-3 w-full mt-2">
                                     <LanternButton onClick={handleOpen} className="w-full">
-                                        افتح الكنز 🗝️
+                                        افتح دلوقتي
                                     </LanternButton>
                                     <button
                                         onClick={onDismiss}

@@ -112,7 +112,7 @@ export function TitlesRevealPhase({ players, onContinue }: TitlesRevealPhaseProp
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="flex flex-col items-center gap-4 py-4"
+            className="flex flex-col items-center gap-3 py-3"
         >
             {/* Section title */}
             <div className="flex flex-col items-center gap-1">
@@ -203,7 +203,7 @@ export function TitlesRevealPhase({ players, onContinue }: TitlesRevealPhaseProp
                     transition={{ duration: 0.5 }}
                     className="flex flex-col items-center gap-3"
                 >
-                    <MoodSticker mood="celebration" size={88} delay={0.2} />
+                    <MoodSticker mood="celebration" size={120} delay={0.2} />
 
                     <motion.button
                         initial={{ opacity: 0 }}

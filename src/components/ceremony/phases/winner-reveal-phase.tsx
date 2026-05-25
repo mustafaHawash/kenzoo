@@ -65,7 +65,7 @@ export function WinnerRevealPhase({ finalScores, winnerId, onContinue }: WinnerR
                 {/* Sparkle overlay */}
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.05),transparent_40%)]" />
 
-                <div className="relative z-10 flex flex-col items-center gap-3">
+                <div className="relative z-10 flex flex-col items-center gap-2.5">
                     {/* Logo mark */}
                     <motion.div
                         variants={gentleFloat}
@@ -85,39 +85,39 @@ export function WinnerRevealPhase({ finalScores, winnerId, onContinue }: WinnerR
                         initial={{ opacity: 0, scale: 0.5, y: -10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         transition={{ delay: 0.5, duration: 0.6, ease: "easeOut" }}
-                        className="text-3xl"
+                        className="text-4xl"
                     >
                         👑
                     </motion.span>
 
                     {/* Winner name */}
-                    <Headline className="text-amber-400 text-2xl font-bold text-center">
+                    <Headline className="text-amber-300 text-2xl font-bold text-center drop-shadow-[0_2px_12px_rgba(245,158,11,0.3)]">
                         {winnerPlayer.name}
                     </Headline>
 
                     {/* Winner stats */}
                     <div className="flex items-center gap-4">
                         <div className="flex flex-col items-center gap-0.5">
-                            <Image src={iconAssets.starsSticker} alt="" width={16} height={16} className="object-contain" />
-                            <Label className="text-amber-400/80 text-xs font-semibold">{winnerPlayer.stars}</Label>
-                            <Muted className="text-[8px] text-amber-400/50">نجمة</Muted>
+                            <Image src={iconAssets.starsSticker} alt="" width={24} height={24} className="object-contain" />
+                            <Label className="text-amber-300/90 text-sm font-semibold">{winnerPlayer.stars}</Label>
+                            <Muted className="text-[9px] text-amber-300/50">نجمة</Muted>
                         </div>
                         <div className="h-6 w-px bg-amber-400/20" />
                         <div className="flex flex-col items-center gap-0.5">
-                            <Image src={iconAssets.mainKey} alt="" width={16} height={16} className="object-contain" />
-                            <Label className="text-amber-400/80 text-xs font-semibold">{winnerPlayer.treasures}</Label>
-                            <Muted className="text-[8px] text-amber-400/50">كنز</Muted>
+                            <Image src={iconAssets.treasure} alt="" width={24} height={24} className="object-contain" />
+                            <Label className="text-amber-300/90 text-sm font-semibold">{winnerPlayer.treasures}</Label>
+                            <Muted className="text-[9px] text-amber-300/50">كنز</Muted>
                         </div>
                         <div className="h-6 w-px bg-amber-400/20" />
                         <div className="flex flex-col items-center gap-0.5">
-                            <span className="text-amber-400/60 text-[10px]">✦</span>
-                            <Label className="text-amber-400/80 text-xs font-semibold">{winner.hiddenPoints}</Label>
-                            <Muted className="text-[8px] text-amber-400/50">نقاط</Muted>
+                            <span className="text-amber-300/60 text-xs">✦</span>
+                            <Label className="text-amber-300/90 text-sm font-semibold">{winner.hiddenPoints}</Label>
+                            <Muted className="text-[9px] text-amber-300/50">نقاط</Muted>
                         </div>
                     </div>
 
                     {/* Celebration sticker */}
-                    <MoodSticker mood="celebration" size={80} delay={0.8} />
+                    <MoodSticker mood="celebration" size={100} delay={0.8} />
                 </div>
             </motion.div>
 

@@ -162,14 +162,14 @@
 
   html {
     @apply font-sans;
-    overflow: hidden;
+    overflow-x: hidden;
     text-size-adjust: 100%;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     min-width: 0;
-    overflow: hidden;
+    overflow-x: hidden;
     overscroll-behavior: none;
   }
 

@@ -498,7 +498,7 @@ export function TreasureRevealView({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
         >
-            <CozyCard className="relative overflow-hidden rounded-[32px] p-7 sm:p-8">
+            <CozyCard className="relative overflow-hidden rounded-[24px] p-5 sm:p-6">
                 {/* Ambient glow — intensity varies by rarity */}
                 <div
                     className="pointer-events-none absolute inset-0"

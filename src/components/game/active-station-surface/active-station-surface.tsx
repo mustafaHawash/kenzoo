@@ -104,8 +104,8 @@ export function ActiveStationSurface({
                 <CozyCard
                     className="
                         relative overflow-hidden
-                        rounded-[28px]
-                        p-3.5
+                        rounded-[24px]
+                        p-3
                     "
                 >
                     {/* ═══ Ambient atmosphere ═══ */}
@@ -116,7 +116,7 @@ export function ActiveStationSurface({
                         "
                     />
 
-                    <div className="relative z-10 flex flex-col gap-3">
+                    <div className="relative z-10 flex flex-col gap-2">
                         {/* ── Station header (badge + title + question + hint) ── */}
                         <StationHeader
                             station={station}

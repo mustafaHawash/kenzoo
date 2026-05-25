@@ -5,7 +5,6 @@ import { FloatingParticles } from "@/components/atmosphere/floating-particles";
 import { cn } from "@/lib/utils";
 import {
     getThemeBackground,
-    particleAssets,
     type BackgroundScene,
     type ThemeAssetId,
 } from "@/assets";
@@ -45,30 +44,15 @@ export function ThemeBackground({
                 src={background}
                 alt=""
                 fill
-                priority={scene === "home" || scene === "setup" || scene === "gameplay"}
-                sizes="100vw"
+                priority={scene === "home" || scene === "setup"}
+                sizes="(max-width: 480px) 100vw, 480px"
                 className={cn("object-cover opacity-70", imageClassName)}
             />
-            <Image
-                src={particleAssets.paperTexture}
-                alt=""
-                fill
-                sizes="100vw"
-                className="object-cover opacity-[0.08] mix-blend-multiply"
-            />
+            {/* Overlay — combines color wash + gradient in one div for performance */}
             <div className={cn("absolute inset-0 backdrop-blur-[1px]", overlayByScene[scene])} />
             <div className="absolute inset-0 bg-linear-to-b from-background/16 via-transparent to-background/68" />
-            {particles && (
-                <>
-                    <Image
-                        src={particleAssets.sparklesOverlay}
-                        alt=""
-                        fill
-                        sizes="100vw"
-                        className="object-cover opacity-20 mix-blend-screen"
-                    />
-                    <FloatingParticles />
-                </>
+            {particles && scene !== "play" && (
+                <FloatingParticles />
             )}
             {children}
         </div>
