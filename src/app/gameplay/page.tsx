@@ -252,10 +252,8 @@ export default function GameplayScreen() {
         if (persistentState && persistentState.players.length > 0) {
             soundtrack.play("gameplay", 0.15);
         }
-        return () => {
-            soundtrack.stop();
-        };
-    }, [persistentState]);
+        // Don't stop on unmount — play page will continue the same layer.
+    }, [persistentState, soundtrack]);
 
     // No session — show loading while redirect happens
     if (!persistentState || persistentState.players.length === 0) {

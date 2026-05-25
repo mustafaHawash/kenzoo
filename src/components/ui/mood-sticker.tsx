@@ -8,8 +8,8 @@ import {
     getRandomCelebrationSticker,
     getRandomFailSticker,
     getRandomThinkingSticker,
-    type StickerMood,
 } from "@/assets/stickerAssets";
+import type { StickerMood } from "@/assets/types";
 
 type MoodStickerProps = {
     mood: StickerMood;

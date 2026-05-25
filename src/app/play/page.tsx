@@ -93,7 +93,7 @@ function PlayPageContent() {
         }
         // Don't stop on unmount — let the next page handle the transition.
         // This prevents a silence gap when navigating to /ending.
-    }, [hasHydrated, currentPlayer, ceremony]);
+    }, [hasHydrated, currentPlayer, ceremony, soundtrack]);
 
     /* ─── No session — show loading (redirect handled by useGameSession) ─── */
     if (!hasHydrated || !currentPlayer) {

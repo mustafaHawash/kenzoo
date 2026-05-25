@@ -63,7 +63,7 @@ export function SessionSetupShell() {
     useEffect(() => {
         soundtrack.play("core", 0.15);
         // Don't stop on unmount — gameplay page will switch to gameplay layer.
-    }, []);
+    }, [soundtrack]);
 
     /* ─── Data-driven step resolution ─── */
     const activeStepDef = sortedSteps[stepIndex];

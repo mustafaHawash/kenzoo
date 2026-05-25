@@ -53,7 +53,7 @@ function EndingCeremonyContent() {
         }
         // Don't stop on unmount during ceremony — only stop when
         // the user explicitly starts a new session (handleNewSession).
-    }, [ceremony]);
+    }, [ceremony, soundtrack]);
 
     /** Start a new session — clear runtime, stop music, go to setup */
     const handleNewSession = () => {

@@ -39,7 +39,7 @@ export default function HomePage() {
         soundtrack.play("core", 0.15);
         // Don't stop on unmount — next page will switch the layer.
         // This prevents a silence gap during navigation.
-    }, []);
+    }, [soundtrack]);
 
     return (
         <KScreen scene="home" contentClassName="max-w-xl items-center justify-center px-6 py-10 text-center">
