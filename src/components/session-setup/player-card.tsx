@@ -108,9 +108,9 @@ export function PlayerCard({
 
                 {/* Compact row: avatar picker + age toggle */}
                 <div className="flex items-center gap-2">
-                    {/* Mini avatar picker — sourced from registry */}
-                    <div className="flex gap-1.5">
-                        {getAllAvatars().slice(0, 4).map((avatar) => (
+                    {/* Avatar picker — sourced from registry */}
+                    <div className="flex flex-wrap gap-1.5">
+                        {getAllAvatars().map((avatar) => (
                             <button
                                 key={avatar}
                                 type="button"

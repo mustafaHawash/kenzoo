@@ -14,6 +14,8 @@ export function LanternButton({ className, children, ...props }: ButtonProps) {
             className={cn(
                 "relative overflow-hidden",
 
+                "before:pointer-events-none before:absolute before:inset-0 before:rounded-full before:bg-linear-to-b before:from-white/15 before:via-transparent before:to-black/10",
+
                 "shadow-[0_4px_24px_rgba(216,179,106,0.30),0_1px_4px_rgba(0,0,0,0.12)]",
 
                 "hover:-translate-y-0.5",
@@ -36,7 +38,7 @@ export function LanternButton({ className, children, ...props }: ButtonProps) {
             )}
             {...props}
         >
-            <span className="relative z-10 flex items-center justify-center gap-2.5 before:pointer-events-none before:absolute before:inset-0 before:rounded-full before:bg-linear-to-b before:from-white/15 before:via-transparent before:to-black/10">
+            <span className="relative z-10 flex items-center justify-center gap-2.5">
                 <Image
                     src={iconAssets.lantern}
                     alt=""

@@ -72,13 +72,13 @@ export default function HomePage() {
                             <Link href="/session/setup">جهز الرحلة</Link>
                         </LanternButton>
 
-                        <button
-                            type="button"
+                        <Link
+                            href="/how-to-play"
                             className="group relative px-4 py-2 text-sm font-medium text-muted-foreground/70 transition-colors duration-300 hover:text-foreground/90 focus-visible:outline-none"
                         >
                             العب ازاي؟
                             <span className="absolute bottom-1 left-1/2 h-px w-0 -translate-x-1/2 bg-foreground/30 transition-all duration-300 group-hover:w-3/4" />
-                        </button>
+                        </Link>
                     </motion.div>
 
                     <motion.div variants={revealVariants}>

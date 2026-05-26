@@ -34,7 +34,7 @@ const RARITY_STYLE: Record<TreasureRarity, { border: string; bg: string; label: 
     common: {
         border: "border-secondary/15",
         bg: "bg-secondary/6",
-        label: "عادي",
+        label: "بسيط",
         icon: "○",
     },
 };
@@ -119,14 +119,14 @@ export function TitlesRevealPhase({ players, onContinue }: TitlesRevealPhaseProp
                 <Image
                     src={iconAssets.treasure}
                     alt=""
-                    width={24}
-                    height={24}
+                    width={80}
+                    height={80}
                     className="object-contain opacity-60"
                 />
                 <Headline className="text-foreground text-lg font-bold">
-                    كشف الكنوز والألقاب
+               توزيع الغنائم
                 </Headline>
-                <Muted className="text-xs">اللي كان مخفي... بقت حقيقة</Muted>
+                <Muted className="text-xs">نصيبك .. هيصيبك</Muted>
             </div>
 
             {/* Reveal items */}
@@ -158,15 +158,15 @@ export function TitlesRevealPhase({ players, onContinue }: TitlesRevealPhaseProp
                                         <Image
                                             src={item.rarity === "legendary" ? iconAssets.treasure : iconAssets.mainKey}
                                             alt=""
-                                            width={16}
-                                            height={16}
+                                            width={18}
+                                            height={18}
                                             className="object-contain"
                                         />
                                     ) : (
-                                        <Image src={iconAssets.tulipSticker} alt="" width={16} height={16} className="object-contain" />
+                                        <Image src={iconAssets.tulipSticker} alt="" width={18} height={18} className="object-contain" />
                                     )}
                                     <div className="flex flex-col">
-                                        <Label className="text-foreground text-[11px] font-semibold">
+                                        <Label className="text-foreground text-[13px] font-semibold">
                                             {item.playerName}
                                         </Label>
                                         <Muted className="text-[9px]">
@@ -222,7 +222,7 @@ export function TitlesRevealPhase({ players, onContinue }: TitlesRevealPhaseProp
                             backdrop-blur-sm
                         "
                     >
-                        مين الفائز؟ 🏆
+                        الفائز هو .. 🏆
                     </motion.button>
                 </motion.div>
             )}

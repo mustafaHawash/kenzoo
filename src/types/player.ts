@@ -10,6 +10,8 @@ export type Player = {
 
     name: string;
 
+    avatar: string;
+
     gender: PlayerGender;
 
     age: number;

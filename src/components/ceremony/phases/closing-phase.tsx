@@ -16,9 +16,11 @@ interface ClosingPhaseProps {
 
 const CLOSING_MESSAGES = [
     "الكنوز الحقيقية كانت اللمة الجميلة ❤️",
-    "بعض الكنوز تُنسى... لكن الليلة لا تُنسى.",
-    "كل سؤال جاوبناه كان طريقنا لبعض.",
-    "النجوم تتجمع... واللمة أجمل.",
+    "بعض الكنوز تُنسى... لكن الليلة لا تُنسى. ✨",
+    "كل سؤال جاوبناه كان طريقنا لبعض. شكراً لكم 🙏",
+    "النجوم تتجمع... واللمة أجمل. شكراً لكم 🌟",
+    "الكنز الحقيقي؟ الضحك والذكريات اللي صنعناها. 💛",
+    "الكنز دايماً في الرحلة والصحبة مش بس في النهاية. شكراً لكم 🌈",
 ];
 
 /** Pick a message based on current time for variety */
@@ -48,7 +50,7 @@ export function ClosingPhase({ onNewSession }: ClosingPhaseProps) {
             <motion.div
                 variants={gentleFloat}
                 animate="animate"
-                className="relative h-12 w-12 select-none"
+                className="relative h-26 w-26 select-none"
             >
                 <Image
                     src={iconAssets.logoMark}
@@ -59,7 +61,7 @@ export function ClosingPhase({ onNewSession }: ClosingPhaseProps) {
             </motion.div>
 
             {/* Celebration sticker */}
-            <MoodSticker mood="celebration" size={100} delay={0.3} />
+            <MoodSticker mood="celebration" size={250} delay={0.3} />
 
             {/* Emotional message */}
             <Headline className="text-secondary text-lg text-center leading-relaxed px-4">

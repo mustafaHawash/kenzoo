@@ -70,7 +70,7 @@ export function WinnerRevealPhase({ finalScores, winnerId, onContinue }: WinnerR
                     <motion.div
                         variants={gentleFloat}
                         animate="animate"
-                        className="relative h-14 w-14 select-none"
+                        className="relative h-20 w-20 select-none"
                     >
                         <Image
                             src={iconAssets.logoMark}
@@ -98,26 +98,26 @@ export function WinnerRevealPhase({ finalScores, winnerId, onContinue }: WinnerR
                     {/* Winner stats */}
                     <div className="flex items-center gap-4">
                         <div className="flex flex-col items-center gap-0.5">
-                            <Image src={iconAssets.starsSticker} alt="" width={24} height={24} className="object-contain" />
-                            <Label className="text-amber-300/90 text-sm font-semibold">{winnerPlayer.stars}</Label>
-                            <Muted className="text-[9px] text-amber-300/50">نجمة</Muted>
+                            <Image src={iconAssets.starsSticker} alt="" width={35} height={35} className="object-contain" />
+                            <Label className="text-amber-300/90 text-xl font-semibold">{winnerPlayer.stars}</Label>
+                            <Muted className="text-[12px] text-amber-300/50">نجمة</Muted>
                         </div>
                         <div className="h-6 w-px bg-amber-400/20" />
                         <div className="flex flex-col items-center gap-0.5">
-                            <Image src={iconAssets.treasure} alt="" width={24} height={24} className="object-contain" />
-                            <Label className="text-amber-300/90 text-sm font-semibold">{winnerPlayer.treasures}</Label>
-                            <Muted className="text-[9px] text-amber-300/50">كنز</Muted>
+                            <Image src={iconAssets.treasure} alt="" width={35} height={35} className="object-contain" />
+                            <Label className="text-amber-300/90 text-xl font-semibold">{winnerPlayer.treasures}</Label>
+                            <Muted className="text-[12px] text-amber-300/50">كنز</Muted>
                         </div>
                         <div className="h-6 w-px bg-amber-400/20" />
                         <div className="flex flex-col items-center gap-0.5">
-                            <span className="text-amber-300/60 text-xs">✦</span>
-                            <Label className="text-amber-300/90 text-sm font-semibold">{winner.hiddenPoints}</Label>
-                            <Muted className="text-[9px] text-amber-300/50">نقاط</Muted>
+                            <span className="text-amber-300/60 text-md">✦</span>
+                            <Label className="text-amber-300/90 text-xl font-semibold">{winner.hiddenPoints}</Label>
+                            <Muted className="text-[12px] text-amber-300/50">نقاط</Muted>
                         </div>
                     </div>
 
                     {/* Celebration sticker */}
-                    <MoodSticker mood="celebration" size={100} delay={0.8} />
+                    <MoodSticker mood="celebration" size={150} delay={0.8} />
                 </div>
             </motion.div>
 

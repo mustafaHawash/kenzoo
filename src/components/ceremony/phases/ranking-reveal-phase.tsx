@@ -86,7 +86,7 @@ export function RankingRevealPhase({ finalScores, onContinue }: RankingRevealPha
                 <Headline className="text-foreground text-lg font-bold">
                     ترتيب اللاعبين
                 </Headline>
-                <Muted className="text-xs">من الأقل للأعلى... مين اللي جمع أكتر؟</Muted>
+                <Muted className="text-xs">مين اللي جمع أكتر؟</Muted>
             </div>
 
             {/* Ranking list */}

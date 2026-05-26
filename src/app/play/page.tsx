@@ -235,7 +235,7 @@ function PlayPageContent() {
                             />
                         </motion.div>
                         <Label className="text-primary text-xs font-semibold">
-                            دور {currentPlayer.name}
+                            {currentPlayer.avatar} دور {currentPlayer.name}
                         </Label>
                         {currentPlayer.treasures > 0 && (
                             <div

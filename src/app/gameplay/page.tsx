@@ -378,7 +378,7 @@ export default function GameplayScreen() {
 
                     {/* Player greeting */}
                     <Headline className="text-foreground text-xl font-bold leading-tight">
-                        دورك يا{" "}
+                        {currentPlayer.avatar} دورك يا{" "}
                         <span className="bg-linear-to-l from-amber-500 via-secondary to-amber-600 bg-clip-text text-transparent">
                             {playerName}
                         </span>

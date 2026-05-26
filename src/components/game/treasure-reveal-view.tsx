@@ -404,11 +404,6 @@ function RewardCard({
 }) {
     return (
         <div className={`flex flex-col gap-2 w-full rounded-xl border border-secondary/15 bg-card/50 px-5 backdrop-blur-sm ${compact ? "py-3" : "py-4"}`}>
-            {/* Stars consumed */}
-            <div className="flex justify-between items-center">
-                <Muted className="text-xs">⭐ التكلفة</Muted>
-                <span className="text-sm text-secondary/80">-{data.starsConsumed} نجوم</span>
-            </div>
             {/* Reward */}
             <div className="flex justify-between items-center">
                 <Muted className="text-xs">🎁 المكافأة</Muted>

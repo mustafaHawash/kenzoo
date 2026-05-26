@@ -220,6 +220,7 @@ export function createSession(input: CreateSessionInput): PersistentSessionState
     const players: Player[] = input.players.map((p, index) => ({
         id: ids.player(index),
         name: p.name.trim() || `لاعب ${index + 1}`,
+        avatar: p.avatar || "🏮",
         gender: "male" as PlayerGender, // Default — future: add to setup
         age: p.ageGroup === "kid" ? 10 : 25,
         ageGroup: p.ageGroup as PlayerAgeGroup,

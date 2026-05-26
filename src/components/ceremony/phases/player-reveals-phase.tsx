@@ -68,7 +68,7 @@ export function PlayerRevealsPhase({ players, onContinue }: PlayerRevealsPhasePr
                         <div className="relative z-10 flex items-start gap-2.5">
                             {/* Avatar emoji */}
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-secondary/20 bg-surface-soft/60 text-xl">
-                                {getDefaultAvatarForIndex(i)}
+                                {player.avatar}
                             </div>
 
                             {/* Player info */}
