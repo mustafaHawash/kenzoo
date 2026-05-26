@@ -122,6 +122,7 @@ type SelectionContext = {
     usedMissionIds: Set<string>;
     recentStationIds: Set<string>;
     recentMissionIds: Set<string>;
+    stationQueues: Map<string, Station[]>;
     previousStation?: Station;
 };
 
@@ -176,6 +177,15 @@ function weightedShuffle<T>(items: readonly T[], getWeight: (item: T) => number)
         .map(({ item }) => item);
 }
 
+function shuffle<T>(items: readonly T[]): T[] {
+    const shuffled = [...items];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
 function difficultyPlanForTier(
     tier: PathDifficultyTier,
     stationsPerPath: number,
@@ -199,7 +209,7 @@ function nearbyDifficulties(targetDifficulty: StationDifficulty): StationDifficu
 function stationWeight(station: Station, context: SelectionContext): number {
     let weight = 1;
 
-    if (context.recentStationIds.has(station.id)) weight *= 0.28;
+    if (context.recentStationIds.has(station.id)) weight *= 0.18;
 
     if (context.previousStation) {
         if (station.type === context.previousStation.type) weight *= 0.42;
@@ -211,6 +221,50 @@ function stationWeight(station: Station, context: SelectionContext): number {
     if (station.mood === "playful" || station.mood === "warm" || station.mood === "cozy") weight *= 1.05;
 
     return weight;
+}
+
+function stationQueueKey(ageGroup: TargetAgeGroup, difficulty: StationDifficulty): string {
+    return `${ageGroup}:${difficulty}`;
+}
+
+function buildStationQueue(
+    pool: readonly Station[],
+    targetAgeGroup: TargetAgeGroup,
+    targetDifficulty: StationDifficulty,
+    context: SelectionContext,
+): Station[] {
+    const candidates = pool.filter(
+        (station) =>
+            station.targetAgeGroup === targetAgeGroup &&
+            station.difficulty === targetDifficulty &&
+            !context.usedStationIds.has(station.id),
+    );
+    const fresh = shuffle(candidates.filter((station) => !context.recentStationIds.has(station.id)));
+    const recent = shuffle(candidates.filter((station) => context.recentStationIds.has(station.id)));
+
+    return [...fresh, ...recent];
+}
+
+function takeFromExactQueue(
+    pool: readonly Station[],
+    targetDifficulty: StationDifficulty,
+    targetAgeGroup: TargetAgeGroup,
+    context: SelectionContext,
+): Station | null {
+    const key = stationQueueKey(targetAgeGroup, targetDifficulty);
+    let queue = context.stationQueues.get(key);
+
+    if (!queue) {
+        queue = buildStationQueue(pool, targetAgeGroup, targetDifficulty, context);
+        context.stationQueues.set(key, queue);
+    }
+
+    while (queue.length > 0) {
+        const candidate = queue.shift();
+        if (candidate && !context.usedStationIds.has(candidate.id)) return candidate;
+    }
+
+    return null;
 }
 
 function candidatesForSlot(
@@ -281,6 +335,15 @@ function selectStationsForPath(
     targetAgeGroup: TargetAgeGroup,
 ): Station[] {
     return difficultyPlan.map((targetDifficulty) => {
+        const exact = takeFromExactQueue(pool, targetDifficulty, targetAgeGroup, context);
+        if (exact) {
+            const cloned = structuredClone(exact);
+            context.usedStationIds.add(cloned.id);
+            cloned.tinyMissionPool = selectMissionPool(context);
+            context.previousStation = cloned;
+            return cloned;
+        }
+
         let candidates = candidatesForSlot(pool, targetDifficulty, targetAgeGroup, context);
         if (context.previousStation && candidates.length > 1) {
             const mixedType = candidates.filter((station) => station.type !== context.previousStation?.type);
@@ -408,6 +471,7 @@ export function composeAllJourneys(
         usedMissionIds: new Set<string>(),
         recentStationIds: new Set(recentHistory.stations),
         recentMissionIds: new Set(recentHistory.missions),
+        stationQueues: new Map<string, Station[]>(),
     };
 
     const journeys = playerIds.map((id, index) => {

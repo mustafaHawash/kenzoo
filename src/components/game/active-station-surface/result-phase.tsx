@@ -82,14 +82,17 @@ export function ResultPhase({
     );
     const [canContinue, setCanContinue] = useState(result.isCorrect);
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         // No countdown for correct answers
         if (result.isCorrect) return;
 
         let remaining = WRONG_ANSWER_COUNTDOWN_SECS;
-        setCountdown(remaining);
-        setCanContinue(false);
+        resetTimerRef.current = setTimeout(() => {
+            setCountdown(remaining);
+            setCanContinue(false);
+        }, 0);
 
         timerRef.current = setInterval(() => {
             remaining -= 1;
@@ -103,6 +106,7 @@ export function ResultPhase({
         }, 1000);
 
         return () => {
+            if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
             if (timerRef.current) clearInterval(timerRef.current);
         };
     }, [result.isCorrect]);
@@ -130,8 +134,8 @@ export function ResultPhase({
                     }
                 >
                     {result.isCorrect
-                        ? pickRandom(CORRECT_MESSAGES)
-                        : pickRandom(WRONG_MESSAGES)}
+                        ? pickRandom(CORRECT_MESSAGES, simpleHash(station.id))
+                        : pickRandom(WRONG_MESSAGES, simpleHash(`${station.id}:wrong`))}
                 </Headline>
 
                 {/* Correct answer reveal (wrong answers only) */}

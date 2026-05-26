@@ -226,6 +226,8 @@ function ShimmerOverlay({ intensity }: { intensity: number }) {
     ═══════════════════════════════════════════════════════════ */
 
 function rewardText(reward: TreasureRevealData["reward"]): string {
+    if (reward.message) return reward.message;
+
     switch (reward.type) {
         case "stars": return `+${reward.starsAmount ?? 0} نجوم`;
         case "double-stars": return "نجوم مزدوجة ⭐⭐";
@@ -417,11 +419,11 @@ function FlipCardReveal({
     const isFlipped = phase === "revealed";
 
     return (
-        <div className="w-full perspective-[800px]">
+        <div className="w-full min-h-[340px] perspective-[800px]">
             <motion.div
                 animate={{ rotateY: isFlipped ? 180 : 0 }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="relative w-full"
+                className="relative min-h-[340px] w-full"
                 style={{ transformStyle: "preserve-3d" }}
             >
                 {/* BACK — Mystery side */}
@@ -636,6 +638,7 @@ export function TreasureRevealView({
     const [phase, setPhase] = useState<RevealPhase>("opening");
     const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const config = RARITY_CONFIG[data.rarity];
+    const revealStyle = data.revealStyle ?? "cinematic";
 
     // Sound effects
     const sfxOpenStart = useSound(SFX.openStart, { volume: 0.5 });
@@ -685,7 +688,7 @@ export function TreasureRevealView({
                 />
 
                 <div className="relative z-10 flex flex-col items-center gap-4">
-                    {data.revealStyle === "cinematic" && (
+                    {revealStyle === "cinematic" && (
                         <CinematicReveal
                             data={data}
                             phase={phase}
@@ -693,7 +696,7 @@ export function TreasureRevealView({
                             onContinue={handleContinue}
                         />
                     )}
-                    {data.revealStyle === "flip-card" && (
+                    {revealStyle === "flip-card" && (
                         <FlipCardReveal
                             data={data}
                             phase={phase}
@@ -701,7 +704,7 @@ export function TreasureRevealView({
                             onContinue={handleContinue}
                         />
                     )}
-                    {data.revealStyle === "mystery" && (
+                    {revealStyle === "mystery" && (
                         <MysteryReveal
                             data={data}
                             phase={phase}
