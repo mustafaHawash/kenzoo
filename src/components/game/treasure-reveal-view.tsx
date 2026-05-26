@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { CozyCard } from "@/components/ui/cozy-card";
@@ -61,28 +61,165 @@ interface TreasureRevealViewProps {
 const RARITY_CONFIG = {
     common: {
         label: "عادي",
-        glowColor: "rgba(246,208,140,0.15)",
+        glowColor: "rgba(246,208,140,0.18)",
         badgeClass: "bg-secondary/10 text-secondary/70 border-secondary/20",
-        emojiScale: 1,
+        emojiScale: 1.1,
         revealDuration: 1200,
+        showSparkles: false,
+        showConfetti: false,
+        shimmerIntensity: 0.3,
     },
     rare: {
         label: "نادر ★",
-        glowColor: "rgba(56,189,248,0.18)",
+        glowColor: "rgba(56,189,248,0.25)",
         badgeClass: "bg-sky-500/20 text-sky-200 border-sky-500/30",
-        emojiScale: 1.05,
+        emojiScale: 1.2,
         revealDuration: 1500,
+        showSparkles: true,
+        showConfetti: false,
+        shimmerIntensity: 0.5,
     },
     legendary: {
         label: "أسطوري ✦",
-        glowColor: "rgba(245,158,11,0.22)",
+        glowColor: "rgba(245,158,11,0.35)",
         badgeClass: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-        emojiScale: 1.12,
-        revealDuration: 1800,
+        emojiScale: 1.35,
+        revealDuration: 2000,
+        showSparkles: true,
+        showConfetti: true,
+        shimmerIntensity: 0.8,
     },
 } as const;
 
 type RarityConfig = (typeof RARITY_CONFIG)[keyof typeof RARITY_CONFIG];
+
+/* ═══════════════════════════════════════════════════════════
+    CONFETTI PARTICLES — celebratory burst for legendary treasures
+    ═══════════════════════════════════════════════════════════ */
+
+const CONFETTI_COLORS = [
+    "#F59E0B", "#FBBF24", "#FDE68A",
+    "#EF4444", "#F97316",
+    "#8B5CF6", "#EC4899",
+    "#10B981", "#3B82F6",
+];
+
+function ConfettiBurst() {
+    const particles = useMemo(() =>
+        Array.from({ length: 24 }, (_, i) => ({
+            id: i,
+            x: 50 + (((i * 7 + 3) % 11) - 5) * 6,
+            yTarget: 20 + ((i * 13 + 7) % 60),
+            delay: ((i * 17 + 5) % 10) * 0.04,
+            duration: 1.2 + ((i * 11 + 3) % 8) * 0.1,
+            color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+            size: 4 + ((i * 9 + 2) % 6),
+            rotation: ((i * 23 + 11) % 360),
+            drift: (((i * 19 + 7) % 11) - 5) * 8,
+        }))
+    , []);
+
+    return (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
+            {particles.map((p) => (
+                <motion.div
+                    key={p.id}
+                    initial={{
+                        x: "50%",
+                        y: "50%",
+                        scale: 0,
+                        opacity: 1,
+                        rotate: 0,
+                    }}
+                    animate={{
+                        x: `${p.x + p.drift}%`,
+                        y: ["50%", `${p.yTarget}%`],
+                        scale: [0, 1.2, 0.8],
+                        opacity: [1, 1, 0],
+                        rotate: p.rotation + 720,
+                    }}
+                    transition={{
+                        duration: p.duration,
+                        delay: p.delay,
+                        ease: "easeOut",
+                    }}
+                    className="absolute rounded-sm"
+                    style={{
+                        width: p.size,
+                        height: p.size * 0.6,
+                        backgroundColor: p.color,
+                        borderRadius: "2px",
+                    }}
+                />
+            ))}
+        </div>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════
+    SPARKLE PARTICLES — twinkling stars for rare+ treasures
+    ═══════════════════════════════════════════════════════════ */
+
+function SparkleRing({ color }: { color: string }) {
+    const sparkles = useMemo(() =>
+        Array.from({ length: 12 }, (_, i) => ({
+            id: i,
+            angle: (i / 12) * 360,
+            delay: i * 0.08,
+            size: 3 + ((i * 7 + 3) % 4),
+        }))
+    , [color]);
+
+    return (
+        <div className="absolute inset-0 pointer-events-none z-10">
+            {sparkles.map((s) => (
+                <motion.div
+                    key={s.id}
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{
+                        opacity: [0, 1, 0],
+                        scale: [0, 1.5, 0],
+                    }}
+                    transition={{
+                        duration: 1.5,
+                        delay: s.delay,
+                        repeat: Infinity,
+                        repeatDelay: 0.5,
+                        ease: "easeInOut",
+                    }}
+                    className="absolute"
+                    style={{
+                        left: `${50 + 28 * Math.cos((s.angle * Math.PI) / 180)}%`,
+                        top: `${50 + 28 * Math.sin((s.angle * Math.PI) / 180)}%`,
+                        width: s.size,
+                        height: s.size,
+                        borderRadius: "50%",
+                        backgroundColor: color,
+                        boxShadow: `0 0 ${s.size * 2}px ${color}`,
+                    }}
+                />
+            ))}
+        </div>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════
+    SHIMMER OVERLAY — subtle glow sweep during opening
+    ═══════════════════════════════════════════════════════════ */
+
+function ShimmerOverlay({ intensity }: { intensity: number }) {
+    return (
+        <motion.div
+            initial={{ x: "-100%" }}
+            animate={{ x: "200%" }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+            className="absolute inset-0 pointer-events-none z-5"
+            style={{
+                background: `linear-gradient(105deg, transparent 30%, rgba(255,255,255,${intensity}) 50%, transparent 70%)`,
+            }}
+        />
+    );
+}
 
 /* ═══════════════════════════════════════════════════════════
     REWARD TEXT HELPER
@@ -139,8 +276,16 @@ const SUSPENSE_MESSAGES = [
     "💫 لحظة... فيه حاجة بتلمع...",
 ];
 
-function pickSuspenseMessage(): string {
-    return SUSPENSE_MESSAGES[Math.floor(Math.random() * SUSPENSE_MESSAGES.length)];
+function simpleHash(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+    }
+    return Math.abs(hash);
+}
+
+function pickSuspenseMessage(treasureId: string): string {
+    return SUSPENSE_MESSAGES[simpleHash(treasureId) % SUSPENSE_MESSAGES.length];
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -168,6 +313,8 @@ function CinematicReveal({
                     exit={{ opacity: 0 }}
                     className="flex flex-col items-center gap-6 py-8"
                 >
+                    {/* Shimmer sweep during opening */}
+                    <ShimmerOverlay intensity={config.shimmerIntensity} />
                     {/* Pulsing glow orb with Kenzoo card */}
                     <div className="relative flex items-center justify-center">
                         <motion.div
@@ -195,7 +342,7 @@ function CinematicReveal({
                         </motion.div>
                     </div>
                     <Muted className="text-sm animate-pulse">
-                        {pickSuspenseMessage()}
+                        {pickSuspenseMessage(data.treasureId)}
                     </Muted>
                     <div className="flex gap-2">
                         {[0, 1, 2].map((i) => (
@@ -218,12 +365,16 @@ function CinematicReveal({
                     transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
                     className="flex flex-col items-center gap-5 w-full"
                 >
+                    {/* Confetti burst for legendary */}
+                    {config.showConfetti && <ConfettiBurst />}
+                    {/* Sparkle ring for rare+ */}
+                    {config.showSparkles && <SparkleRing color={data.rarity === "legendary" ? "#F59E0B" : "#38BDF8"} />}
                     {/* Glow burst behind emoji */}
                     <motion.div
                         initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 2.5, opacity: [0, 0.6, 0.2] }}
-                        transition={{ duration: 1, ease: "easeOut" }}
-                        className="absolute h-20 w-20 rounded-full pointer-events-none"
+                        animate={{ scale: 3, opacity: [0, 0.7, 0.25] }}
+                        transition={{ duration: 1.2, ease: "easeOut" }}
+                        className="absolute h-24 w-24 rounded-full pointer-events-none"
                         style={{
                             background: `radial-gradient(circle, ${config.glowColor}, transparent 70%)`,
                         }}
@@ -231,8 +382,8 @@ function CinematicReveal({
                     <motion.span
                         initial={{ scale: 0.3, rotate: -15 }}
                         animate={{ scale: config.emojiScale, rotate: 0 }}
-                        transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 180 }}
-                        className="text-6xl relative"
+                        transition={{ delay: 0.2, duration: 0.6, type: "spring", stiffness: 180 }}
+                        className="text-7xl relative"
                     >
                         {data.emoji}
                     </motion.span>
@@ -280,6 +431,7 @@ function FlipCardReveal({
                 >
                     {phase === "opening" && (
                         <>
+                            <ShimmerOverlay intensity={config.shimmerIntensity} />
                             <motion.div
                                 animate={{ scale: [1, 1.05, 1], opacity: [0.7, 1, 0.7] }}
                                 transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" as const }}
@@ -292,7 +444,7 @@ function FlipCardReveal({
                                     className="object-contain"
                                 />
                             </motion.div>
-                            <Muted className="text-sm animate-pulse">{pickSuspenseMessage()}</Muted>
+                            <Muted className="text-sm animate-pulse">{pickSuspenseMessage(data.treasureId)}</Muted>
                         </>
                     )}
                 </div>
@@ -304,11 +456,13 @@ function FlipCardReveal({
                     className="absolute inset-0 flex flex-col items-center gap-4 pt-2"
                     style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
                 >
+                    {config.showConfetti && <ConfettiBurst />}
+                    {config.showSparkles && <SparkleRing color={data.rarity === "legendary" ? "#F59E0B" : "#38BDF8"} />}
                     <motion.span
                         initial={{ scale: 0.5 }}
-                        animate={{ scale: config.emojiScale }}
-                        transition={{ delay: 0.3, duration: 0.4, type: "spring", stiffness: 200 }}
-                        className="text-5xl"
+                        animate={{ scale: config.emojiScale, rotate: 0 }}
+                        transition={{ delay: 0.3, duration: 0.5, type: "spring", stiffness: 200 }}
+                        className="text-6xl"
                     >
                         {data.emoji}
                     </motion.span>
@@ -372,7 +526,8 @@ function MysteryReveal({
                             />
                         </motion.div>
                     </div>
-                    <Muted className="text-sm animate-pulse">{pickSuspenseMessage()}</Muted>
+                    <ShimmerOverlay intensity={config.shimmerIntensity} />
+                    <Muted className="text-sm animate-pulse">{pickSuspenseMessage(data.treasureId)}</Muted>
                 </motion.div>
             )}
 
@@ -384,11 +539,13 @@ function MysteryReveal({
                     transition={{ duration: 0.8, ease: "easeOut" }}
                     className="flex flex-col items-center gap-5 w-full"
                 >
+                    {config.showConfetti && <ConfettiBurst />}
+                    {config.showSparkles && <SparkleRing color={data.rarity === "legendary" ? "#F59E0B" : "#38BDF8"} />}
                     <motion.span
                         initial={{ scale: 0.6, opacity: 0 }}
-                        animate={{ scale: config.emojiScale, opacity: 1 }}
-                        transition={{ delay: 0.2, duration: 0.5, type: "spring", stiffness: 160 }}
-                        className="text-6xl"
+                        animate={{ scale: config.emojiScale, opacity: 1, rotate: 0 }}
+                        transition={{ delay: 0.2, duration: 0.6, type: "spring", stiffness: 160 }}
+                        className="text-7xl"
                     >
                         {data.emoji}
                     </motion.span>

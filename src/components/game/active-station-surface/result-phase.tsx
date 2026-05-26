@@ -38,9 +38,18 @@ const WRONG_MESSAGES = [
     "حاولت وبس ده شجاعة 💪",
 ] as const;
 
-/** Pick a random message from the list */
-function pickRandom<T extends readonly string[]>(messages: T): string {
-    return messages[Math.floor(Math.random() * messages.length)];
+/** Simple deterministic hash */
+function simpleHash(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+    }
+    return Math.abs(hash);
+}
+
+/** Pick a deterministic message based on seed */
+function pickRandom<T extends readonly string[]>(messages: T, seed: number): string {
+    return messages[seed % messages.length];
 }
 
 /* ─── Countdown for wrong answers ─── */

@@ -10,7 +10,7 @@ export const eidTreasures: Treasure[] = [
     /* ═════════════════ COMMON ═════════════════ */
 
     {
-        id: "eid-common-01",
+        id: "eid-common-001",
 
         emoji: "🌙",
 
@@ -34,7 +34,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-common-02",
+        id: "eid-common-002",
 
         emoji: "☕",
 
@@ -58,7 +58,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-common-03",
+        id: "eid-common-003",
 
         emoji: "😄",
 
@@ -106,7 +106,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-common-05",
+        id: "eid-common-005",
 
         emoji: "🎯",
 
@@ -153,7 +153,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-common-07",
+        id: "eid-common-007",
 
         emoji: "🧠",
 
@@ -176,7 +176,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-common-08",
+        id: "eid-common-008",
 
         emoji: "🍃",
 
@@ -455,7 +455,7 @@ export const eidTreasures: Treasure[] = [
         },
     },
         {
-        id: "eid-common-001",
+        id: "eid-common-009",
 
         emoji: "🌙",
 
@@ -481,7 +481,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-common-002",
+        id: "eid-common-010",
 
         emoji: "☕",
 
@@ -507,7 +507,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-common-003",
+        id: "eid-common-011",
 
         emoji: "😄",
 
@@ -533,7 +533,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-common-004",
+        id: "eid-common-012",
 
         emoji: "📿",
 
@@ -559,7 +559,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-common-005",
+        id: "eid-common-013",
 
         emoji: "🍃",
 
@@ -585,7 +585,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-common-006",
+        id: "eid-common-014",
 
         emoji: "🕌",
 
@@ -611,7 +611,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-common-007",
+        id: "eid-common-015",
 
         emoji: "🧠",
 
@@ -637,7 +637,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-common-008",
+        id: "eid-common-016",
 
         emoji: "🎊",
 
@@ -665,7 +665,7 @@ export const eidTreasures: Treasure[] = [
     /* ═════════════════ RARE ═════════════════ */
 
     {
-        id: "eid-rare-001",
+        id: "eid-rare-07",
 
         emoji: "🗝️",
 
@@ -691,7 +691,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-rare-002",
+        id: "eid-rare-08",
 
         emoji: "🌌",
 
@@ -717,7 +717,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-rare-003",
+        id: "eid-rare-09",
 
         emoji: "👑",
 
@@ -741,7 +741,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-rare-004",
+        id: "eid-rare-010",
 
         emoji: "🌙",
 
@@ -767,7 +767,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-rare-005",
+        id: "eid-rare-011",
 
         emoji: "😄",
 
@@ -795,7 +795,7 @@ export const eidTreasures: Treasure[] = [
     /* ═════════════════ LEGENDARY ═════════════════ */
 
     {
-        id: "eid-legendary-001",
+        id: "eid-legendary-06",
 
         emoji: "🏆",
 
@@ -821,7 +821,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-legendary-002",
+        id: "eid-legendary-07",
 
         emoji: "👑",
 
@@ -845,7 +845,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-legendary-003",
+        id: "eid-legendary-08",
 
         emoji: "🌠",
 
@@ -871,7 +871,7 @@ export const eidTreasures: Treasure[] = [
     },
 
     {
-        id: "eid-legendary-004",
+        id: "eid-legendary-09",
 
         emoji: "🕋",
 
@@ -888,6 +888,106 @@ export const eidTreasures: Treasure[] = [
 
         rarity: "legendary",
 
+         reward: {
+            type: "title",
+            titleText: pickRandomTitle(),
+        },
+
+    },
+
+    /* ═════════════════ NEW RARE ═════════════════ */
+
+    {
+        id: "eid-rare-012",
+
+        emoji: "🎨",
+
+        title:
+            "إبداع الليل",
+
+        flavor:
+            "وكل ظلام بيخبي إبداع جديد ✨",
+
+        description:
+            "الليل مش بس ظلام، ده كنفاس جديد 🎨",
+
+        starsRequired: 5,
+
+        rarity: "rare",
+
+        reward: {
+            type: "mystic",
+        },
+    },
+
+    {
+        id: "eid-rare-013",
+
+        emoji: "🌸",
+
+        title:
+            "ربيع القلب",
+
+        flavor:
+            "وكل فصل بيبدأ ببذورة أمل 🌱",
+
+        description:
+            "الأمل هو البذورة الأولى 🌸",
+
+        starsRequired: 5,
+
+        rarity: "rare",
+
+        reward: {
+            type: "emotional",
+        },
+    },
+
+    {
+        id: "eid-rare-014",
+
+        emoji: "🌇",
+
+        title:
+            "شفق الغروب",
+
+        flavor:
+            "وكل غروب شمسه بتطلع من جديد 🌅",
+
+        description:
+            "الغروب مش نهاية، ده بداية 🌇",
+
+        starsRequired: 5,
+
+        rarity: "rare",
+
+        reward: {
+            type: "wisdom",
+
+            message: "كل غروب بيفتح باب جديد 🌇",
+        },
+    },
+
+    /* ═════════════════ NEW LEGENDARY ═════════════════ */
+
+    {
+        id: "eid-legendary-010",
+
+        emoji: "🏆",
+
+        title:
+            "تاج الإيمان",
+
+        flavor:
+            "والله ما ضاع عمل عمله لله ✨",
+
+        description:
+            "كنز الإيمان أغلى من أي تاج 👑",
+
+        starsRequired: 7,
+
+        rarity: "legendary",
+
         reward: {
             type: "title",
 
@@ -896,5 +996,50 @@ export const eidTreasures: Treasure[] = [
         },
     },
 
+    {
+        id: "eid-legendary-011",
+
+        emoji: "🔮",
+
+        title:
+            "الكرستالة",
+
+        flavor:
+            "فيه أسرار بتعدي الخيال 🔮",
+
+        description:
+            "هذه الكرستالة فيها عالم كامل 🔮",
+
+        starsRequired: 7,
+
+        rarity: "legendary",
+
+        reward: {
+            type: "magical",
+        },
+    },
+
+    {
+        id: "eid-legendary-012",
+
+        emoji: "🌈",
+
+        title:
+            "قوس العهد",
+
+        flavor:
+            "وعد الله حق والقوس بيشهد 🌈",
+
+        description:
+            "بعد كل عاصفة فيه قوس قزح 🌈",
+
+        starsRequired: 7,
+
+        rarity: "legendary",
+
+        reward: {
+            type: "destiny",
+        },
+    },
 
 ];

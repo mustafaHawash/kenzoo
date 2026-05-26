@@ -32,7 +32,7 @@ export const eidQuizStations: Station[] = [
         explanation: "الأضحية مرتبطة بالطاعة والثقة بالله.",
 
         reward: {
-            stars: 1,
+            stars: 2,
             canUnlockTreasure: true,
         },
 
@@ -108,8 +108,8 @@ export const eidQuizStations: Station[] = [
             "السكينة تعني الهدوء والطمأنينة اللي بيحس بيها الإنسان لما يكون قريب من الله.",
 
         reward: {
-            stars: 1,
-            canUnlockTreasure: false,
+            stars: 2,
+            canUnlockTreasure: true,
         },
 
         tinyMissionPool: eidMissions,
@@ -200,8 +200,8 @@ export const eidQuizStations: Station[] = [
             "الله نجّى سيدنا يونس بعد ما بلعه الحوت ✨",
 
         reward: {
-            stars: 1,
-            canUnlockTreasure: false,
+            stars: 2,
+            canUnlockTreasure: true,
         },
 
         tinyMissionPool: eidMissions,
@@ -247,8 +247,8 @@ export const eidQuizStations: Station[] = [
             "الزرافة من أطول الحيوانات 👀",
 
         reward: {
-            stars: 1,
-            canUnlockTreasure: false,
+            stars: 2,
+            canUnlockTreasure: true,
         },
 
         tinyMissionPool: eidMissions,
@@ -294,8 +294,8 @@ export const eidQuizStations: Station[] = [
             "الشمس بتخلي التلج يدوب 💧",
 
         reward: {
-            stars: 1,
-            canUnlockTreasure: false,
+            stars: 2,
+            canUnlockTreasure: true,
         },
 
         tinyMissionPool: eidMissions,
@@ -346,7 +346,7 @@ export const eidQuizStations: Station[] = [
 
         reward: {
             stars: 2,
-            canUnlockTreasure: false,
+            canUnlockTreasure: true,
         },
 
         tinyMissionPool: eidMissions,
@@ -393,7 +393,7 @@ export const eidQuizStations: Station[] = [
 
         reward: {
             stars: 2,
-            canUnlockTreasure: false,
+            canUnlockTreasure: true,
         },
 
         tinyMissionPool: eidMissions,
@@ -440,7 +440,7 @@ export const eidQuizStations: Station[] = [
 
         reward: {
             stars: 2,
-            canUnlockTreasure: false,
+            canUnlockTreasure: true,
         },
 
         tinyMissionPool: eidMissions,
@@ -640,7 +640,7 @@ export const eidQuizStations: Station[] = [
 
         reward: {
             stars: 1,
-            canUnlockTreasure: false,
+            canUnlockTreasure: true,
         },
 
         tinyMissionPool: eidMissions,
@@ -687,7 +687,7 @@ export const eidQuizStations: Station[] = [
 
         reward: {
             stars: 1,
-            canUnlockTreasure: false,
+            canUnlockTreasure: true,
         },
 
         tinyMissionPool: eidMissions,
@@ -906,7 +906,7 @@ export const eidQuizStations: Station[] = [
         answer: "يونس عليه السلام",
         hint: "🐳 حوت كبير",
         explanation: "سيدنا يونس فضل يسبح ربنا في بطن الحوت لحد ما خرج.",
-        reward: { stars: 1, canUnlockTreasure: false },
+        reward: { stars: 1, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
     {
@@ -924,7 +924,7 @@ export const eidQuizStations: Station[] = [
         answer: "ملهاش صوت",
         hint: "🔇 هدوء خالص",
         explanation: "الزرافة حيوان أبكم مش بيطلع صوت خالص.",
-        reward: { stars: 1, canUnlockTreasure: false },
+        reward: { stars: 2, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
     {
@@ -942,7 +942,7 @@ export const eidQuizStations: Station[] = [
         answer: "المشط",
         hint: "💇 تسريح الشعر",
         explanation: "المشط بنسرح بيه شعرنا بس هو جماد مش بيعض.",
-        reward: { stars: 1, canUnlockTreasure: false },
+        reward: { stars: 1, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
     {
@@ -960,7 +960,7 @@ export const eidQuizStations: Station[] = [
         answer: "نوح عليه السلام",
         hint: "🌊 طوفان وموج",
         explanation: "سيدنا نوح بنى السفينة عشان ينقذ المؤمنين والحيوانات.",
-        reward: { stars: 1, canUnlockTreasure: false },
+        reward: { stars: 2, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
     {
@@ -978,7 +978,7 @@ export const eidQuizStations: Station[] = [
         answer: "الشرق",
         hint: "➡️ جهة اليمين",
         explanation: "الشمس دايماً بتشرق من جهة الشرق وتنور يومنا.",
-        reward: { stars: 1, canUnlockTreasure: false },
+        reward: { stars: 1, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
     {
@@ -996,7 +996,7 @@ export const eidQuizStations: Station[] = [
         answer: "زلومته",
         hint: "👃 مناخيره الطويلة",
         explanation: "الزلومة هي إيد الفيل ومناخيره في نفس الوقت.",
-        reward: { stars: 1, canUnlockTreasure: false },
+        reward: { stars: 2, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
     {
@@ -1014,7 +1014,7 @@ export const eidQuizStations: Station[] = [
         answer: "إبراهيم عليه السلام",
         hint: "🕋 باني الكعبة",
         explanation: "ربنا أمر النار تكون برداً وسلاماً على سيدنا إبراهيم.",
-        reward: { stars: 2, canUnlockTreasure: true },
+        reward: { stars: 3, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
     {
@@ -1032,7 +1032,7 @@ export const eidQuizStations: Station[] = [
         answer: "السحاب",
         hint: "🌧️ مطر جميل",
         explanation: "السحاب بيمشي مع الهوا وبينزل مطر كأنه بيبكي.",
-        reward: { stars: 1, canUnlockTreasure: false },
+        reward: { stars: 2, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
     {
@@ -1050,7 +1050,7 @@ export const eidQuizStations: Station[] = [
         answer: "5 مرات",
         hint: "🖐️ صوابع ايدك",
         explanation: "الصلوات المفروضة 5 عشان نفضل قريبين من ربنا.",
-        reward: { stars: 1, canUnlockTreasure: false },
+        reward: { stars: 2, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
     {
@@ -1068,7 +1068,7 @@ export const eidQuizStations: Station[] = [
         answer: "7 ألوان",
         hint: "🌈 ألوان كتير",
         explanation: "قوس قزح بيظهر بـ 7 ألوان روعة بعد ما الدنيا تمطر.",
-        reward: { stars: 1, canUnlockTreasure: false },
+        reward: { stars: 1, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
     {
@@ -1086,7 +1086,7 @@ export const eidQuizStations: Station[] = [
         answer: "سيدنا آدم",
         hint: "🍎 أبو البشر",
         explanation: "سيدنا آدم هو أول البشر وخلقه ربنا من طين.",
-        reward: { stars: 1, canUnlockTreasure: false },
+        reward: { stars: 1, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
     {
@@ -1104,7 +1104,7 @@ export const eidQuizStations: Station[] = [
         answer: "البيضة",
         hint: "🐔 جاية من الفرخة",
         explanation: "البيضة لازم نكسر قشرتها عشان نعرف نطبخها.",
-        reward: { stars: 1, canUnlockTreasure: false },
+        reward: { stars: 1, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
     {
@@ -1122,7 +1122,7 @@ export const eidQuizStations: Station[] = [
         answer: "سليمان عليه السلام",
         hint: "👑 ملك عظيم",
         explanation: "سيدنا سليمان علمه ربنا لغة الطيور والحشرات.",
-        reward: { stars: 1, canUnlockTreasure: false },
+        reward: { stars: 2, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
     {
@@ -1140,7 +1140,7 @@ export const eidQuizStations: Station[] = [
         answer: "الجمل",
         hint: "🐫 عنده سنام",
         explanation: "الجمل بيقدر يستحمل العطش ويمشي في الرمل مسافات طويلة.",
-        reward: { stars: 1, canUnlockTreasure: false },
+        reward: { stars: 1, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
     {
@@ -1158,7 +1158,7 @@ export const eidQuizStations: Station[] = [
         answer: "الطريق",
         hint: "🛣️ بنمشي عليه",
         explanation: "الطريق بيفضل في مكانه واحنا اللي بنمشي فوقيه.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-016",
@@ -1175,7 +1175,7 @@ export const eidQuizStations: Station[] = [
         answer: "مكة المكرمة",
         hint: "🇸🇦 في السعودية",
         explanation: "الكعبة هي قبلة المسلمين وموجودة في مكة.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-017",
@@ -1192,7 +1192,7 @@ export const eidQuizStations: Station[] = [
         answer: "النحلة",
         hint: "🐝 بتطير وتزن",
         explanation: "النحل بيمتص رحيق الورد ويحوله لعسل مفيد.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-018",
@@ -1209,7 +1209,7 @@ export const eidQuizStations: Station[] = [
         answer: "ماء زمزم",
         hint: "🕋 في مكة",
         explanation: "ماء زمزم مبارك وطلع هدية من ربنا للسيدة هاجر وابنها.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-019",
@@ -1226,7 +1226,7 @@ export const eidQuizStations: Station[] = [
         answer: "الحفرة",
         hint: "🕳️ في الأرض",
         explanation: "الحفرة لما بنشيل منها تراب بتوسع وتكبر أكتر.",
-        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+        reward: { stars: 3, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-020",
@@ -1243,7 +1243,7 @@ export const eidQuizStations: Station[] = [
         answer: "عام الفيل",
         hint: "🐘 حيوان ضخم",
         explanation: "اتولد النبي ﷺ في السنة اللي أبرهة حاول فيها يهد الكعبة.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-021",
@@ -1260,7 +1260,7 @@ export const eidQuizStations: Station[] = [
         answer: "3 قلوب",
         hint: "3️⃣ رقم تلاتة",
         explanation: "الأخطبوط كائن غريب وعنده 3 قلوب بدل واحد.",
-        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+        reward: { stars: 3, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-022",
@@ -1277,7 +1277,7 @@ export const eidQuizStations: Station[] = [
         answer: "عقرب الساعة",
         hint: "⏰ بنعرف بيه الوقت",
         explanation: "عقارب الساعة هي اللي بتقولنا الساعة كام دلوقتي.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-023",
@@ -1294,7 +1294,7 @@ export const eidQuizStations: Station[] = [
         answer: "اقرأ",
         hint: "📖 من القراءة",
         explanation: "أول آية نزلت في القرآن كانت 'اقرأ باسم ربك الذي خلق'.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-024",
@@ -1311,7 +1311,7 @@ export const eidQuizStations: Station[] = [
         answer: "بيعكس ضوء الشمس",
         hint: "☀️ مراية كبيرة",
         explanation: "القمر جسم مظلم بس بيعكس ضوء الشمس لينا فنشوفه منور.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-025",
@@ -1328,7 +1328,7 @@ export const eidQuizStations: Station[] = [
         answer: "8 رجول",
         hint: "🕷️ كتير أوي",
         explanation: "العناكب عندها 8 رجول بتتحرك بيها وتبني شبكتها.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-026",
@@ -1345,7 +1345,7 @@ export const eidQuizStations: Station[] = [
         answer: "الحمامة والعنكبوت",
         hint: "🕊️ طيور وخيوط",
         explanation: "ربنا حمى النبي بخيوط العنكبوت وعش الحمامة عشان المشركين ميشوفوهوش.",
-        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+        reward: { stars: 3, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-027",
@@ -1362,7 +1362,7 @@ export const eidQuizStations: Station[] = [
         answer: "الصوت",
         hint: "📢 بنسمعه بس",
         explanation: "الصوت بينتقل في الهوا وبنسمعه بوداننا من غير ما نشوفه.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-028",
@@ -1379,7 +1379,7 @@ export const eidQuizStations: Station[] = [
         answer: "صالح عليه السلام",
         hint: "🐪 جمل ضخم",
         explanation: "ربنا طلع الناقة من الصخرة عشان يثبت صدق سيدنا صالح.",
-        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+        reward: { stars: 3, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-029",
@@ -1396,7 +1396,7 @@ export const eidQuizStations: Station[] = [
         answer: "أحمر",
         hint: "❤️ زي القلب",
         explanation: "البطيخ قشرته خضراء بس قلبه أحمر وجميل.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-030",
@@ -1413,7 +1413,7 @@ export const eidQuizStations: Station[] = [
         answer: "علي بن أبي طالب",
         hint: "🦁 ابن عم النبي",
         explanation: "سيدنا علي كان لسه طفل لما صدق النبي وآمن بيه.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-031",
@@ -1430,7 +1430,7 @@ export const eidQuizStations: Station[] = [
         answer: "5 عيون",
         hint: "🖐️ ايد كاملة",
         explanation: "النحلة عندها 5 عيون بتشوف بيها الورد من بعيد.",
-        reward: { stars: 3, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-032",
@@ -1447,7 +1447,7 @@ export const eidQuizStations: Station[] = [
         answer: "الجوانتي",
         hint: "🧤 بنلبسه في إيدنا",
         explanation: "الجوانتي متفصل على قد صوابعنا بس طبعاً ملوش عضم.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-033",
@@ -1464,7 +1464,7 @@ export const eidQuizStations: Station[] = [
         answer: "القصواء",
         hint: "🐫 جمل رائع",
         explanation: "القصواء هي الناقة اللي ركبها النبي في الهجرة للمدينة.",
-        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+        reward: { stars: 3, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-034",
@@ -1481,7 +1481,7 @@ export const eidQuizStations: Station[] = [
         answer: "البقرة",
         hint: "🐄 بتقول مووو",
         explanation: "البقرة بتدينا لبن بيقوي عضمانا وسناننا.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-035",
@@ -1498,7 +1498,7 @@ export const eidQuizStations: Station[] = [
         answer: "بلال بن رباح",
         hint: "🗣️ صوت روعة",
         explanation: "سيدنا بلال هو أول مؤذن اختاره النبي ﷺ لجمال صوته.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-036",
@@ -1515,7 +1515,7 @@ export const eidQuizStations: Station[] = [
         answer: "الشمعة",
         hint: "🔥 بتسيح بالراحة",
         explanation: "الشمعة بتخلص وهي بتدينا ضوء في الضلمة.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-037",
@@ -1532,7 +1532,7 @@ export const eidQuizStations: Station[] = [
         answer: "القرآن الكريم",
         hint: "📗 بنقرأه دايماً",
         explanation: "القرآن هو كلام ربنا المعجز لكل الناس.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-038",
@@ -1549,7 +1549,7 @@ export const eidQuizStations: Station[] = [
         answer: "الفهد",
         hint: "🐆 سريع جداً",
         explanation: "الفهد هو أسرع حيوان بري في العالم كله.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-039",
@@ -1566,7 +1566,7 @@ export const eidQuizStations: Station[] = [
         answer: "بيتهم",
         hint: "🏠 مكان يناموا فيه",
         explanation: "ربنا خلق لهم درع صلب بيحميهم كأنه بيت متنقل.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-040",
@@ -1583,7 +1583,7 @@ export const eidQuizStations: Station[] = [
         answer: "إبراهيم عليه السلام",
         hint: "🕋 في مكة",
         explanation: "سيدنا إبراهيم وابنه إسماعيل هما اللي رفعوا قواعد الكعبة.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-041",
@@ -1600,7 +1600,7 @@ export const eidQuizStations: Station[] = [
         answer: "الصحن",
         hint: "🍽️ بنحط فيه الأكل",
         explanation: "الصحن بنحط فيه الأكل بس طبعاً مش بناكله.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-042",
@@ -1617,7 +1617,7 @@ export const eidQuizStations: Station[] = [
         answer: "بسبب الجاذبية",
         hint: "🧲 مغناطيس الأرض",
         explanation: "الجاذبية هي اللي بتشد كل حاجة ناحية الأرض.",
-        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+        reward: { stars: 3, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-043",
@@ -1634,7 +1634,7 @@ export const eidQuizStations: Station[] = [
         answer: "مسجد قباء",
         hint: "🕌 في المدينة",
         explanation: "بناه النبي ﷺ أول ما وصل المدينة في منطقة اسمها قباء.",
-        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+        reward: { stars: 3, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-044",
@@ -1651,7 +1651,7 @@ export const eidQuizStations: Station[] = [
         answer: "شبل",
         hint: "🦁 أسد صغنن",
         explanation: "صغير الأسد بنسميه شبل.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-045",
@@ -1668,7 +1668,7 @@ export const eidQuizStations: Station[] = [
         answer: "القلم",
         hint: "✍️ بنمسكه بإيدنا",
         explanation: "القلم بيكتب كل حاجة بس هو جماد مش بيقرأ.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-046",
@@ -1685,7 +1685,7 @@ export const eidQuizStations: Station[] = [
         answer: "يوم الجمعة",
         hint: "🕌 يوم العيد الأسبوعي",
         explanation: "يوم الجمعة يوم مبارك وفيه ساعة استجابة للدعاء.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-047",
@@ -1702,7 +1702,7 @@ export const eidQuizStations: Station[] = [
         answer: "سورة التين",
         hint: "🍐 فاكهة لذيذة",
         explanation: "ربنا سمى سورة كاملة باسم التين والزيتون.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-048",
@@ -1719,7 +1719,7 @@ export const eidQuizStations: Station[] = [
         answer: "في المية",
         hint: "🌊 بحر ونهر",
         explanation: "السمك مكانه الطبيعي في المية ولو خرج بره يموت.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-049",
@@ -1736,7 +1736,7 @@ export const eidQuizStations: Station[] = [
         answer: "الظل",
         hint: "👤 خيالك",
         explanation: "ظلك بيمشي معاك في كل حتة بس هو مش جسم حقيقي يتبل.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-050",
@@ -1753,7 +1753,7 @@ export const eidQuizStations: Station[] = [
         answer: "كبش (خروف)",
         hint: "🐑 بيقول مأأأأ",
         explanation: "ربنا نزل كبش كبير فداء لسيدنا إسماعيل وده سر الأضحية.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-051",
@@ -1770,7 +1770,7 @@ export const eidQuizStations: Station[] = [
         answer: "الأرض",
         hint: "🌍 لونه أزرق وأخضر",
         explanation: "كوكب الأرض هو الكوكب الوحيد اللي فيه حياة ومية.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-052",
@@ -1787,7 +1787,7 @@ export const eidQuizStations: Station[] = [
         answer: "القطة",
         hint: "🐱 بتقول مياو",
         explanation: "صوت القطة هو المواء وهي حيوان أليف وجميل.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-053",
@@ -1804,7 +1804,7 @@ export const eidQuizStations: Station[] = [
         answer: "5 أركان",
         hint: "🖐️ صوابع إيدك",
         explanation: "الإسلام مبني على 5 حاجات أساسية أهمها الصلاة.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-054",
@@ -1821,7 +1821,7 @@ export const eidQuizStations: Station[] = [
         answer: "الباب المفتوح",
         hint: "🔓 هو خلاص مفتوح",
         explanation: "الباب المفتوح مش محتاج يتفتح أصلاً.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-055",
@@ -1838,7 +1838,7 @@ export const eidQuizStations: Station[] = [
         answer: "محمد صلى الله عليه وسلم",
         hint: "🌹 نبينا الحبيب",
         explanation: "النبي كان معروف بصدقه وأمانته حتى قبل ما يبقى نبي.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-056",
@@ -1855,7 +1855,7 @@ export const eidQuizStations: Station[] = [
         answer: "أخضر",
         hint: "🍃 لون الزرع",
         explanation: "الشجر لونه أخضر عشان مادة الكلوروفيل اللي بتصنع الأكل.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-057",
@@ -1872,7 +1872,7 @@ export const eidQuizStations: Station[] = [
         answer: "السلحفاة",
         hint: "🐢 بطيئة جداً",
         explanation: "السلحفاة بتشيل بيتها على ظهرها وبتمشي ببطء وصبور.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-058",
@@ -1889,7 +1889,7 @@ export const eidQuizStations: Station[] = [
         answer: "الإسفنج",
         hint: "🧼 بنغسل بيه",
         explanation: "الإسفنج فيه فتحات كتير بس بيحبس المية جواه.",
-        reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+        reward: { stars: 3, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-059",
@@ -1906,7 +1906,7 @@ export const eidQuizStations: Station[] = [
         answer: "الهلال",
         hint: "🌙 موزة في السما",
         explanation: "رؤية الهلال هي اللي بتقولنا إن الشهر الجديد بدأ والعيد جه.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-k-060",
@@ -1923,7 +1923,7 @@ export const eidQuizStations: Station[] = [
         answer: "البرتقال",
         hint: "🍊 فاكهة الشتا",
         explanation: "البرتقال هو الفاكهة اللي لونها برتقالي واسمها برتقال.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
 
     // ========================
@@ -1995,7 +1995,7 @@ export const eidQuizStations: Station[] = [
         answer: "عثمان بن عفان",
         hint: "💍 ثالث الخلفاء",
         explanation: "لقب بذلك لأنه تزوج من ابنتي النبي ﷺ رقية وأم كلثوم.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-a-005",
@@ -2114,7 +2114,7 @@ export const eidQuizStations: Station[] = [
         answer: "دولة الفاتيكان",
         hint: "🇮🇹 داخل إيطاليا",
         explanation: "تقع الفاتيكان في قلب العاصمة الإيطالية روما.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-a-012",
@@ -2233,7 +2233,7 @@ export const eidQuizStations: Station[] = [
         answer: "نهر النيل",
         hint: "🇪🇬 في أفريقيا",
         explanation: "يعتبر نهر النيل هو الأطول عالمياً ويمر عبر عدة دول أفريقية.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-a-019",
@@ -2403,7 +2403,7 @@ export const eidQuizStations: Station[] = [
         answer: "32 سناً",
         hint: "🦷 كاملة بالضروس",
         explanation: "يمتلك الإنسان البالغ عادة 32 سناً تشمل ضروس العقل.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-a-029",
@@ -2420,7 +2420,7 @@ export const eidQuizStations: Station[] = [
         answer: "قناة السويس",
         hint: "🇪🇬 في مصر",
         explanation: "قناة السويس هي أهم ممر ملاحي يربط الشرق بالغرب عبر مصر.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-a-030",
@@ -2454,7 +2454,7 @@ export const eidQuizStations: Station[] = [
         answer: "بلال بن رباح",
         hint: "🗣️ صوت جميل",
         explanation: "سيدنا بلال بن رباح هو أول مؤذن في الإسلام بطلب من النبي ﷺ.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-a-032",
@@ -2522,7 +2522,7 @@ export const eidQuizStations: Station[] = [
         answer: "توماس أديسون",
         hint: "💡 نور البيت",
         explanation: "توماس أديسون هو من أهدى العالم الضوء من خلال اختراع المصباح.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-a-036",
@@ -2539,7 +2539,7 @@ export const eidQuizStations: Station[] = [
         answer: "الجزائر",
         hint: "🇩🇿 في شمال أفريقيا",
         explanation: "أصبحت الجزائر هي الأكبر مساحة عربياً وأفريقياً بعد تقسيم السودان.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-a-037",
@@ -2573,7 +2573,7 @@ export const eidQuizStations: Station[] = [
         answer: "100 درجة مئوية",
         hint: "🌡️ ماء ساخن جداً",
         explanation: "يغلي الماء ويتحول لبخار عند درجة 100 مئوية.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-a-039",
@@ -2590,7 +2590,7 @@ export const eidQuizStations: Station[] = [
         answer: "مصر",
         hint: "🇪🇬 أرض النيل",
         explanation: "بنيت الأهرامات في مصر القديمة كمعلم تاريخي عالمي.",
-        reward: { stars: 1, canUnlockTreasure: false }, tinyMissionPool: eidMissions,
+        reward: { stars: 1, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
     {
         id: "quiz-a-040",
@@ -2948,6 +2948,276 @@ export const eidQuizStations: Station[] = [
         hint: "📈 هزات أرضية",
         explanation: "مقياس ريختر يقيس كمية الطاقة المنبعثة أثناء الزلزال.",
         reward: { stars: 2, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-061",
+        type: "quiz",
+        category: "islamic",
+        title: "🕋 الكلمات الطيب",
+        description: "أركان الحج",
+        theme: "eid-al-adha",
+        mood: "reflective",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "ما هي الكلمات التي يلقي بها الحاج عند الجمرتين؟",
+        choices: ["اللهم إني أسألك الفردوس", "لبيك اللهم لبيك", "سبحان الله وبحمده", "لا إله إلا الله"],
+        answer: "اللهم إني أسألك الفردوس",
+        hint: "دعاء خاص بين الجمرتين",
+        explanation: "يلقي الحاج بين الجمرتين بالدعاء: اللهم إني أسألك الفردوس الأعلى.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-062",
+        type: "quiz",
+        category: "islamic",
+        title: "⛩️ الصفا والمروة",
+        description: "مناسك الحج",
+        theme: "eid-al-adha",
+        mood: "reflective",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "السعي بين الصفا والمروة يبدأ من أين؟",
+        choices: ["الصفا", "المروة", "الحجر الأسود", "مقام إبراهيم"],
+        answer: "الصفا",
+        hint: "جبل صغير داخل المسجد الحرام",
+        explanation: "يبدأ السعي من الصفا وينتهي عند المروة.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-063",
+        type: "quiz",
+        category: "islamic",
+        title: "مناسك الحج",
+        description: "تفاصيل المناسك",
+        theme: "eid-al-adha",
+        mood: "curious",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "في أي يوم من أيام الحج يوم عرفة؟",
+        choices: ["التاسع", "الثامن", "العاشر", "السابع"],
+        answer: "التاسع",
+        hint: "اليوم الأهم في الحج",
+        explanation: "يوم عرفة هو التاسع من ذي الحجة وهو ركن الحج الأعظم.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-064",
+        type: "quiz",
+        category: "history",
+        title: "🏛️ عام الفتح",
+        description: "تاريخ إسلامي",
+        theme: "eid-al-adha",
+        mood: "curious",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "في أي عام هجري فتح النبي مكة؟",
+        choices: ["الثامن", "السابع", "العاشر", "الخامس"],
+        answer: "الثامن",
+        hint: "بعد صلب الحديبية",
+        explanation: "فتح مكة كان في السنة الثامنة للهجرة في شهر رمضان.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-065",
+        type: "quiz",
+        category: "islamic",
+        title: "الأضاحي",
+        description: "أحكام الأضحية",
+        theme: "eid-al-adha",
+        mood: "reflective",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "ما هي السنة في توزيع لحم الأضحية؟",
+        choices: ["ثلاثة أثلاث: للأكل والهدية والصدقة", "كله للأكل", "كله للصدقة", "نصفه للأكل ونصفه للصدقة"],
+        answer: "ثلاثة أثلاث: للأكل والهدية والصدقة",
+        hint: "تقسيم ثلاثي",
+        explanation: "السنة تقسم الأضحية ثلاثة أثلاث: ثلث للأكل وثلث للهدية وثلث للصدقة.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-066",
+        type: "quiz",
+        category: "islamic",
+        title: "يوم عرفة",
+        description: "فضائل الأيام",
+        theme: "eid-al-adha",
+        mood: "reflective",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "النبي قال إن الحج عرفة، وقصده إيه؟",
+        choices: ["أن يوم عرفة هو ركن الحج الأهم", "أن الحج يكون في عرفة بس", "أن عرفة هي الحج كله", "أن الحج ممكن يتعمد على عرفة بس"],
+        answer: "أن يوم عرفة هو ركن الحج الأهم",
+        hint: "موقف عظيم",
+        explanation: "القصد إن يوم عرفة هو أعظم أركان الحج وأهمها.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-067",
+        type: "quiz",
+        category: "islamic",
+        title: "التلبية",
+        description: "مناسك الحج",
+        theme: "eid-al-adha",
+        mood: "reflective",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "متى ينتهي وقت التلبية للمحرم؟",
+        choices: ["عند رمي جمرة العقبة يوم النحر", "عند الطواف", "عند السعي", "عند الوقوف بعرفة"],
+        answer: "عند رمي جمرة العقبة يوم النحر",
+        hint: "آخر أيام التشريق",
+        explanation: "ينتهي وقت التلبية عند رمي جمرة العقبة يوم النحر.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-068",
+        type: "quiz",
+        category: "history",
+        title: "غزوات النبي",
+        description: "سيرة نبوية",
+        theme: "eid-al-adha",
+        mood: "curious",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "كم عدد غزوات النبي محمد صلى الله عليه وسلم؟",
+        choices: ["27", "19", "35", "10"],
+        answer: "27",
+        hint: "عدد كبير لكن معروف",
+        explanation: "غزا النبي 27 غزوة في سبيل الله.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-069",
+        type: "quiz",
+        category: "islamic",
+        title: "ميسر السلام",
+        description: "صحابة النبي",
+        theme: "eid-al-adha",
+        mood: "curious",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "من هو آخر الصحابة موتًا؟",
+        choices: ["أنس بن مالك", "أبو بكر الصديق", "عمر بن الخطاب", "علي بن أبي طالب"],
+        answer: "أنس بن مالك",
+        hint: "خادم النبي",
+        explanation: "أنس بن مالك كان آخر الصحابة وفاتًا سنة 93 هجرية.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-070",
+        type: "quiz",
+        category: "islamic",
+        title: "القبلة",
+        description: "تاريخ إسلامي",
+        theme: "eid-al-adha",
+        mood: "curious",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "في أي سنة تحولت القبلة من بيت المقدس إلى الكعبة؟",
+        choices: ["الثانية هجرية", "الخامسة هجرية", "الأولى هجرية", "العاشرة هجرية"],
+        answer: "الثانية هجرية",
+        hint: "بعد الهجرة بشوية",
+        explanation: "تحولت القبلة في السنة الثانية للهجرة في صلاة الظهر.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-071",
+        type: "quiz",
+        category: "language",
+        title: "عجيب العربية",
+        description: "لغة عربية",
+        theme: "eid-al-adha",
+        mood: "cozy",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "كم عدد حروف الهجاء في اللغة العربية؟",
+        choices: ["28", "29", "26", "30"],
+        answer: "28",
+        hint: "أكثر من الإنجليزية بشوية",
+        explanation: "اللغة العربية فيها 28 حرف هجاء.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-072",
+        type: "quiz",
+        category: "science",
+        title: "السماء",
+        description: "علوم قرآنية",
+        theme: "eid-al-adha",
+        mood: "curious",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "كم سماء ذكرت في القرآن الكريم؟",
+        choices: ["7", "5", "3", "10"],
+        answer: "7",
+        hint: "ربطت بغيز بدون عمد",
+        explanation: "ذكر القرآن 7 سموات طباقًا بعضها فوق بعض.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-073",
+        type: "quiz",
+        category: "islamic",
+        title: "الزكاة",
+        description: "أركان الإسلام",
+        theme: "eid-al-adha",
+        mood: "reflective",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "ما هو النصاب المحدد لزكاة الذهب؟",
+        choices: ["85 جرام", "100 جرام", "200 جرام", "50 جرام"],
+        answer: "85 جرام",
+        hint: "مقدار معين من الذهب",
+        explanation: "نصاب زكاة الذهب هو 85 جرام وهو ما يعادل 20 مثقالًا.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-074",
+        type: "quiz",
+        category: "islamic",
+        title: "الصيام",
+        description: "أحكام الصيام",
+        theme: "eid-al-adha",
+        mood: "reflective",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "ما هو حكم صيام يوم عرفة للحاج؟",
+        choices: ["مكروه", "محرم", "مستحب", "واجب"],
+        answer: "مكروه",
+        hint: "الحاج مش زي غيره",
+        explanation: "يكره صيام يوم عرفة للحاج لأنه ينبغي أن يقوي على العبادة.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "quiz-a-075",
+        type: "quiz",
+        category: "history",
+        title: "صلب الحديبية",
+        description: "أحداث تاريخية",
+        theme: "eid-al-adha",
+        mood: "curious",
+        difficulty: 4,
+        targetAgeGroup: "adult",
+        question: "في أي سنة كان صلب الحديبية؟",
+        choices: ["السابعة هجرية", "الخامسة هجرية", "السادسة هجرية", "الثامنة هجرية"],
+        answer: "السادسة هجرية",
+        hint: "قبل فتح مكة",
+        explanation: "صلب الحديبية كان في السنة السادسة للهجرة وهو من أهم الأحداث.",
+        reward: { stars: 4, canUnlockTreasure: true }, tinyMissionPool: eidMissions,
     },
 
 

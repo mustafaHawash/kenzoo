@@ -33,7 +33,7 @@ import {
  * FUTURE: When seeded RNG is implemented, replace Math.random()
  * with a deterministic RngSource passed as a parameter.
  */
-export const BASE_TREASURE_PROBABILITY = 0.35;
+export const BASE_TREASURE_PROBABILITY = 0.45;
 
 /**
  * Maximum treasure appearance probability — hard cap.

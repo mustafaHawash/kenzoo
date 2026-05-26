@@ -89,10 +89,11 @@ export const HIDDEN_TREASURE_WIN_THRESHOLD = 21;
 
 /**
  * The minimum stars a player must have for a treasure opportunity to appear.
- * Set to 7 because that is the maximum possible hidden star cost.
- * This guarantees the player can always afford any treasure they encounter.
+ * Set to 5 to allow treasures to appear earlier and more frequently.
+ * Players can always afford common (3★) and rare (5★) treasures at this threshold.
+ * Legendary treasures (7★) require the player to accumulate more stars first.
  */
-export const TREASURE_APPEARANCE_MIN_STARS = 7;
+export const TREASURE_APPEARANCE_MIN_STARS = 5;
 
 /* ─── Stars consumed by rarity (hidden from player before opening) ─── */
 export const STARS_REQUIRED_BY_RARITY: Record<TreasureRarity, number> = {
@@ -264,6 +265,8 @@ function deriveRewardText(reward: TreasureRewardDetail): string {
             return "احتفال 🎊";
         case "destiny":
             return "قدر مكتوب 🌠";
+        case "physical":
+            return "نشاط وحركة 💪";
         default:
             return "مفاجأة";
     }
