@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 
 import { LanternButton } from "@/components/ui/lantern-button";
@@ -13,6 +14,37 @@ import type { RoundResult } from "@/types/session";
 import { softPop, slideUp } from "./motion";
 import { RewardSummary } from "./reward-summary";
 import { TinyMissionCard } from "./tiny-mission-card";
+
+/* ─── Varied result messages — same warm colloquial tone ─── */
+const CORRECT_MESSAGES = [
+    "صح جداً .. الله عليك 👏🏼",
+    "إجابة صح! ذكاء وحش 🌟",
+    "يا سلام! جواب على راس 🎯",
+    "تمام يا بطل! كده ✨",
+    "عرفتها! برافو عليك 💫",
+    "صح! ده فهم كده 🏆",
+    "ما شاء الله! إجابة مية المية 🌙",
+    "يا حلو! صح كده 🪄",
+] as const;
+
+const WRONG_MESSAGES = [
+    "تغلط اكتر .. تتعلم اكتر 💪",
+    "مفيش مشكلة! المرة الجاية 🤍",
+    "مش ضروري تبقى صح كل مرة 🌱",
+    "الغلط جزء من الطريق .. كمّل 💫",
+    "بص للناحية الحلوة: هتفتكرها دلوقتي 🌙",
+    "عادي! اللي بيجرب بيغلط وبيتعلم ✨",
+    "مش نهاية الدنيا .. يلا نكمل 🤗",
+    "حاولت وبس ده شجاعة 💪",
+] as const;
+
+/** Pick a random message from the list */
+function pickRandom<T extends readonly string[]>(messages: T): string {
+    return messages[Math.floor(Math.random() * messages.length)];
+}
+
+/* ─── Countdown for wrong answers ─── */
+const WRONG_ANSWER_COUNTDOWN_SECS = 3;
 
 interface ResultPhaseProps {
     station: Station;
@@ -36,6 +68,35 @@ export function ResultPhase({
     result,
     onNext,
 }: ResultPhaseProps) {
+    const [countdown, setCountdown] = useState(
+        result.isCorrect ? 0 : WRONG_ANSWER_COUNTDOWN_SECS,
+    );
+    const [canContinue, setCanContinue] = useState(result.isCorrect);
+    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    useEffect(() => {
+        // No countdown for correct answers
+        if (result.isCorrect) return;
+
+        let remaining = WRONG_ANSWER_COUNTDOWN_SECS;
+        setCountdown(remaining);
+        setCanContinue(false);
+
+        timerRef.current = setInterval(() => {
+            remaining -= 1;
+            if (remaining <= 0) {
+                setCountdown(0);
+                setCanContinue(true);
+                if (timerRef.current) clearInterval(timerRef.current);
+                return;
+            }
+            setCountdown(remaining);
+        }, 1000);
+
+        return () => {
+            if (timerRef.current) clearInterval(timerRef.current);
+        };
+    }, [result.isCorrect]);
 
     return (
         <motion.div
@@ -44,7 +105,7 @@ export function ResultPhase({
             animate="visible"
             className="flex flex-col gap-2.5"
         >
-            {/* ── Result sticker & message — sticker only, no icon ── */}
+            {/* ── Result sticker & message ── */}
             <div className="flex flex-col items-center gap-1.5 text-center">
                 <MoodSticker
                     mood={result.isCorrect ? "celebration" : "fail"}
@@ -60,8 +121,8 @@ export function ResultPhase({
                     }
                 >
                     {result.isCorrect
-                        ? "صح جداً .. الله عليك 👏🏼"
-                        : "تغلط اكتر  .. تتعلم اكتر 💪"}
+                        ? pickRandom(CORRECT_MESSAGES)
+                        : pickRandom(WRONG_MESSAGES)}
                 </Headline>
 
                 {/* Correct answer reveal (wrong answers only) */}
@@ -110,17 +171,31 @@ export function ResultPhase({
                 <TinyMissionCard mission={result.tinyMission} />
             )}
 
-            {/* ── Next CTA ── */}
-            <LanternButton
-                onClick={onNext}
-                className="w-full"
-            >
-                {result.isCorrect
-                    ? "يلا بينا "
-                    : result.tinyMission
-                        ? "عملت المهمة! يلا نكمل 🚀"
-                        : "جرب مرة تانية 💪"}
-            </LanternButton>
+            {/* ── Next CTA with countdown ── */}
+            <div className="relative">
+                <LanternButton
+                    onClick={onNext}
+                    disabled={!canContinue}
+                    className="w-full"
+                >
+                    {result.isCorrect
+                        ? "يلا بينا ✨"
+                        : countdown > 0
+                            ? `اعمل المهمة... ${countdown}`
+                            : result.tinyMission
+                                ? "عملت المهمة! يلا نكمل 🚀"
+                                : "يلا نكمل 💪"}
+                </LanternButton>
+
+                {/* Countdown ring overlay */}
+                {!result.isCorrect && countdown > 0 && (
+                    <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full">
+                        <span className="text-xs font-medium text-secondary/50">
+                            ⏳
+                        </span>
+                    </div>
+                )}
+            </div>
         </motion.div>
     );
 }

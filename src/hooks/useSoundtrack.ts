@@ -22,8 +22,12 @@ import type { SoundtrackLayer } from "@/assets/types";
  *   - Global mute: respects data-muted attribute and custom events
  */
 
-const FADE_DURATION_MS = 800;
-const FADE_INTERVAL_MS = 50;
+/* ─── Fade timing constants ─── */
+const FADE_DURATION_MS = 1200;       // Crossfade between layers — smooth & cinematic
+const FADE_INTERVAL_MS = 40;        // Smoother steps (30 steps vs 16)
+const DUCK_FADE_OUT_MS = 300;        // Quick duck when SFX starts
+const DUCK_FADE_IN_MS = 900;         // Gentle restore after SFX ends
+const DUCK_RESTORE_DELAY_MS = 150;   // Small pause before restoring — lets SFX breathe
 
 type AudioState = {
     audio: HTMLAudioElement;
@@ -57,13 +61,27 @@ function getOrCreateLayer(layer: SoundtrackLayer): HTMLAudioElement {
     return audio;
 }
 
-/** Fade audio to target volume */
-function fadeTo(audio: HTMLAudioElement, targetVolume: number): Promise<void> {
+/**
+ * Fade audio to target volume with configurable duration.
+ * Uses an easing curve (ease-out) for more natural-sounding fades.
+ */
+function fadeTo(
+    audio: HTMLAudioElement,
+    targetVolume: number,
+    durationMs: number = FADE_DURATION_MS,
+): Promise<void> {
     return new Promise((resolve) => {
         const startVolume = audio.volume;
         const volumeDelta = targetVolume - startVolume;
-        const steps = FADE_DURATION_MS / FADE_INTERVAL_MS;
-        const volumeStep = volumeDelta / steps;
+
+        // Already at target — skip
+        if (Math.abs(volumeDelta) < 0.005) {
+            audio.volume = targetVolume;
+            resolve();
+            return;
+        }
+
+        const steps = Math.max(1, Math.round(durationMs / FADE_INTERVAL_MS));
         let currentStep = 0;
 
         const interval = setInterval(() => {
@@ -74,7 +92,10 @@ function fadeTo(audio: HTMLAudioElement, targetVolume: number): Promise<void> {
                 resolve();
                 return;
             }
-            audio.volume = Math.max(0, Math.min(1, startVolume + volumeStep * currentStep));
+            // Ease-out curve: fast start, gentle finish
+            const progress = currentStep / steps;
+            const eased = 1 - Math.pow(1 - progress, 2);
+            audio.volume = Math.max(0, Math.min(1, startVolume + volumeDelta * eased));
         }, FADE_INTERVAL_MS);
     });
 }
@@ -97,12 +118,12 @@ if (typeof window !== "undefined") {
         }
     }) as EventListener);
 
-    // SFX ducking
+    // SFX ducking — quick fade out, gentle delayed fade in
     window.addEventListener("kenzoo:sfx-start", () => {
         if (!globalActiveLayer) return;
         const state = globalLayers[globalActiveLayer];
         if (state?.isPlaying) {
-            fadeTo(state.audio, globalIntendedVolume * 0.1);
+            fadeTo(state.audio, globalIntendedVolume * 0.15, DUCK_FADE_OUT_MS);
         }
     });
 
@@ -110,7 +131,15 @@ if (typeof window !== "undefined") {
         if (!globalActiveLayer) return;
         const state = globalLayers[globalActiveLayer];
         if (state?.isPlaying) {
-            fadeTo(state.audio, globalIntendedVolume);
+            // Small delay before restoring — lets the SFX tail breathe
+            setTimeout(() => {
+                // Re-check: don't restore if another SFX started in the meantime
+                if (!globalActiveLayer) return;
+                const currentState = globalLayers[globalActiveLayer];
+                if (currentState?.isPlaying) {
+                    fadeTo(currentState.audio, globalIntendedVolume, DUCK_FADE_IN_MS);
+                }
+            }, DUCK_RESTORE_DELAY_MS);
         }
     });
 }

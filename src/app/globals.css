@@ -228,6 +228,7 @@
   50% { transform: translateY(2px); }
 }
 
+
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *,

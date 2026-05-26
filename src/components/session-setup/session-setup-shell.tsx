@@ -129,10 +129,10 @@ export function SessionSetupShell() {
 
     /* ─── Step-specific continue labels — warm, not mechanical ─── */
     const continueLabels: Record<typeof activeStepId, string> = {
-        players: "كملوا الإيقاع ✨",
-        length: "اختاروا الجو ✨",
-        theme: "جهزوا الليلة ✨",
-        begin: "ابدأ الليلة ✨",
+        players: "يلا نبدأ الليلة ",
+        length: "اختاروا الجو ",
+        theme: "جهزوا الليلة ",
+        begin: "ابدأ الليلة ",
     };
 
     return (

@@ -1,5 +1,6 @@
 {
     "Codegeex.Chat.LanguagePreference": "English",
     "Codegeex.RepoIndex": true,
-    "Codegeex.CompletionDelay": 0.4
+    "Codegeex.CompletionDelay": 0.4,
+    "Codegeex.CommitMessageStyle": "ConventionalCommits"
 }

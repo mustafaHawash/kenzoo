@@ -39,32 +39,39 @@ export function useSound(
             if (!audioRef.current) {
                 audioRef.current = new Audio(src);
             }
-            audioRef.current.volume = volume;
+            const audio = audioRef.current;
+            audio.volume = volume;
             // Reset to start if already playing
-            audioRef.current.currentTime = 0;
+            audio.currentTime = 0;
+
+            // Track whether we already dispatched sfx-end to avoid double restore
+            let hasDispatchedEnd = false;
+
+            const dispatchSfxEnd = () => {
+                if (hasDispatchedEnd) return;
+                hasDispatchedEnd = true;
+                window.dispatchEvent(new CustomEvent("kenzoo:sfx-end"));
+            };
 
             // ─── Duck the soundtrack while SFX plays ───
-            // Dispatch a custom event that useSoundtrack listens to.
-            // This temporarily lowers the soundtrack volume so the SFX
-            // is clearly audible without competing with background music.
             window.dispatchEvent(new CustomEvent("kenzoo:sfx-start"));
 
-            audioRef.current.play().catch(() => {
+            audio.play().catch(() => {
                 // Autoplay blocked — silently ignore.
-                window.dispatchEvent(new CustomEvent("kenzoo:sfx-end"));
+                dispatchSfxEnd();
             });
 
             // When SFX ends, restore soundtrack volume
             const restoreOnEnd = () => {
-                window.dispatchEvent(new CustomEvent("kenzoo:sfx-end"));
-                audioRef.current?.removeEventListener("ended", restoreOnEnd);
+                dispatchSfxEnd();
+                audio.removeEventListener("ended", restoreOnEnd);
             };
-            audioRef.current.addEventListener("ended", restoreOnEnd);
+            audio.addEventListener("ended", restoreOnEnd);
 
-            // Safety: restore after 3 seconds max (in case ended doesn't fire)
-            setTimeout(() => {
-                window.dispatchEvent(new CustomEvent("kenzoo:sfx-end"));
-            }, 3000);
+            // Safety: restore after 4 seconds max (in case ended doesn't fire)
+            // This covers long SFX files and edge cases where the ended event
+            // is never dispatched (e.g., audio element removed from DOM).
+            setTimeout(dispatchSfxEnd, 4000);
         } catch {
             // Audio not supported — silently ignore
             window.dispatchEvent(new CustomEvent("kenzoo:sfx-end"));

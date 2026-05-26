@@ -71,14 +71,14 @@ export const avatarOptions = getAllAvatars();
 export const sessionLengthOptions: SessionLengthDefinition[] = [
     {
         id: "short",
-        label: "قصيرة 🌙",
+        label: "جلسة سريعة 🌙",
         rounds: 3,
         mood: "هادية وخفيفة",
         description: "لمّة صغيرة وسريعة، بس فيها كل الدفا.",
     },
     {
         id: "normal",
-        label: "ليلة عادية ✨",
+        label: "جلسة عادية ✨",
         rounds: 4,
         mood: "متوازنة ودافئة",
         description: "الإيقاع الأساسي: مساحة كفاية للضحك والاكتشاف.",
