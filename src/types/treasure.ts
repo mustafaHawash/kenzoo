@@ -55,7 +55,8 @@ export type TreasureRewardType =
     | "mysterious"
     | "celebration"
     | "destiny"
-    | "atmosphere"; // A tiny ambiance enhancement
+    | "atmosphere" // A tiny ambiance enhancement
+    | "physical"; // Physical activity or movement reward
 
     
 
