@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { IBM_Plex_Sans_Arabic, Alexandria, Literata } from "next/font/google";
@@ -32,18 +32,12 @@ export const metadata: Metadata = {
 
     /* ─── PWA ─── */
     manifest: "/manifest.json",
-    themeColor: "#d8b36a",
-    viewport: {
-        width: "device-width",
-        initialScale: 1,
-        maximumScale: 1,
-        userScalable: false,
-    },
 
     /* ─── Favicon ─── */
     icons: {
         icon: [
-            { url: "/Logo-PNG.webp", type: "image/webp" },
+            { url: "/FavIcon.ico", sizes: "any" },
+            { url: "/Logo-PNG.webp", type: "image/webp", sizes: "512x512" },
         ],
         apple: "/Logo-PNG.webp",
     },
@@ -94,6 +88,14 @@ export const metadata: Metadata = {
         index: true,
         follow: true,
     },
+};
+
+export const viewport: Viewport = {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    themeColor: "#d8b36a",
 };
 
 export default function RootLayout({
