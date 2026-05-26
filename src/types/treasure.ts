@@ -294,12 +294,17 @@ export function toGameplayTreasureView(
 export function pickTreasureByRarity(
     pool: Treasure[],
     claimedLegendaryIds: string[] = [],
+    openedTreasureIds: string[] = [],
 ): Treasure {
-    // Exclude claimed legendary treasures
-    const available = pool.filter(
+    // Exclude claimed legendary treasures and already opened treasures.
+    const freshAvailable = pool.filter(
         (t) =>
-            !(t.rarity === "legendary" && claimedLegendaryIds.includes(t.id)),
+            !(t.rarity === "legendary" && claimedLegendaryIds.includes(t.id)) &&
+            !openedTreasureIds.includes(t.id),
     );
+    const available = freshAvailable.length > 0
+        ? freshAvailable
+        : pool.filter((t) => !(t.rarity === "legendary" && claimedLegendaryIds.includes(t.id)));
 
     // Standard internal pacing weights (invisible to players)
     const legendaryThreshold = 0.12;

@@ -82,6 +82,7 @@ export function resolveTurn(
     treasurePool: Treasure[],
     claimedLegendaryIds: string[],
     treasureProbabilityMultiplier: number = 1,
+    openedTreasureIds: string[] = [],
 ): TurnOutcome {
     // Basic correctness logic (can be expanded for fuzzy matching later)
     const isCorrect = answer === station.answer;
@@ -115,6 +116,7 @@ export function resolveTurn(
             treasureOpportunity = pickTreasureByRarity(
                 treasurePool,
                 claimedLegendaryIds,
+                openedTreasureIds,
             );
         }
     }

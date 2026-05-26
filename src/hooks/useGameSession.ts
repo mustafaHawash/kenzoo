@@ -204,6 +204,9 @@ export function useGameSession() {
                     ? getCurrentPath(persistentState, activePathId)
                     : null;
                 const treasureMultiplier = activePathObj?.treasureProbabilityMultiplier ?? 1;
+                const openedTreasureIds = persistentState.players.flatMap((player) =>
+                    player.openedTreasures.map((treasure) => treasure.treasureId),
+                );
                 
                 // 1. Pure resolution
                 const outcome = resolveTurn(
@@ -213,6 +216,7 @@ export function useGameSession() {
                     eidTreasures,
                     persistentState.claimedLegendaryIds,
                     treasureMultiplier,
+                    openedTreasureIds,
                 );
                 
                 // 2. Commit outcome to store IMMEDIATELY
