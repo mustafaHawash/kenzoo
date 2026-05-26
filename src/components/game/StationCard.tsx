@@ -105,6 +105,20 @@ const moodLabels: Record<SessionMood, string> = {
     social: "❤️ اجتماعية",
 
     reflective: "✨ مُثمرة",
+
+    warm: "☀️ هادية",
+
+    curious: "🔍 فضولية",
+
+    funny: "😂 مضحكة",
+
+    epic: "🏆 ملحمية",
+
+    mystic: "🔮 سحرية",
+
+    peaceful: "🕊️ مسالمة",
+
+    nature: "🌿 طبيعة",
 };
 
 export function StationCard({ station, onClick, className }: StationCardProps) {
