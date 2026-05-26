@@ -2,35 +2,39 @@ import { Station } from "@/types/station";
 import { eidMissions } from "./missions";
 
 export const eidRiddleStations: Station[] = [
+    
     {
-        id: "riddle-eid-001",
+        id: "riddle-001",
 
         type: "riddle",
 
-        category: "wisdom",
+        category: "fun",
 
-        title: "🧠 لغز العيد",
+        title:
+            " أسنان كتير",
 
-        description: "لغز بسيط عن العيد.",
+        description:
+            "فزورة خفيفة كده 😄",
 
         theme: "eid-al-adha",
 
-        mood: "mystery",
+        mood: "playful",
 
-        difficulty: 2,
+        difficulty: 1,
 
-        targetAgeGroup: "adult",
+        targetAgeGroup: "kid",
 
-        question: "شيء نسمعه في العيد ولا نراه؟",
+        question:
+            "إيه اللي له أسنان لكنه لا يعض؟",
 
-        choices: ["التكبيرات", "أذان الفجر", "صوت الطيور", "أدعية العيد"],
+        answer:
+            "المشط",
 
-        answer: "التكبيرات",
-
-        hint: "الله أكبر، الله أكبر 📣",
+        hint:
+            "🪥",
 
         explanation:
-            "التكبيرات هي الأصوات العالية التي نسمعها في العيد، وهي دليل على الفرح والشكر لله.",
+            "المشط له أسنان لكنه لا يعض 😄",
 
         reward: {
             stars: 1,
@@ -40,272 +44,414 @@ export const eidRiddleStations: Station[] = [
         tinyMissionPool: eidMissions,
     },
 
-    // ========================================================================
-    // القسم الأول: ألغاز سهلة وممتعة (Kids & Beginners) - Difficulty 1-2
-    // الهدف: ألغاز محسوسة، بصرية، أو تعتمد على الملاحظة البسيطة.
-    // ========================================================================
-
     {
-        id: "riddle-kid-001",
+        id: "riddle-002",
+
         type: "riddle",
-        category: "fun",
-        title: "🌙 نور الليل",
-        description: "لغز بسيط عن السماء",
+
+        category: "nature",
+
+        title:
+            "من غير رجلين",
+
+        description:
+            "كلنا بنشوفه 👀",
+
         theme: "eid-al-adha",
-        mood: "playful",
+
+        mood: "cozy",
+
         difficulty: 1,
+
         targetAgeGroup: "kid",
-        question: "شيء يتغير شكله كل ليلة، يضيء الظلام، ويراقب الأرض بهدوء؟",
-        choices: ["الشمس", "القمر", "النجوم", "السحابة"],
-        answer: "القمر",
-        hint: "يظهر في هلال ثم يصبح بدراً 🌕",
+
+        question:
+            "إيه اللي بيقع ومبيتكسرش؟",
+
+        answer:
+            "المطر",
+
+        hint:
+            "🌧️ ",
+
         explanation:
-            "القمر يتغير طوره كل شهر، وهو رفيقنا في ليالي العيد والسفر.",
-        reward: { stars: 1, canUnlockTreasure: false },
+            "المطر ينزل باستمرار من غير تعب 🌧️",
+
+        reward: {
+            stars: 1,
+            canUnlockTreasure: false,
+        },
+
         tinyMissionPool: eidMissions,
     },
 
     {
-        id: "riddle-kid-002",
+        id: "riddle-003",
+
         type: "riddle",
+
         category: "fun",
-        title: "🪡 عين بلا بصر",
-        description: "لغز ذكاء يومي",
+
+        title:
+            "سفينة الصحراء",
+
+        description:
+            "حيوان مشهور جدًا 🌙",
+
         theme: "eid-al-adha",
-        mood: "mystery",
-        difficulty: 2,
+
+        mood: "warm",
+
+        difficulty: 1,
+
         targetAgeGroup: "kid",
-        question: "شيء له عين ولا يرى، ويسبح في الماء ولا يغرق؟",
-        choices: ["الإبرة", "السمكة", "العين الزرقاء", "القط"],
-        answer: "الإبرة",
-        hint: "تستخدمها أمك في الخياطة 🧵",
-        explanation:
-            "الإبرة تسمى 'العين' الثقب الذي يمر منه الخيط، وإذا سقطت في الماء تطفو لوزنها الخفيف.",
-        reward: { stars: 1, canUnlockTreasure: false },
-        tinyMissionPool: eidMissions,
-    },
 
-    {
-        id: "riddle-adult-001",
-        type: "riddle",
-        category: "wisdom",
-        title: "🕊️ نور بلا فتيل",
-        description: "لغز قيمي وروحي",
-        theme: "eid-al-adha",
-        mood: "reflective",
-        difficulty: 2,
-        targetAgeGroup: "adult",
         question:
-            "نور يضيء القلوب، ولا يحتاج لزيت ولا فتيل، يزداد بالذكر وينطفئ بالغفلة؟",
-        choices: ["الإيمان", "المصباح", "الشمس", "النار"],
-        answer: "الإيمان",
-        hint: "سورة في القرآن تحمل اسمه 📖",
-        explanation:
-            "نور الإيمان يملأ الصدر بالطمأنينة والسكينة، ويقوى بالطاعات ويقرب القلب من الله.",
-        reward: { stars: 1, canUnlockTreasure: false },
-        tinyMissionPool: eidMissions,
-    },
+            "مين الحيوان اللي بيتسمّى سفينة الصحراء؟",
 
-    // ========================================================================
-    // القسم الثاني: ألغاز متوسطة وربط المعاني (Intermediate) - Difficulty 2-3
-    // الهدف: ألغاز تتطلب تفكيراً، ربطاً بين الصور، أو فهمًا للقيم.
-    // ========================================================================
+        answer:
+            "الجمل",
 
-    {
-        id: "riddle-kid-003",
-        type: "riddle",
-        category: "social",
-        title: "❤️ يزداد بالعطاء",
-        description: "لغز عن المشاعر",
-        theme: "eid-al-adha",
-        mood: "cozy",
-        difficulty: 2,
-        targetAgeGroup: "kid",
-        question:
-            "شيء صغير الحجم، يفرح القلب جداً، ولا يزن كثيراً، لكنه أغلى من الألعاب؟",
-        choices: ["الهدية", "الحلوى", "المال", "الهاتف"],
-        answer: "الهدية",
-        hint: "نقدمها في العيد مع ابتسامة 🎁",
+        hint:
+            "🐪 ",
+
         explanation:
-            "الهدية ليست ثمنها، بل المعنى وراءها. تبادل الهدايا يزيد المحبة ويقرب القلوب.",
-        reward: { stars: 1, canUnlockTreasure: true },
+            "الجمل يتحمل السفر الطويل في الصحراء 🐪",
+
+        reward: {
+            stars: 1,
+            canUnlockTreasure: false,
+        },
+
         tinyMissionPool: eidMissions,
     },
 
     {
-        id: "riddle-adult-002",
-        type: "riddle",
-        category: "history",
-        title: "🕋 بيت التوحيد",
-        description: "لغز تاريخي وجغرافي",
-        theme: "eid-al-adha",
-        mood: "mystery",
-        difficulty: 3,
-        targetAgeGroup: "adult",
-        question:
-            "بيت قديم، ليس له سقف للزوار، ولا أبواب تُفتح باليد، لكن الدنيا كلها تتجه إليه كل يوم؟",
-        choices: [
-            "الكعبة المشرفة",
-            "المسجد الأقصى",
-            "برج إيفل",
-            "البيت الأبيض",
-        ],
-        answer: "الكعبة المشرفة",
-        hint: "قبلة المسلمين في الصلوات الخمس 🧭",
-        explanation:
-            "الكعبة هي بيت الله الحرام في مكة، يتجه إليها المسلمون في صلاتهم ويحجون إليها امتثالاً لأمر الله.",
-        reward: { stars: 2, canUnlockTreasure: true },
-        tinyMissionPool: eidMissions,
-    },
+        id: "riddle-004",
 
-    {
-        id: "riddle-adult-003",
         type: "riddle",
-        category: "wisdom",
-        title: "⏳ يسير ولا يعود",
-        description: "لغز وجودي",
-        theme: "eid-al-adha",
-        mood: "reflective",
-        difficulty: 3,
-        targetAgeGroup: "adult",
-        question:
-            "شيء يمشي بلا أقدام، لا ينتظر أحداً، ولا يعود أبداً، وهو أغلى ما نملك؟",
-        choices: ["الوقت", "الهواء", "المال", "السمعة"],
-        answer: "الوقت",
-        hint: "لا يُشترى ولا يُرد إذا فات 🕰️",
-        explanation:
-            "الوقت هو رأس مال الإنسان. استثماره في الطاعة والبر والعلم هو أعظم مكسب في الدنيا والآخرة.",
-        reward: { stars: 2, canUnlockTreasure: true },
-        tinyMissionPool: eidMissions,
-    },
 
-    // ========================================================================
-    // القسم الثالث: ألغاز صعبة ومعقدة (Expert/Legend) - Difficulty 4
-    // الهدف: ألغاز منطقية، لغوية، أو تتطلب استنتاجاً دقيقاً.
-    // ========================================================================
-
-    {
-        id: "riddle-kid-004",
-        type: "riddle",
-        category: "fun",
-        title: "🌧️ ابن الماء",
-        description: "لغز علمي بسيط",
-        theme: "eid-al-adha",
-        mood: "mystery",
-        difficulty: 3, // تحدي ذكي للأطفال
-        targetAgeGroup: "kid",
-        question: "أنا ابن الماء، وإذا وضعوني في الماء أموت. من أنا؟",
-        choices: ["الثلج", "السمك", "الملح", "الورق"],
-        answer: "الثلج",
-        hint: "يصبح سائلاً في الدفء ❄️💧",
-        explanation:
-            "الثلج ماء متجمد، فإذا وضع في ماء دافئ ذاب وفقد شكله الصلب.",
-        reward: { stars: 2, canUnlockTreasure: true },
-        tinyMissionPool: eidMissions,
-    },
-
-    {
-        id: "riddle-adult-004",
-        type: "riddle",
-        category: "language",
-        title: "📜 لغز الحروف",
-        description: "لغز لفظي دقيق",
-        theme: "eid-al-adha",
-        mood: "cozy",
-        difficulty: 4,
-        targetAgeGroup: "adult",
-        question:
-            "أبدأ بحرف 'م'، وأنتهي بحرف 'د'، وأجمع الناس في فرحة واحدة، ما أنا؟",
-        choices: ["المسجد", "المولد", "الموعد", "المشهد"],
-        answer: "المسجد",
-        hint: "بيت الله، وفيه تقام الصلاة والخطب 🕌",
-        explanation:
-            "المسجد يبدأ بالميم وينتهي بالدال، وهو مركز تجمع المسلمين في الأعياد والجمعات.",
-        reward: { stars: 3, canUnlockTreasure: true },
-        tinyMissionPool: eidMissions,
-    },
-
-    {
-        id: "riddle-adult-005",
-        type: "riddle",
-        category: "wisdom",
-        title: "🪞 لا تملك عيوناً",
-        description: "لغز منطقي عميق",
-        theme: "eid-al-adha",
-        mood: "mystery",
-        difficulty: 4,
-        targetAgeGroup: "adult",
-        question:
-            "تظهر لك وجهك بصدق، ولا تملك عيوناً، تكسر بسهولة، لكن صدقها لا يتغير أبداً؟",
-        choices: ["المرآة", "الكاميرا", "الصورة", "الذاكرة"],
-        answer: "المرآة",
-        hint: "تنظر إليها كل صباح 🪞",
-        explanation:
-            "المرآة تعكس الحقيقة كما هي دون تزييف، وتذكيرنا بأنها كالعقل الصافي يرى الأشياء بوضوح.",
-        reward: { stars: 3, canUnlockTreasure: true },
-        tinyMissionPool: eidMissions,
-    },
-
-    {
-        id: "riddle-adult-006",
-        type: "riddle",
         category: "islamic",
-        title: "🌟 صوت لا يُرى",
-        description: "لغز العيد المميز",
+
+        title:
+            "🕋 شهر الخير",
+
+        description:
+            "سؤال قريب من أجواء العيد 🌙",
+
         theme: "eid-al-adha",
-        mood: "social",
+
+        mood: "peaceful",
+
         difficulty: 2,
-        targetAgeGroup: "adult",
-        question:
-            "نسمعه في العيد ولا نراه، يعلو في السماء، ويملأ الأذن بالجلال والخشوع؟",
-        choices: ["التكبيرات", "أذان الفجر", "صوت الطيور", "أدعية العيد"],
-        answer: "التكبيرات",
-        hint: "الله أكبر، الله أكبر 📣",
-        explanation:
-            "تكبيرات العيد شعار يرفع في البي والمساجد والشوارع لإعلان فرحة المؤمنين وعظمة الله.",
-        reward: { stars: 1, canUnlockTreasure: false },
-        tinyMissionPool: eidMissions,
-    },
 
-    {
-        id: "riddle-adult-007",
-        type: "riddle",
-        category: "social",
-        title: "🤝 يربط القلوب",
-        description: "لغز العلاقات الإنسانية",
-        theme: "eid-al-adha",
-        mood: "social",
-        difficulty: 3,
-        targetAgeGroup: "adult",
-        question:
-            "جسر لا يُبنى بالحجر، ولا يعبره الماء، لكنه يصل بين المتباعدين ويذيب الخلافات؟",
-        choices: ["الاعتذار", "الرسالة", "الزيارة", "الصمت"],
-        answer: "الاعتذار",
-        hint: "كلمة واحدة تزيل حزناً قديماً 🕊️",
-        explanation:
-            "الاعتذار الصادق جسر عابر للزمن، يعيد الثقة ويصلح ما فسد من العلاقات.",
-        reward: { stars: 2, canUnlockTreasure: true },
-        tinyMissionPool: eidMissions,
-    },
-
-    {
-        id: "riddle-kid-005",
-        type: "riddle",
-        category: "fun",
-        title: "🐪 سفينة الصحراء",
-        description: "لغز حيواني",
-        theme: "eid-al-adha",
-        mood: "playful",
-        difficulty: 1,
         targetAgeGroup: "kid",
+
         question:
-            "طويل القامة، يلبس عباءة صوفية، ويتحمل العطش والحر في الصحراء؟",
-        choices: ["الجمل", "الحصان", "الزرافة", "الفيل"],
-        answer: "الجمل",
-        hint: "يسمى سفينة الصحراء 🐫",
+            "إيه الشهر اللي فيه صيام وقرآن وتراويح؟",
+
+        answer:
+            "رمضان",
+
+        hint:
+            "🌙✨",
+
         explanation:
-            "الجمل حيوان فريد يتكيف مع الظروف القاسية، وكان رفيق المسافرين والتجار قديماً.",
-        reward: { stars: 1, canUnlockTreasure: false },
+            "رمضان شهر الخير والبركة 🤍",
+
+        reward: {
+            stars: 2,
+            canUnlockTreasure: false,
+        },
+
         tinyMissionPool: eidMissions,
     },
+
+    {
+        id: "riddle-005",
+
+        type: "riddle",
+
+        category: "fun",
+
+        title:
+            "بيكبر كل ما ينقص",
+
+        description:
+            "فزورة مشهورة جدًا 😄",
+
+        theme: "eid-al-adha",
+
+        mood: "playful",
+
+        difficulty: 2,
+
+        targetAgeGroup: "adult",
+
+        question:
+            "إيه اللي كل ما ناخد منه يكبر؟",
+
+        answer:
+            "الحفرة",
+
+        hint:
+            "👀",
+
+        explanation:
+            "كل الناس ممكن تاخد من الحفرة لكنها تفضل موجودة 😄",
+
+        reward: {
+            stars: 2,
+            canUnlockTreasure: false,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "riddle-006",
+
+        type: "riddle",
+
+        category: "wisdom",
+
+        title:
+            "🤍 كل ما يزيد",
+
+        description:
+            "فكّر فيها بهدوء ✨",
+
+        theme: "eid-al-adha",
+
+        mood: "warm",
+
+        difficulty: 2,
+
+        targetAgeGroup: "adult",
+
+        question:
+            "إيه الشيء اللي كل ما تعطي منه يكبر؟",
+
+        answer:
+            "الخير",
+
+        hint:
+            "🌙",
+
+        explanation:
+            "الخير يزيد وينتشر بين الناس 🤍",
+
+        reward: {
+            stars: 2,
+            canUnlockTreasure: false,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "riddle-007",
+
+        type: "riddle",
+
+        category: "mystery",
+
+        title:
+            "👀 موجود لكنه لا يُمسك",
+
+        description:
+            "فزورة فيها شوية تركيز 😄",
+
+        theme: "eid-al-adha",
+
+        mood: "mystic",
+
+        difficulty: 3,
+
+        targetAgeGroup: "adult",
+
+        question:
+            "شيء تراه دائمًا لكن لا تستطيع لمسه… ما هو؟",
+
+        answer:
+            "الظل",
+
+        hint:
+            "☀️",
+
+        explanation:
+            "الظل موجود حولنا لكنه لا يُمسك 👀",
+
+        reward: {
+            stars: 3,
+            canUnlockTreasure: true,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "riddle-008",
+
+        type: "riddle",
+
+        category: "islamic",
+
+        title:
+            "🕌 كلمة تطمّن",
+
+        description:
+            "كل المسلمين يحبوها 🤍",
+
+        theme: "eid-al-adha",
+
+        mood: "peaceful",
+
+        difficulty: 3,
+
+        targetAgeGroup: "adult",
+
+        question:
+            "ما الكلمة التي يقولها المسلم فتريح قلبه؟",
+
+        answer:
+            "الحمد لله",
+
+        hint:
+            "✨",
+
+        explanation:
+            "الحمد لله من أكثر الكلمات التي تطمئن القلب 🌙",
+
+        reward: {
+            stars: 3,
+            canUnlockTreasure: true,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "riddle-009",
+
+        type: "riddle",
+
+        category: "science",
+
+        title:
+            "🌍 الكوكب الأزرق",
+
+        description:
+            "كلنا عايشين عليه 😄",
+
+        theme: "eid-al-adha",
+
+        mood: "cozy",
+
+        difficulty: 2,
+
+        targetAgeGroup: "kid",
+
+        question:
+            "ما اسم الكوكب الذي نعيش عليه؟",
+
+        answer:
+            "الأرض",
+
+        hint:
+            "🌎",
+
+        explanation:
+            "الأرض هي بيت البشر وكل الكائنات 🌍",
+
+        reward: {
+            stars: 2,
+            canUnlockTreasure: false,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "riddle-010",
+
+        type: "riddle",
+
+        category: "islamic",
+
+        title:
+            "🐑 خليل الله",
+
+        description:
+            "سؤال من روح العيد 🌙",
+
+        theme: "eid-al-adha",
+
+        mood: "warm",
+
+        difficulty: 4,
+
+        targetAgeGroup: "adult",
+
+        question:
+            "من النبي الذي يُسمّى خليل الله؟",
+
+        answer:
+            "سيدنا إبراهيم",
+
+        hint:
+            "🕋",
+
+        explanation:
+            "سيدنا إبراهيم عليه السلام هو خليل الله 🤍",
+
+        reward: {
+            stars: 4,
+            canUnlockTreasure: true,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "riddle-011",
+
+        type: "riddle",
+
+        category: "geography",
+
+        title:
+            "🏞️ أطول نهر",
+
+        description:
+            "سؤال قريب مننا 😄",
+
+        theme: "eid-al-adha",
+
+        mood: "playful",
+
+        difficulty: 3,
+
+        targetAgeGroup: "adult",
+
+        question:
+            "ما اسم النهر الذي يمر في مصر؟",
+
+        answer:
+            "النيل",
+
+        hint:
+            "🇪🇬",
+
+        explanation:
+            "نهر النيل من أشهر وأطول أنهار العالم 🌊",
+
+        reward: {
+            stars: 3,
+            canUnlockTreasure: true,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
 ];

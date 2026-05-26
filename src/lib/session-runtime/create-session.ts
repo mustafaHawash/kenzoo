@@ -234,7 +234,8 @@ export function createSession(input: CreateSessionInput): PersistentSessionState
     // 2. Compose journeys using theme content
     //    Future: replace with AI-generated composition
     const playerIds = players.map((p) => p.id);
-    const journeys = composeAllJourneys(playerIds, stationsPerPath);
+    const playerAgeGroups = players.map((p) => p.ageGroup as import("@/types/station").TargetAgeGroup);
+    const journeys = composeAllJourneys(playerIds, stationsPerPath, playerAgeGroups);
 
     // 3. Assemble PersistentSessionState (no runtime fields)
     return createSessionState(players, journeys, input.sessionLength);

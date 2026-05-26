@@ -98,6 +98,31 @@ function rewardText(reward: TreasureRevealData["reward"]): string {
         case "secret": return "سر مخفي 🤫";
         case "atmosphere": return "لمسة سحرية ✨";
         case "real-gift": return "هدية حقيقية 🎁";
+        case "bonus-life": return "فرصة إضافية ❤️";
+        case "double-life": return "فرصتين إضافيتين ❤️❤️";
+        case "retry": return "إعادة المحاولة 🔄";
+        case "shield": return "درع حماية 🛡️";
+        case "easy-next": return "السؤال الجاي أسهل 🌱";
+        case "extra-star": return "نجممة خفية ⭐";
+        case "skip-fail": return "تخطي الخطأ ⏭️";
+        case "funny": return "مفاجأة مضحكة 😄";
+        case "cozy": return "دفء وراحة ☕";
+        case "lucky": return "حظ سعيد 🍀";
+        case "spiritual": return "بركة وروحانية 📿";
+        case "emotional": return "لحظة مؤثرة 🤍";
+        case "physical": return "نشاط وحركة 💪";
+        case "comfort": return "راحة وسكينة 🍃";
+        case "rare-moment": return "لحظة نادرة 👑";
+        case "mystic": return "سر غامض 🗝️";
+        case "magical": return "سحر حقيقي 🪄";
+        case "epic": return "لحظة أسطورية 🏆";
+        case "legendary": return "كنز أسطوري ✦";
+        case "hidden": return "سر مخفي 🌑";
+        case "peaceful": return "سلام وأمان 🕊️";
+        case "smart": return "لمعة ذكاء 🧠";
+        case "mysterious": return "غموض مريب 🌌";
+        case "celebration": return "احتفال 🎊";
+        case "destiny": return "قدر مكتوب 🌠";
         default: return "مفاجأة";
     }
 }

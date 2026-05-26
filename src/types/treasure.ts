@@ -26,12 +26,38 @@
 export type TreasureRewardType =
     | "stars" // Bonus stars inside the treasure
     | "double-stars" // Next correct answer earns double stars
+    | "bonus-life" // Unlocks a new player life
     | "bonus-turn" // Player gets an extra turn
-    | "title" // Unlocks a new player title
     | "real-gift" // A real-world gift (for special events)
+    | "double-life" // Player gets double lives
+    | "retry" // Allows the player to retry a question immediately
+    | "shield" // Protects the player from losing stars on the next wrong answer
+    | "easy-next" // Makes the next question easier
+    | "extra-star" // A hidden star reward
+    | "skip-fail" // Allows the player to skip a failed question
     | "wisdom" // A beautiful message or quote
     | "secret" // A hidden reveal or easter egg
+    | "title" // Unlocks a new player title
+    | "funny" // A humorous surprise reward
+    | "cozy"
+    | "lucky"
+    | "spiritual"
+    | "emotional"
+    | "comfort"
+    | "rare-moment"
+    | "mystic"
+    | "magical"
+    | "epic"
+    | "legendary"
+    | "hidden"
+    |"peaceful"
+    | "smart"
+    | "mysterious"
+    | "celebration"
+    | "destiny"
     | "atmosphere"; // A tiny ambiance enhancement
+
+    
 
 /* ─── Treasure rarity ─── */
 export type TreasureRarity =
@@ -176,19 +202,67 @@ function deriveRewardText(reward: TreasureRewardDetail): string {
         case "stars":
             return `+${reward.starsAmount ?? 0} نجوم`;
         case "double-stars":
-            return "الجولة الجاية نجوم مزدوجة";
+            return "الجولة الجاية نجوم مزدوجة ⭐⭐";
         case "bonus-turn":
-            return "جولة إضافية";
+            return "جولة إضافية 🎯";
         case "title":
-            return reward.titleText ?? "لقب جديد";
+            return reward.titleText ?? "لقب جديد 👑";
         case "wisdom":
-            return reward.message ?? "حكمة خاصة";
+            return reward.message ?? "حكمة خاصة 💡";
         case "secret":
-            return "سر مخفي";
+            return "سر مخفي 🤫";
         case "atmosphere":
-            return "لمسة سحرية";
+            return "لمسة سحرية ✨";
         case "real-gift":
-            return "هدية حقيقية";
+            return "هدية حقيقية 🎁";
+        case "bonus-life":
+            return "فرصة إضافية ❤️";
+        case "double-life":
+            return "فرصتين إضافيتين ❤️❤️";
+        case "retry":
+            return "إعادة المحاولة 🔄";
+        case "shield":
+            return "درع حماية 🛡️";
+        case "easy-next":
+            return "السؤال الجاي أسهل 🌱";
+        case "extra-star":
+            return "نجممة خفية ⭐";
+        case "skip-fail":
+            return "تخطي الخطأ ⏭️";
+        case "funny":
+            return "مفاجأة مضحكة 😄";
+        case "cozy":
+            return "دفء وراحة ☕";
+        case "lucky":
+            return "حظ سعيد 🍀";
+        case "spiritual":
+            return "بركة وروحانية 📿";
+        case "emotional":
+            return "لحظة مؤثرة 🤍";
+        case "comfort":
+            return "راحة وسكينة 🍃";
+        case "rare-moment":
+            return "لحظة نادرة 👑";
+        case "mystic":
+            return "سر غامض 🗝️";
+        case "magical":
+            return "سحر حقيقي 🪄";
+        case "epic":
+            return "لحظة أسطورية 🏆";
+        case "legendary":
+            return "كنز أسطوري ✦";
+        case "hidden":
+            return "سر مخفي 🌑";
+        case "peaceful":
+            return "سلام وأمان 🕊️";
+        case "smart":
+            return "لمعة ذكاء 🧠";
+        case "mysterious":
+            return "غموض مريب 🌌";
+        case "celebration":
+            return "احتفال 🎊";
+        case "destiny":
+            return "قدر مكتوب 🌠";
         default:
             return "مفاجأة";
     }

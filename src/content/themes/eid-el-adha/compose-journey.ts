@@ -26,7 +26,7 @@
  *   Stations, paths, and slots are deep-cloned per player.
  */
 
-import type { Station, StationDifficulty } from "@/types/station";
+import type { Station, StationDifficulty, TargetAgeGroup } from "@/types/station";
 import type { PlayerJourneyState, JourneyPath, PathStationSlot, PathDifficultyTier } from "@/types/path";
 
 import { eidQuizStations } from "./quiz";
@@ -110,26 +110,48 @@ const ALL_STATIONS: Station[] = [...eidQuizStations, ...eidRiddleStations];
 /* ─── Station Selection ────────────────────────────────── */
 
 /**
- * Selects stations matching a target difficulty.
- * Falls back to nearest available difficulty if exact match is scarce.
+ * Selects stations matching a target difficulty AND player age group.
+ * Falls back to nearby difficulties if exact match is scarce.
+ * Falls back to any age group if not enough age-matched stations.
  *
  * Guarantees:
- *   - Never returns duplicate stations
+ *   - Never returns duplicate stations (checked against usedIds)
  *   - Never mutates the source pool
  *   - Returns deep-cloned stations (safe for per-player isolation)
+ *   - Prioritizes stations matching the player's age group
  */
 function selectStationsForDifficulty(
     pool: readonly Station[],
     targetDifficulty: StationDifficulty,
     count: number,
     usedIds: Set<string>,
+    targetAgeGroup: TargetAgeGroup,
 ): Station[] {
-    // Try exact difficulty match first
+    // Try exact difficulty + exact age group first
     let candidates = pool.filter(
-        (s) => s.difficulty === targetDifficulty && !usedIds.has(s.id),
+        (s) => s.difficulty === targetDifficulty && s.targetAgeGroup === targetAgeGroup && !usedIds.has(s.id),
     );
 
-    // Fall back to nearby difficulties if not enough
+    // Fall back to nearby difficulties (same age group)
+    if (candidates.length < count) {
+        const nearby: StationDifficulty[] =
+            targetDifficulty <= 2
+                ? [1, 2, 3]
+                : [2, 3, 4];
+
+        candidates = pool.filter(
+            (s) => nearby.includes(s.difficulty) && s.targetAgeGroup === targetAgeGroup && !usedIds.has(s.id),
+        );
+    }
+
+    // Last resort: fall back to any age group (still respecting difficulty)
+    if (candidates.length < count) {
+        candidates = pool.filter(
+            (s) => s.difficulty === targetDifficulty && !usedIds.has(s.id),
+        );
+    }
+
+    // Final resort: nearby difficulties, any age group
     if (candidates.length < count) {
         const nearby: StationDifficulty[] =
             targetDifficulty <= 2
@@ -173,6 +195,7 @@ function composePath(
     stationsPerPath: number,
     usedIds: Set<string>,
     playerSuffix: string,
+    targetAgeGroup: TargetAgeGroup,
 ): JourneyPath {
     const atmosphere = PATH_ATMOSPHERE[tier];
     const stations = selectStationsForDifficulty(
@@ -180,6 +203,7 @@ function composePath(
         tier as StationDifficulty,
         stationsPerPath,
         usedIds,
+        targetAgeGroup,
     );
 
     // Wrap stations in PathStationSlots
@@ -208,9 +232,9 @@ function composePath(
  *
  * GUARANTEES:
  *   - 4 paths: easy (1), medium (2), hard (3), legendary (4)
- *   - Each path has stations matching its difficulty
+ *   - Each path has stations matching its difficulty AND player's age group
  *   - All stations are deep-cloned — NO shared references
- *   - usedIds prevents station reuse within the same player
+ *   - usedIds prevents station reuse across ALL players in the session
  *
  * DEEP CLONE:
  *   Every station, slot, and path is a fresh object.
@@ -219,12 +243,12 @@ function composePath(
 export function composeJourney(
     playerId: string,
     stationsPerPath: number = 4,
+    usedIds: Set<string>,
+    targetAgeGroup: TargetAgeGroup = "adult",
 ): PlayerJourneyState {
-    const usedIds = new Set<string>();
-
     const tiers: PathDifficultyTier[] = [1, 2, 3, 4];
     const paths = tiers.map((tier) =>
-        composePath(tier, stationsPerPath, usedIds, playerId),
+        composePath(tier, stationsPerPath, usedIds, playerId, targetAgeGroup),
     );
 
     return {
@@ -238,14 +262,26 @@ export function composeJourney(
  * Composes journeys for all players.
  *
  * Each player gets their own fully isolated journey.
- * Stations are NOT shared between players (each player gets
- * their own deep-cloned copies of the same pool).
+ * Stations are NOT shared between players — no duplicate questions
+ * across the entire session, regardless of age group.
+ *
+ * AGE GROUP RESPECT:
+ *   - Kid players get kid-targeted questions
+ *   - Adult players get adult-targeted questions
+ *   - The shared usedIds ensures no question appears twice in the session
  *
  * This is the main entry point for session initialization.
  */
 export function composeAllJourneys(
     playerIds: string[],
     stationsPerPath: number = 4,
+    playerAgeGroups: TargetAgeGroup[] = [],
 ): PlayerJourneyState[] {
-    return playerIds.map((id) => composeJourney(id, stationsPerPath));
+    // Shared usedIds across ALL players — prevents duplicate stations in the session
+    const usedIds = new Set<string>();
+
+    return playerIds.map((id, index) => {
+        const ageGroup = playerAgeGroups[index] || "adult";
+        return composeJourney(id, stationsPerPath, usedIds, ageGroup);
+    });
 }

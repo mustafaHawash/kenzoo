@@ -247,7 +247,10 @@ export function TreasureOpportunityCard({
                                     <Body className="text-foreground text-sm leading-relaxed">{treasure.description}</Body>
                                 </div>
 
-                                {/* Reward type indicators */}
+                                {/* Reward type indicator — covers all TreasureRewardType values */}
+                                {treasure.reward.type === "stars" && (
+                                    <Muted className="text-xs text-center">⭐ +{treasure.reward.starsAmount ?? 0} نجوم</Muted>
+                                )}
                                 {treasure.reward.type === "double-stars" && (
                                     <Muted className="text-xs text-center">⭐⭐ النجوم مضاعفة!</Muted>
                                 )}
@@ -257,6 +260,9 @@ export function TreasureOpportunityCard({
                                 {treasure.reward.type === "title" && awardedTitle && (
                                     <Muted className="text-xs text-center">👑 لقب جديد: {awardedTitle}</Muted>
                                 )}
+                                {treasure.reward.type === "real-gift" && (
+                                    <Muted className="text-xs text-center">🎁 هدية حقيقية!</Muted>
+                                )}
                                 {treasure.reward.type === "wisdom" && treasure.reward.message && (
                                     <Muted className="text-xs text-center italic">💡 {treasure.reward.message}</Muted>
                                 )}
@@ -265,6 +271,81 @@ export function TreasureOpportunityCard({
                                 )}
                                 {treasure.reward.type === "atmosphere" && treasure.reward.message && (
                                     <Muted className="text-xs text-center">✨ {treasure.reward.message}</Muted>
+                                )}
+                                {treasure.reward.type === "bonus-life" && (
+                                    <Muted className="text-xs text-center">❤️ فرصة إضافية!</Muted>
+                                )}
+                                {treasure.reward.type === "double-life" && (
+                                    <Muted className="text-xs text-center">❤️❤️ فرصتين إضافيتين!</Muted>
+                                )}
+                                {treasure.reward.type === "retry" && (
+                                    <Muted className="text-xs text-center">🔄 إعادة المحاولة!</Muted>
+                                )}
+                                {treasure.reward.type === "shield" && (
+                                    <Muted className="text-xs text-center">🛡️ درع حماية!</Muted>
+                                )}
+                                {treasure.reward.type === "easy-next" && (
+                                    <Muted className="text-xs text-center">🌱 السؤال الجاي أسهل!</Muted>
+                                )}
+                                {treasure.reward.type === "extra-star" && (
+                                    <Muted className="text-xs text-center">⭐ نجمة خفية!</Muted>
+                                )}
+                                {treasure.reward.type === "skip-fail" && (
+                                    <Muted className="text-xs text-center">⏭️ تخطي الخطأ!</Muted>
+                                )}
+                                {treasure.reward.type === "funny" && (
+                                    <Muted className="text-xs text-center">😄 مفاجأة مضحكة!</Muted>
+                                )}
+                                {treasure.reward.type === "cozy" && (
+                                    <Muted className="text-xs text-center">☕ دفء وراحة!</Muted>
+                                )}
+                                {treasure.reward.type === "lucky" && (
+                                    <Muted className="text-xs text-center">🍀 حظ سعيد!</Muted>
+                                )}
+                                {treasure.reward.type === "spiritual" && (
+                                    <Muted className="text-xs text-center">📿 بركة وروحانية!</Muted>
+                                )}
+                                {treasure.reward.type === "emotional" && (
+                                    <Muted className="text-xs text-center">🤍 لحظة مؤثرة!</Muted>
+                                )}
+                                {treasure.reward.type === "physical" && (
+                                    <Muted className="text-xs text-center">💪 نشاط وحركة!</Muted>
+                                )}
+                                {treasure.reward.type === "comfort" && (
+                                    <Muted className="text-xs text-center">🍃 راحة وسكينة!</Muted>
+                                )}
+                                {treasure.reward.type === "rare-moment" && (
+                                    <Muted className="text-xs text-center">👑 لحظة نادرة!</Muted>
+                                )}
+                                {treasure.reward.type === "mystic" && (
+                                    <Muted className="text-xs text-center">🗝️ سر غامض!</Muted>
+                                )}
+                                {treasure.reward.type === "magical" && (
+                                    <Muted className="text-xs text-center">🪄 سحر حقيقي!</Muted>
+                                )}
+                                {treasure.reward.type === "epic" && (
+                                    <Muted className="text-xs text-center">🏆 لحظة أسطورية!</Muted>
+                                )}
+                                {treasure.reward.type === "legendary" && (
+                                    <Muted className="text-xs text-center">✦ كنز أسطوري!</Muted>
+                                )}
+                                {treasure.reward.type === "hidden" && (
+                                    <Muted className="text-xs text-center">🌑 سر مخفي!</Muted>
+                                )}
+                                {treasure.reward.type === "peaceful" && (
+                                    <Muted className="text-xs text-center">🕊️ سلام وأمان!</Muted>
+                                )}
+                                {treasure.reward.type === "smart" && (
+                                    <Muted className="text-xs text-center">🧠 لمعة ذكاء!</Muted>
+                                )}
+                                {treasure.reward.type === "mysterious" && (
+                                    <Muted className="text-xs text-center">🌌 غموض مريب!</Muted>
+                                )}
+                                {treasure.reward.type === "celebration" && (
+                                    <Muted className="text-xs text-center">🎊 احتفال!</Muted>
+                                )}
+                                {treasure.reward.type === "destiny" && (
+                                    <Muted className="text-xs text-center">🌠 قدر مكتوب!</Muted>
                                 )}
 
                                 <LanternButton onClick={onDismiss} className="w-full">يلا نكمل 🚀</LanternButton>
