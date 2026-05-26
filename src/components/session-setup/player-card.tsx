@@ -53,8 +53,13 @@ export function PlayerCard({
                         {displayName}
                     </span>
                 </div>
-                <span className="text-[11px] text-muted-foreground/50">
-                    {player.ageGroup === "kid" ? "👶 طفل" : "🧑 كبير"}
+                <span className={cn(
+                    "rounded-lg px-2 py-0.5 text-[11px] font-medium",
+                    player.ageGroup === "kid"
+                        ? "bg-primary/10 text-primary/70"
+                        : "bg-secondary/10 text-secondary/70",
+                )}>
+                    {player.ageGroup === "kid" ? "صغير" : "كبير"}
                 </span>
             </button>
         );
@@ -127,11 +132,11 @@ export function PlayerCard({
                         ))}
                     </div>
 
-                    {/* Age group pills — thumb-friendly with icons */}
+                    {/* Age group pills */}
                     <div className="mr-auto flex gap-1.5">
                         {[
-                            { id: "adult" as const, label: "كبير", icon: "🕵🏼‍♂️" },
-                            { id: "kid" as const, label: "صغير", icon: "👶🏼" },
+                            { id: "adult" as const, label: "كبير" },
+                            { id: "kid" as const, label: "صغير" },
                         ].map((option) => {
                             const isSelected = player.ageGroup === option.id;
                             return (
@@ -140,13 +145,12 @@ export function PlayerCard({
                                     type="button"
                                     onClick={() => updateAgeGroup(option.id)}
                                     className={cn(
-                                        "flex items-center gap-1 rounded-xl px-3 py-1.5 text-[12px] font-medium transition-all duration-(--duration-normal) ease-(--ease-soft) active:scale-95",
+                                        "rounded-xl px-4 py-1.5 text-[13px] font-medium transition-all duration-(--duration-normal) ease-(--ease-soft) active:scale-95",
                                         isSelected
-                                            ? "bg-secondary/16 text-foreground border border-secondary/20"
-                                            : "text-muted-foreground/50 hover:bg-foreground/5 hover:text-foreground border border-transparent",
+                                            ? "bg-secondary/16 text-foreground ring-1 ring-secondary/24"
+                                            : "text-muted-foreground/50 hover:bg-foreground/5 hover:text-foreground",
                                     )}
                                 >
-                                    <span className="text-sm">{option.icon}</span>
                                     {option.label}
                                 </button>
                             );

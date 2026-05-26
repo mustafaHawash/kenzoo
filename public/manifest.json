@@ -1,0 +1,27 @@
+{
+  "name": "Kenzoo",
+  "short_name": "Kenzoo",
+  "description": "لعبة اجتماعية دافئة للحظات المشتركة والاكتشاف اللطيف",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1f1b18",
+  "theme_color": "#d8b36a",
+  "dir": "rtl",
+  "lang": "ar",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/Logo-PNG.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/Logo-PNG.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "entertainment", "social"]
+}

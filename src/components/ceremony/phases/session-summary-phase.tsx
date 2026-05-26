@@ -66,11 +66,11 @@ export function SessionSummaryPhase({ players, onContinue }: SessionSummaryPhase
                 <Image
                     src={iconAssets.treasureSymbol}
                     alt=""
-                    width={28}
-                    height={28}
+                    width={32}
+                    height={32}
                     className="object-contain opacity-60"
                 />
-                <Headline className="text-foreground text-lg font-bold">
+                <Headline className="text-foreground text-xl font-bold">
                     ملخص الرحلة
                 </Headline>
             </div>
@@ -95,7 +95,7 @@ export function SessionSummaryPhase({ players, onContinue }: SessionSummaryPhase
                         `}
                     >
                         <Image src={iconAssets.treasure} alt="" width={20} height={20} className="object-contain" />
-                        <Label className="text-amber-400 text-lg font-bold">{stats.legendaryCount}</Label>
+                        <Label className="text-amber-400 text-2xl font-bold">{stats.legendaryCount}</Label>
                         <Muted className="text-[9px] text-amber-400/70">{RARITY_CONFIG.legendary.label}</Muted>
                     </motion.div>
                 )}
@@ -113,8 +113,8 @@ export function SessionSummaryPhase({ players, onContinue }: SessionSummaryPhase
                         `}
                     >
                         <Image src={iconAssets.secondaryKey} alt="" width={20} height={20} className="object-contain" />
-                        <Label className="text-sky-300 text-lg font-bold">{stats.rareCount}</Label>
-                        <Muted className="text-[9px] text-sky-300/70">{RARITY_CONFIG.rare.label}</Muted>
+                        <Label className="text-sky-300 text-2xl font-bold">{stats.rareCount}</Label>
+                        <Muted className="text-[12px] text-sky-300/70">{RARITY_CONFIG.rare.label}</Muted>
                     </motion.div>
                 )}
 
@@ -129,8 +129,8 @@ export function SessionSummaryPhase({ players, onContinue }: SessionSummaryPhase
                     "
                 >
                     <Image src={iconAssets.treasure} alt="" width={28} height={28} className="object-contain" />
-                    <Label className="text-secondary text-lg font-bold">{stats.totalTreasures}</Label>
-                    <Muted className="text-[9px] text-secondary/70">كنوز مكتشفة</Muted>
+                    <Label className="text-secondary text-2xl font-bold">{stats.totalTreasures}</Label>
+                    <Muted className="text-[12px] text-secondary/70">كنوز مكتشفة</Muted>
                 </motion.div>
 
                 {/* Stars collected */}
@@ -144,8 +144,8 @@ export function SessionSummaryPhase({ players, onContinue }: SessionSummaryPhase
                     "
                 >
                     <Image src={iconAssets.starsSticker} alt="" width={28} height={28} className="object-contain" />
-                    <Label className="text-secondary text-lg font-bold">{stats.totalStars}</Label>
-                    <Muted className="text-[9px] text-secondary/70">نجوم مجمعة</Muted>
+                    <Label className="text-secondary text-2xl font-bold">{stats.totalStars}</Label>
+                    <Muted className="text-[12px] text-secondary/70">نجوم مجمعة</Muted>
                 </motion.div>
 
                 {/* Titles earned */}
@@ -184,7 +184,7 @@ export function SessionSummaryPhase({ players, onContinue }: SessionSummaryPhase
                     backdrop-blur-sm
                 "
             >
-                كمل 🌙
+               الله ينور 🌙
             </motion.button>
         </motion.div>
     );

@@ -35,22 +35,22 @@ export type AvatarPack = {
 const defaultPack: AvatarPack = {
     id: "people",
     label: "شخصيات",
-    avatars: ["👨🏻", "👩🏻", "👦🏻", "👧🏻", "🧔🏻", "👵🏻", "🧒🏻", "👶🏻"],
+    avatars: ["👨🏻", "👩🏻", "👦🏻", "👧🏻"],
     active: true,
 };
 
 const eidPack: AvatarPack = {
     id: "eid",
     label: "العيد",
-    avatars: ["👨🏽", "👩🏽", "👦🏽", "👧🏽", "🧔🏽", "👵🏽", "🧒🏽", "👶🏽"],
-    active: true,
+    avatars: ["👨🏽", "👩🏽", "👦🏽", "👧🏽"],
+    active: false,
     themeId: "eid-el-adha",
 };
 
 const hijraPack: AvatarPack = {
     id: "hijra",
     label: "الهجرة",
-    avatars: ["👨🏾", "👩🏾", "👦🏾", "👧🏾", "🧔🏾", "👵🏾", "🧒🏾", "👶🏾"],
+    avatars: ["👨🏾", "👩🏾", "👦🏾", "👧🏾"],
     active: false,
     themeId: "hijra",
 };

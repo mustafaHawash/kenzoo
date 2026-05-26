@@ -1,50 +1,27 @@
-"use client";
-
-import { motion, type Variants } from "framer-motion";
 import Image from "next/image";
 import { iconAssets } from "@/assets";
 
-const revealVariants: Variants = {
-    hidden: { opacity: 0, y: 14, scale: 0.98 },
-    visible: {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        transition: { duration: 0.7, ease: "easeOut" },
-    },
-};
-
-const floatVariants: Variants = {
-    float: {
-        y: [0, -7, 0],
-        scale: [1, 1.02, 1],
-        transition: {
-            duration: 4.8,
-            ease: "easeInOut",
-            repeat: Infinity,
-        },
-    },
-};
-
+/**
+ * OpeningLanternMark — Server Component with CSS-only animation.
+ *
+ * Replaced framer-motion with CSS keyframes.
+ * No "use client" needed — this is now a Server Component.
+ * The floating effect uses CSS animation (zero JS runtime cost).
+ */
 export function OpeningLanternMark() {
     return (
-        <motion.div
-            variants={revealVariants}
-            className="relative flex h-60 w-60 items-center justify-center "
-        >
-            <motion.div
-                variants={floatVariants}
-                animate="float"
-                className="relative h-120 w-120"
-            >
+        <div className="relative flex h-48 w-48 items-center justify-center">
+            <div className="relative h-48 w-48 animate-[lanternFloat_4.8s_ease-in-out_infinite]">
                 <Image
                     src={iconAssets.logoMark}
                     alt="Kenzoo Logo"
-                    fill
+                    width={200}
+                    height={200}
                     priority
+                    sizes="192px"
                     className="object-contain drop-shadow-[0_8px_32px_rgba(216,179,106,0.3)]"
                 />
-            </motion.div>
-        </motion.div>
+            </div>
+        </div>
     );
 }

@@ -51,7 +51,7 @@ function getOrCreateLayer(layer: SoundtrackLayer): HTMLAudioElement {
     const audio = new Audio(src);
     audio.loop = true;
     audio.volume = 0;
-    audio.preload = "auto";
+    audio.preload = "none";
 
     globalLayers[layer] = { audio, isPlaying: false };
     return audio;

@@ -46,18 +46,18 @@ const PATH_ATMOSPHERE: Record<PathDifficultyTier, { emoji: string; title: string
     },
     2: {
         emoji: "/images/icons/lantern-icon.webp",
-        title: "الغرفة المقفولة",
+        title: "ضباب الليل",
         subtitle: "غموض بلا نهاية",
     },
     3: {
         emoji: "/images/icons/main-key-icon.webp",
-        title: "أسرار الليلة",
+        title: "غرفة الأسرار",
         subtitle: "خيوط الضوء الخافت",
     },
     4: {
         emoji: "/images/icons/treasure-symbol.webp",
-        title: "باب المجهول",
-        subtitle: "ما وراء الظلام",
+        title: "طريق الكنوز",
+        subtitle: "ما وراء الأفق",
     },
 };
 

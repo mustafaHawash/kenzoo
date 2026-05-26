@@ -3,7 +3,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { IBM_Plex_Sans_Arabic, Alexandria, Literata } from "next/font/google";
 import { ThemeProvider } from "@/providers/theme-provider";
-import { GlobalMuteButton } from "@/components/ui/global-mute-button";
+import { DeferredMuteButton } from "@/components/ui/deferred-mute-button";
 
 const alexandria = Alexandria({
     subsets: ["arabic"],
@@ -25,6 +25,14 @@ export const metadata: Metadata = {
     title: "Kenzoo",
     description:
         "A cozy magical social game for shared moments, playful discovery, and warm mystery.",
+    manifest: "/manifest.json",
+    themeColor: "#d8b36a",
+    viewport: {
+        width: "device-width",
+        initialScale: 1,
+        maximumScale: 1,
+        userScalable: false,
+    },
 };
 
 export default function RootLayout({
@@ -51,7 +59,7 @@ export default function RootLayout({
             <body className={cn("h-full overflow-x-hidden flex flex-col bg-background text-foreground")}>
                 <ThemeProvider>
                     {children}
-                    <GlobalMuteButton />
+                    <DeferredMuteButton />
                 </ThemeProvider>
             </body>
         </html>

@@ -44,12 +44,13 @@ export function ThemeBackground({
                 src={background}
                 alt=""
                 fill
-                priority={scene === "home" || scene === "setup"}
+                priority={scene === "home"}
+                quality={75}
                 sizes="(max-width: 480px) 100vw, 480px"
                 className={cn("object-cover opacity-70", imageClassName)}
             />
             {/* Overlay — combines color wash + gradient in one div for performance */}
-            <div className={cn("absolute inset-0 backdrop-blur-[1px]", overlayByScene[scene])} />
+            <div className={cn("absolute inset-0", overlayByScene[scene])} />
             <div className="absolute inset-0 bg-linear-to-b from-background/16 via-transparent to-background/68" />
             {particles && scene !== "play" && (
                 <FloatingParticles />
