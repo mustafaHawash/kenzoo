@@ -454,30 +454,743 @@ export const eidQuizStations: Station[] = [
         reward: { stars: 3, canUnlockTreasure: true },
         tinyMissionPool: eidMissions,
     },
+/**
+ * Kenzoo — Eid Al-Adha Quiz Pack v1
+ * Rich replayable family-friendly quiz content
+ */
 
-    // --- أسئلة عامة صعبة للأطفال (تحدي الذكاء) ---
+
+    // =====================================================
+    // KIDS — LEVEL 1
+    // =====================================================
 
     {
-        id: "quiz-hard-kid-001",
+        id: "q-k-001",
+
         type: "quiz",
-        category: "fun",
-        title: "🌍 كوكبنا الأزرق",
-        description: "معلومة جيولوجية",
+
+        category: "islamic",
+
+        title: "🐋 الحوت الكبير",
+
+        description:
+            "السؤال ده عن نبي معروف 👀",
+
         theme: "eid-al-adha",
-        mood: "mystery",
-        difficulty: 3, // صعب نسبياً للطفل
+
+        mood: "playful",
+
+        difficulty: 1,
+
         targetAgeGroup: "kid",
-        question: "ما هو أكبر محيط في العالم؟",
+
+        question:
+            "مين النبي اللي بلعه الحوت؟",
+
         choices: [
-            "المحيط الأطلسي",
-            "المحيط الهندي",
-            "المحيط الهادئ",
-            "البحر المتوسط",
+            "سيدنا يونس",
+            "سيدنا موسى",
+            "سيدنا يوسف",
+            "سيدنا نوح",
         ],
-        answer: "المحيط الهادئ",
-        hint: "اسمه يوحي بالهدوء لكنه الأكبر 🌊",
-        explanation: "المحيط الهادئ هو أكبر مسطح مائي على وجه الأرض.",
-        reward: { stars: 2, canUnlockTreasure: true },
+
+        answer:
+            "سيدنا يونس",
+
+        hint:
+            "🐋🌙",
+
+        explanation:
+            "الله نجّى سيدنا يونس بعد ما بلعه الحوت ✨",
+
+        reward: {
+            stars: 1,
+            canUnlockTreasure: false,
+        },
+
         tinyMissionPool: eidMissions,
     },
+
+    {
+        id: "q-k-002",
+
+        type: "quiz",
+
+        category: "animals",
+
+        title: "🦒 رقبة طويلة",
+
+        description:
+            "الحيوان ده معروف جدًا 😄",
+
+        theme: "eid-al-adha",
+
+        mood: "playful",
+
+        difficulty: 1,
+
+        targetAgeGroup: "kid",
+
+        question:
+            "مين الحيوان اللي رقبته طويلة؟",
+
+        choices: [
+            "الزرافة",
+            "الفيل",
+            "الأسد",
+            "الحصان",
+        ],
+
+        answer:
+            "الزرافة",
+
+        hint:
+            "🦒",
+
+        explanation:
+            "الزرافة من أطول الحيوانات في العالم 👀",
+
+        reward: {
+            stars: 1,
+            canUnlockTreasure: false,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "q-k-003",
+
+        type: "quiz",
+
+        category: "fun",
+
+        title: "🌈 بعد المطر",
+
+        description:
+            "السؤال ده فيه ألوان كتير ✨",
+
+        theme: "eid-al-adha",
+
+        mood: "cozy",
+
+        difficulty: 1,
+
+        targetAgeGroup: "kid",
+
+        question:
+            "إيه اللي ممكن يظهر بعد المطر؟",
+
+        choices: [
+            "قوس قزح",
+            "الثلج",
+            "الدخان",
+            "النجوم",
+        ],
+
+        answer:
+            "قوس قزح",
+
+        hint:
+            "🌧️🌈",
+
+        explanation:
+            "قوس قزح بيظهر بعد المطر مع ضوء الشمس ✨",
+
+        reward: {
+            stars: 1,
+            canUnlockTreasure: false,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    // =====================================================
+    // KIDS — LEVEL 2
+    // =====================================================
+
+    {
+        id: "q-k-004",
+
+        type: "quiz",
+
+        category: "islamic",
+
+        title: "🕌 صلاة العيد",
+
+        description:
+            "سؤال صغير عن يوم العيد 🌙",
+
+        theme: "eid-al-adha",
+
+        mood: "warm",
+
+        difficulty: 2,
+
+        targetAgeGroup: "kid",
+
+        question:
+            "بنروح فين نصلي صلاة العيد؟",
+
+        choices: [
+            "المسجد",
+            "السوق",
+            "المدرسة",
+            "البيت",
+        ],
+
+        answer:
+            "المسجد",
+
+        hint:
+            "🕌👨‍👩‍👧",
+
+        explanation:
+            "صلاة العيد بتجمع ناس كتير في جو جميل ✨",
+
+        reward: {
+            stars: 2,
+            canUnlockTreasure: false,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "q-k-005",
+
+        type: "quiz",
+
+        category: "animals",
+
+        title: "🐆 سريع جدًا",
+
+        description:
+            "في حيوان سريع جدًا 😄",
+
+        theme: "eid-al-adha",
+
+        mood: "playful",
+
+        difficulty: 2,
+
+        targetAgeGroup: "kid",
+
+        question:
+            "مين أسرع حيوان على الأرض؟",
+
+        choices: [
+            "الفهد",
+            "الفيل",
+            "الأرنب",
+            "الدب",
+        ],
+
+        answer:
+            "الفهد",
+
+        hint:
+            "🐆💨",
+
+        explanation:
+            "الفهد يجري بسرعة كبيرة جدًا 👀",
+
+        reward: {
+            stars: 2,
+            canUnlockTreasure: false,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "q-k-006",
+
+        type: "quiz",
+
+        category: "science",
+
+        title: "☀️ في الشمس",
+
+        description:
+            "واضح إن في حاجة هتدوب 👀",
+
+        theme: "eid-al-adha",
+
+        mood: "curious",
+
+        difficulty: 2,
+
+        targetAgeGroup: "kid",
+
+        question:
+            "إيه اللي بيحصل للتلج في الشمس؟",
+
+        choices: [
+            "بيدوب",
+            "بيتجمد",
+            "بيكبر",
+            "بيطير",
+        ],
+
+        answer:
+            "بيدوب",
+
+        hint:
+            "☀️🧊",
+
+        explanation:
+            "حرارة الشمس بتخلي التلج يدوب 💧",
+
+        reward: {
+            stars: 2,
+            canUnlockTreasure: false,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    // =====================================================
+    // KIDS — LEVEL 3
+    // =====================================================
+
+    {
+        id: "q-k-007",
+
+        type: "quiz",
+
+        category: "islamic",
+
+        title: "🌟 خليل الله",
+
+        description:
+            "السؤال ده عن نبي عظيم 🌙",
+
+        theme: "eid-al-adha",
+
+        mood: "warm",
+
+        difficulty: 3,
+
+        targetAgeGroup: "kid",
+
+        question:
+            "مين النبي اللي كان يُسمى خليل الله؟",
+
+        choices: [
+            "سيدنا إبراهيم",
+            "سيدنا موسى",
+            "سيدنا يوسف",
+            "سيدنا يونس",
+        ],
+
+        answer:
+            "سيدنا إبراهيم",
+
+        hint:
+            "🕋🔥",
+
+        explanation:
+            "سيدنا إبراهيم من أعظم الأنبياء ✨",
+
+        reward: {
+            stars: 3,
+            canUnlockTreasure: true,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "q-k-008",
+
+        type: "quiz",
+
+        category: "mystery",
+
+        title: "😄 أسنان كثيرة",
+
+        description:
+            "لغز صغير وسهل 👀",
+
+        theme: "eid-al-adha",
+
+        mood: "playful",
+
+        difficulty: 3,
+
+        targetAgeGroup: "kid",
+
+        question:
+            "إيه اللي له أسنان لكنه لا يعض؟",
+
+        choices: [
+            "المشط",
+            "الأسد",
+            "التمساح",
+            "الذئب",
+        ],
+
+        answer:
+            "المشط",
+
+        hint:
+            "🪮",
+
+        explanation:
+            "المشط له أسنان كثيرة… لكنه لا يعض 😄",
+
+        reward: {
+            stars: 3,
+            canUnlockTreasure: true,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    // =====================================================
+    // KIDS — LEVEL 4
+    // =====================================================
+
+    {
+        id: "q-k-009",
+
+        type: "quiz",
+
+        category: "islamic",
+
+        title: "🕋 أبو الأنبياء",
+
+        description:
+            "سؤال مشهور جدًا 🌙",
+
+        theme: "eid-al-adha",
+
+        mood: "warm",
+
+        difficulty: 4,
+
+        targetAgeGroup: "kid",
+
+        question:
+            "مين النبي اللي يُسمى أبو الأنبياء؟",
+
+        choices: [
+            "سيدنا إبراهيم",
+            "سيدنا آدم",
+            "سيدنا موسى",
+            "سيدنا يوسف",
+        ],
+
+        answer:
+            "سيدنا إبراهيم",
+
+        hint:
+            "🕋✨",
+
+        explanation:
+            "كثير من الأنبياء جاءوا من نسل سيدنا إبراهيم 👀",
+
+        reward: {
+            stars: 4,
+            canUnlockTreasure: true,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    // =====================================================
+    // ADULT — LEVEL 1
+    // =====================================================
+
+    {
+        id: "q-a-001",
+
+        type: "quiz",
+
+        category: "geography",
+
+        title: "🌍 عاصمة مشهورة",
+
+        description:
+            "سؤال سريع من الجغرافيا 👀",
+
+        theme: "eid-al-adha",
+
+        mood: "curious",
+
+        difficulty: 1,
+
+        targetAgeGroup: "adult",
+
+        question:
+            "ما عاصمة تركيا؟",
+
+        choices: [
+            "أنقرة",
+            "إسطنبول",
+            "بيروت",
+            "دبي",
+        ],
+
+        answer:
+            "أنقرة",
+
+        hint:
+            "🇹🇷",
+
+        explanation:
+            "إسطنبول أشهر مدينة… لكن العاصمة الرسمية هي أنقرة ✨",
+
+        reward: {
+            stars: 1,
+            canUnlockTreasure: false,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "q-a-002",
+
+        type: "quiz",
+
+        category: "islamic",
+
+        title: "🕌 أول مؤذن",
+
+        description:
+            "سؤال سريع من السيرة 🌙",
+
+        theme: "eid-al-adha",
+
+        mood: "warm",
+
+        difficulty: 1,
+
+        targetAgeGroup: "adult",
+
+        question:
+            "من أول مؤذن في الإسلام؟",
+
+        choices: [
+            "بلال بن رباح",
+            "عمر بن الخطاب",
+            "عثمان بن عفان",
+            "أبو بكر الصديق",
+        ],
+
+        answer:
+            "بلال بن رباح",
+
+        hint:
+            "🕌🔊",
+
+        explanation:
+            "بلال بن رباح كان أول من رفع الأذان في الإسلام ✨",
+
+        reward: {
+            stars: 1,
+            canUnlockTreasure: false,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    // =====================================================
+    // ADULT — LEVEL 2
+    // =====================================================
+
+    {
+        id: "q-a-003",
+
+        type: "quiz",
+
+        category: "science",
+
+        title: "🧠 عضو مهم",
+
+        description:
+            "الجسم يستهلك طاقة كبيرة هنا 👀",
+
+        theme: "eid-al-adha",
+
+        mood: "curious",
+
+        difficulty: 2,
+
+        targetAgeGroup: "adult",
+
+        question:
+            "أي عضو يستهلك أكبر قدر من الطاقة في جسم الإنسان؟",
+
+        choices: [
+            "المخ",
+            "القلب",
+            "المعدة",
+            "الرئتين",
+        ],
+
+        answer:
+            "المخ",
+
+        hint:
+            "🧠⚡",
+
+        explanation:
+            "المخ يستهلك طاقة كبيرة رغم حجمه الصغير ✨",
+
+        reward: {
+            stars: 2,
+            canUnlockTreasure: true,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "q-a-004",
+
+        type: "quiz",
+
+        category: "history",
+
+        title: "⚔️ أول معركة",
+
+        description:
+            "سؤال سريع من التاريخ الإسلامي 🌙",
+
+        theme: "eid-al-adha",
+
+        mood: "epic",
+
+        difficulty: 2,
+
+        targetAgeGroup: "adult",
+
+        question:
+            "ما أول معركة كبرى في الإسلام؟",
+
+        choices: [
+            "بدر",
+            "أحد",
+            "الخندق",
+            "اليرموك",
+        ],
+
+        answer:
+            "بدر",
+
+        hint:
+            "⚔️",
+
+        explanation:
+            "غزوة بدر من أهم الأحداث في بداية الإسلام ✨",
+
+        reward: {
+            stars: 2,
+            canUnlockTreasure: true,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    // =====================================================
+    // ADULT — LEVEL 3
+    // =====================================================
+
+    {
+        id: "q-a-005",
+
+        type: "quiz",
+
+        category: "psychology",
+
+        title: "👃 ذكريات قديمة",
+
+        description:
+            "الموضوع ده بيحصل مع ناس كتير 👀",
+
+        theme: "eid-al-adha",
+
+        mood: "cozy",
+
+        difficulty: 3,
+
+        targetAgeGroup: "adult",
+
+        question:
+            "ما أكثر حاسة مرتبطة بالذكريات عند الإنسان؟",
+
+        choices: [
+            "الشم",
+            "السمع",
+            "اللمس",
+            "التذوق",
+        ],
+
+        answer:
+            "الشم",
+
+        hint:
+            "🧠👃",
+
+        explanation:
+            "الروائح مرتبطة بقوة بالذاكرة والمشاعر ✨",
+
+        reward: {
+            stars: 3,
+            canUnlockTreasure: true,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
+    {
+        id: "q-a-006",
+
+        type: "quiz",
+
+        category: "islamic",
+
+        title: "🕊️ معنى الإحرام",
+
+        description:
+            "سؤال بسيط لكن معناه مهم 🌙",
+
+        theme: "eid-al-adha",
+
+        mood: "peaceful",
+
+        difficulty: 3,
+
+        targetAgeGroup: "adult",
+
+        question:
+            "ما الحكمة الأساسية من ارتداء الحجاج ملابس متشابهة؟",
+
+        choices: [
+            "إلغاء الفوارق بين الناس",
+            "تقليل التكاليف",
+            "تمييز الحجاج",
+            "تسهيل السفر",
+        ],
+
+        answer:
+            "إلغاء الفوارق بين الناس",
+
+        hint:
+            "👥⚖️",
+
+        explanation:
+            "الإحرام يذكّر الناس أن الجميع متساوون ✨",
+
+        reward: {
+            stars: 3,
+            canUnlockTreasure: true,
+        },
+
+        tinyMissionPool: eidMissions,
+    },
+
 ];

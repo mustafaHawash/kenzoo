@@ -22,9 +22,15 @@ const plex = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-    title: "Kenzoo",
+    /* ─── Title & Description — Arabic SEO ─── */
+    title: {
+        default: "كـنزو | تجمع الكبار والصغار",
+        template: "%s | كـنزو",
+    },
     description:
-        "A cozy magical social game for shared moments, playful discovery, and warm mystery.",
+        "لعبة اجتماعية هادئة وممتعة للأصدقاء والعيلة الكبار والصغار معاً — اختيارات غامضة، ذكريات جميلة، ولحظات مشتركة هتخليكم أقرب.",
+
+    /* ─── PWA ─── */
     manifest: "/manifest.json",
     themeColor: "#d8b36a",
     viewport: {
@@ -32,6 +38,61 @@ export const metadata: Metadata = {
         initialScale: 1,
         maximumScale: 1,
         userScalable: false,
+    },
+
+    /* ─── Favicon ─── */
+    icons: {
+        icon: [
+            { url: "/Logo-PNG.webp", type: "image/webp" },
+        ],
+        apple: "/Logo-PNG.webp",
+    },
+
+    /* ─── Open Graph — Social Sharing ─── */
+    openGraph: {
+        type: "website",
+        locale: "ar_EG",
+        siteName: "كـنزو",
+        title: "كـنزو | تجمع الكبار والصغار",
+        description:
+            "لعبة اجتماعية هادئة وممتعة للأصدقاء والعيلة الكبار والصغار معاً — اختيارات غامضة، ذكريات جميلة، ولحظات مشتركة هتخليكم أقرب.",
+        images: [
+            {
+                url: "/Logo-PNG.webp",
+                width: 512,
+                height: 512,
+                alt: "كـنزو | تجمع الكبار والصغار",
+            },
+        ],
+    },
+
+    /* ─── Twitter Card ─── */
+    twitter: {
+        card: "summary",
+        title: "كـنزو | تجمع الكبار والصغار",
+        description:
+            "لعبة اجتماعية هادئة وممتعة للأصدقاء والعيلة الكبار والصغار معاً — اختيارات غامضة، ذكريات جميلة، ولحظات مشتركة هتخليكم أقرب.",
+        images: ["/Logo-PNG.webp"],
+    },
+
+    /* ─── Additional SEO ─── */
+    keywords: [
+        "كنزو",
+        "لعبة اجتماعية",
+        "لعبة أصدقاء",
+        "لعبة عيلة",
+        "لحظات دافئة",
+        "ألعاب جماعية",
+        "ألعاب حفلات",
+        "kenzoo",
+        "social game",
+        "party game",
+    ],
+    authors: [{ name: "Kenzoo" }],
+    creator: "Kenzoo",
+    robots: {
+        index: true,
+        follow: true,
     },
 };
 

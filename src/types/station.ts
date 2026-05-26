@@ -15,11 +15,16 @@ export type StationStatus = "locked" | "active" | "completed";
 export type StationCategory =
     | "islamic"
     | "history"
+    | "science"
+    | "geography"
+    | "animals"
     | "language"
     | "social"
     | "wisdom"
     | "fun"
-    | "memory";
+    | "memory"
+    | "psychology"
+    | "mystery";
 
 export type StationDifficulty = 1 | 2 | 3 | 4;
 

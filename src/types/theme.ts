@@ -5,4 +5,9 @@ export type SessionMood =
     | "playful"
     | "mystery"
     | "social"
+    | "warm"
+    | "curious"
+    | "funny"
+    | "epic"
+    | "peaceful"
     | "reflective";
