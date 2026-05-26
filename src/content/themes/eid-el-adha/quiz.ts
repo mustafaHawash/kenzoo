@@ -1193,7 +1193,7 @@ export const eidQuizStations: Station[] = [
     {
         id: "quiz-k-002",
         type: "quiz",
-        category: "riddles",
+        category: "fun",
         title: "🦷 لغز السنان",
         description: "حاجة بنستخدمها كل يوم",
         theme: "eid-al-adha",

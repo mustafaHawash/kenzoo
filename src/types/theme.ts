@@ -10,4 +10,8 @@ export type SessionMood =
     | "funny"
     | "epic"
     | "peaceful"
+    | "mystic"
+    | "riddles"
+    | "nature"
+    
     | "reflective";

@@ -24,6 +24,9 @@ export type StationCategory =
     | "fun"
     | "memory"
     | "psychology"
+    | "math"
+    | "nature"
+    | "riddles"
     | "mystery";
 
 export type StationDifficulty = 1 | 2 | 3 | 4;
