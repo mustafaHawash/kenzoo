@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils";
 import { IBM_Plex_Sans_Arabic, Alexandria, Literata } from "next/font/google";
 import { ThemeProvider } from "@/providers/theme-provider";
 import { DeferredMuteButton } from "@/components/ui/deferred-mute-button";
+import { Analytics } from '@vercel/analytics/next';
+
 
 const alexandria = Alexandria({
     subsets: ["arabic"],
@@ -124,6 +126,8 @@ export default function RootLayout({
                     {children}
                     <DeferredMuteButton />
                 </ThemeProvider>
+                <Analytics />
+
             </body>
         </html>
     );
